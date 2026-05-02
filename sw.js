@@ -1,6 +1,11 @@
 // Track service worker. Caches the app shell so launches work offline.
-// Bypasses GitHub API/Gist URLs so sync still hits the network.
-const CACHE = 'track-v2';
+// Network-first for same-origin assets so fresh code always wins; the cache
+// is only consulted when the network fails. Bypasses the GitHub API and
+// gist downloads so sync always hits live data.
+//
+// Bumping CACHE invalidates the previous cache on activate and forces a
+// fresh fetch of every asset.
+const CACHE = 'track-v3';
 const ASSETS = ['./', 'index.html', 'core.js'];
 
 self.addEventListener('install', (event) => {
@@ -23,19 +28,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (event.request.method !== 'GET') return;
-  // Stale-while-revalidate for app shell.
+
+  // Network-first for same-origin assets, fall back to cache only if offline.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((res) => {
-          if (res && res.ok && (url.origin === self.location.origin)) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(event.request, copy));
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request)
+      .then((res) => {
+        if (res && res.ok && url.origin === self.location.origin) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(event.request, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
