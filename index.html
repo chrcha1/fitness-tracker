@@ -1227,6 +1227,7 @@
   </div>
   <div class="sheet-actions">
     <button class="sheet-btn ghost" id="cardioCancelBtn">Cancel</button>
+    <button class="sheet-btn danger" id="cardioRemoveBtn" hidden>Remove</button>
     <button class="sheet-btn primary" id="cardioSaveBtn">Save</button>
   </div>
 </div>
@@ -1301,6 +1302,7 @@
   </div>
   <div class="sheet-actions">
     <button class="sheet-btn ghost" id="intervalsCancelBtn">Cancel</button>
+    <button class="sheet-btn danger" id="intervalsRemoveBtn" hidden>Remove</button>
     <button class="sheet-btn primary" id="intervalsSaveBtn">Save</button>
   </div>
 </div>
@@ -1982,14 +1984,19 @@
 
   function handleShortTap(tab, key) {
     if (tab === 'cardio' || tab === 'intervals') {
-      // Tap toggles. If already done, confirm.
-      if (store[tab][key]) openConfirm(tab, key);
-      else {
+      // Existing entry → open editor (Save / Remove inside).
+      // Empty + today → quick mark done with no time.
+      // Empty + past day → open editor so the user can pick a duration.
+      if (store[tab][key]) {
+        openEditor(tab, key);
+      } else if (key === fmtKey(today)) {
         store[tab][key] = { mins: null };
         touchMeta(tab, key);
         save(); haptic(10); render();
         flashCell(key);
         if (tab === 'cardio') checkZone2Milestone();
+      } else {
+        openEditor(tab, key);
       }
     } else if (tab === 'weight') {
       // Always open editor — no meaningful "just mark"
@@ -2087,10 +2094,20 @@
     const dateObj = new Date(y, m-1, d);
     document.getElementById('cardioSheetDate').textContent =
       dateObj.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    // Show Remove button only when an entry already exists.
+    document.getElementById('cardioRemoveBtn').hidden = !entry;
     document.getElementById('backdrop').classList.add('open');
     document.getElementById('cardioSheet').classList.add('open');
     requestAnimationFrame(() => requestAnimationFrame(() => setCardioWheel(pendingMins, false)));
   }
+
+  document.getElementById('cardioRemoveBtn').addEventListener('click', () => {
+    if (!currentEditKey || !store.cardio[currentEditKey]) return;
+    delete store.cardio[currentEditKey];
+    deleteMeta('cardio', currentEditKey);
+    save(); haptic(15);
+    closeAllSheets(); render();
+  });
 
   document.getElementById('cardioSaveBtn').addEventListener('click', () => {
     if (!currentEditKey) return;
@@ -2159,10 +2176,19 @@
     const dateObj = new Date(y, m-1, d);
     document.getElementById('intervalsSheetDate').textContent =
       dateObj.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    document.getElementById('intervalsRemoveBtn').hidden = !entry;
     document.getElementById('backdrop').classList.add('open');
     document.getElementById('intervalsSheet').classList.add('open');
     requestAnimationFrame(() => requestAnimationFrame(() => setIntervalsWheel(intervalsPendingMins, false)));
   }
+
+  document.getElementById('intervalsRemoveBtn').addEventListener('click', () => {
+    if (!currentEditKey || !store.intervals[currentEditKey]) return;
+    delete store.intervals[currentEditKey];
+    deleteMeta('intervals', currentEditKey);
+    save(); haptic(15);
+    closeAllSheets(); render();
+  });
 
   document.getElementById('intervalsSaveBtn').addEventListener('click', () => {
     if (!currentEditKey) return;
