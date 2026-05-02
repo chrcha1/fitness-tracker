@@ -806,13 +806,16 @@
   .modality-ring {
     flex-shrink: 0; width: 44px; height: 44px; position: relative;
   }
-  .modality-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  /* Only rotate the ring SVG (so the dasharray fill starts from the top).
+     The check SVG inside .ring-check is a separate element that must not rotate. */
+  .modality-ring > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .modality-ring .ring-bg { fill: none; stroke: var(--border); stroke-width: 4; }
   .modality-ring .ring-fg { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 400ms ease; }
   .modality-ring .ring-check {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     color: var(--accent-deep); opacity: 0; transition: opacity 200ms ease;
   }
+  .modality-ring .ring-check svg { width: 20px; height: 20px; transform: none; }
   .modality-card.done .ring-check { opacity: 1; }
   .modality-card.done .ring-fg { stroke-dashoffset: 0 !important; }
   .modality-info { flex: 1; min-width: 0; }
@@ -1737,8 +1740,9 @@
   const save = () => { saveLocal(); schedulePush(); };
 
   // ===== TABS =====
+  // Always land on Today on cold open. Previously persisted last tab across
+  // sessions, but the user explicitly wants Today as the default landing.
   let currentTab = 'today';
-  try { currentTab = localStorage.getItem(TAB_KEY) || 'today'; } catch(e) {}
 
   function setTab(tab) {
     if (!['today','cardio','weight','lifting','intervals'].includes(tab)) tab = 'today';
@@ -2678,17 +2682,19 @@
     const dateLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
     document.getElementById('todayGreetDate').textContent = dateLabel.toUpperCase();
     document.getElementById('todayGreetText').textContent = greet;
-    const completed = ['cardio','intervals','lifting','weight'].filter(
+    // Cadence-aware encouragement. The user's plan isn't daily-everything —
+    // Z2 averages ~3-4/wk, intervals ~1/wk, weight ~daily. Don't imply 4-a-day.
+    const todayCount = ['cardio','intervals','lifting','weight'].filter(
       tab => TrackCore.dayHasContent(tab, store[tab][todayKey])
     ).length;
     const subs = [
-      'Nothing logged yet — pick one to start.',
-      `1 of 4 done. Keep going.`,
-      `2 of 4 down.`,
-      `3 of 4 — one to go.`,
-      `All four. Today is yours.`,
+      'Quiet day so far. Pick what fits.',
+      'One logged. Nice work.',
+      'Two in the books today.',
+      'Strong day already.',
+      'Big day. Rest is part of the plan too.',
     ];
-    document.getElementById('todayGreetSub').textContent = subs[completed];
+    document.getElementById('todayGreetSub').textContent = subs[todayCount];
 
     // Per-modality cards
     const modalityStatus = {
@@ -2698,9 +2704,21 @@
         return { done: true, status: e.mins ? `Done · ${e.mins} min` : 'Marked complete' };
       },
       intervals: () => {
-        const e = store.intervals[todayKey];
-        if (!e) return { done: false, status: 'Tap when you finish a session' };
-        return { done: true, status: e.mins ? `Done · ${e.mins} min` : 'Marked complete' };
+        // Goal cadence is 1/week — closure tracks the WEEK, not just today.
+        const todayE = store.intervals[todayKey];
+        const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+        let weekCount = 0;
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
+          if (TrackCore.dayHasContent('intervals', store.intervals[fmtKey(d)])) weekCount++;
+        }
+        if (todayE) {
+          return { done: true, status: todayE.mins ? `Done today · ${todayE.mins} min` : 'Done today' };
+        }
+        if (weekCount > 0) {
+          return { done: true, status: `${weekCount} this week — on plan` };
+        }
+        return { done: false, status: 'Goal: 1 session this week' };
       },
       lifting: () => {
         const e = store.lifting[todayKey];
