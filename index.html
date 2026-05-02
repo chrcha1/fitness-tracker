@@ -162,6 +162,33 @@
     user-select: none; -webkit-user-select: none;
   }
 
+  /* Desktop: keep the phone-shaped column, just centered. Fixed elements use
+     left:50% + margin-left so we don't disturb their existing transform-based
+     slide animations (sheets) or vertical translations (overlays). */
+  @media (min-width: 700px) {
+    body {
+      max-width: 540px;
+      margin: 0 auto;
+    }
+    .tabbar {
+      width: 540px; left: 50%; right: auto; margin-left: -270px;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .chat-dock {
+      width: 540px; left: 50%; right: auto; margin-left: -270px;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .sheet {
+      width: 540px; left: 50%; right: auto; margin-left: -270px;
+    }
+    .sheet-backdrop, .celebrate-overlay {
+      /* Backdrop and overlays should still cover the entire viewport. */
+      left: 0; right: 0;
+    }
+  }
+
   /* ===== TOP BAR ===== */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
