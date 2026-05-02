@@ -1772,8 +1772,12 @@
   // weight: { "YYYY-MM-DD": { am: number|null, pm: number|null } }
   // lifting: { "YYYY-MM-DD": { tags: string[] } }
   // intervals: { "YYYY-MM-DD": { mins: number|null } }
-  let store = { cardio: {}, weight: {}, lifting: {}, intervals: {} };
-  let meta = { cardio: {}, weight: {}, lifting: {}, intervals: {} };
+  // Always go through sanitizeStore/sanitizeMeta so the shape stays in sync
+  // with TABS. Adding a new tab in core.js automatically gives us the right
+  // default here. Without this, a missing key on first load would crash any
+  // render function that does store[tab][key].
+  let store = TrackCore.sanitizeStore(null);
+  let meta = TrackCore.sanitizeMeta(null);
   // True if loading detected & repaired the phantom-tab-key bug. Triggers a
   // gist push after sync is initialized so every device sees the cleaned data.
   let needsRepairPush = false;

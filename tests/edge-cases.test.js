@@ -550,3 +550,131 @@ test('logicalToday: returns a Date at local midnight', () => {
   assert.equal(result.getMinutes(), 0);
   assert.equal(result.getSeconds(), 0);
 });
+
+// ============================================================
+// Initial-state regression: sanitizeStore must produce every tab in TABS,
+// no matter what shape the input is. This is the bug that broke the
+// Nutrition button in production: the live init code declared an explicit
+// 4-tab object as default and missed the 5th when sanitizeStore wasn't run.
+// ============================================================
+
+test('sanitizeStore(null) covers every tab in TABS', () => {
+  const out = T.sanitizeStore(null);
+  for (const tab of T.TABS) {
+    assert.ok(tab in out, `missing tab: ${tab}`);
+    assert.deepEqual(out[tab], {}, `${tab} should default to {}`);
+  }
+});
+
+test('sanitizeMeta(null) covers every tab in TABS', () => {
+  const out = T.sanitizeMeta(null);
+  for (const tab of T.TABS) {
+    assert.ok(tab in out, `missing tab: ${tab}`);
+    assert.deepEqual(out[tab], {}, `${tab} should default to {}`);
+  }
+});
+
+test('sanitizeStore: any single-tab input fills all other tabs as {}', () => {
+  for (const onlyTab of T.TABS) {
+    const input = { [onlyTab]: { '2026-05-01': { mins: 50 } } };
+    const out = T.sanitizeStore(input);
+    for (const t of T.TABS) {
+      assert.ok(t in out, `missing tab: ${t} when input had only ${onlyTab}`);
+    }
+    assert.equal(Object.keys(out[onlyTab]).length, 1, 'preserves the original tab');
+  }
+});
+
+test('sanitizeStore: legacy 4-tab input still produces 5-tab output', () => {
+  // Critical pre-nutrition shape, exactly what an existing user's localStorage
+  // looks like before the tab was added. New tabs must materialize as {}.
+  const legacy = {
+    cardio: { '2026-05-01': { mins: 50 } },
+    weight: { '2026-05-01': { am: null, pm: 156 } },
+    lifting: { '2026-05-01': { tags: ['upper'] } },
+    intervals: {},
+  };
+  const out = T.sanitizeStore(legacy);
+  assert.ok('nutrition' in out, 'nutrition must materialize on the new client');
+  assert.deepEqual(out.nutrition, {});
+  // Existing data must not be lost.
+  assert.equal(Object.keys(out.cardio).length, 1);
+});
+
+test('sanitizeMeta: legacy 4-tab meta still produces 5-tab output', () => {
+  const legacy = {
+    cardio: { '2026-05-01': 12345 },
+    weight: { '2026-05-01': 67890 },
+    lifting: {}, intervals: {},
+  };
+  const out = T.sanitizeMeta(legacy);
+  assert.ok('nutrition' in out);
+  assert.deepEqual(out.nutrition, {});
+});
+
+test('sanitizeStore: every TABS subset produces a full 5-tab object', () => {
+  // 2^5 = 32 subsets. Test all of them.
+  for (let mask = 0; mask < (1 << T.TABS.length); mask++) {
+    const input = {};
+    for (let i = 0; i < T.TABS.length; i++) {
+      if (mask & (1 << i)) input[T.TABS[i]] = {};
+    }
+    const out = T.sanitizeStore(input);
+    for (const tab of T.TABS) {
+      assert.ok(tab in out, `missing ${tab} from subset mask ${mask.toString(2).padStart(5,'0')}`);
+    }
+  }
+});
+
+test('sanitizeStore: refuses to leak phantom tab keys nested in tab maps', () => {
+  // The phantom-key bug from the original gist must never reappear.
+  const corrupted = {
+    cardio: {
+      '2026-05-01': { mins: 50 },
+      cardio: {}, weight: {}, lifting: {}, intervals: {}, nutrition: {},
+    },
+    weight: {}, lifting: {}, intervals: {}, nutrition: {},
+  };
+  const out = T.sanitizeStore(corrupted);
+  assert.deepEqual(Object.keys(out.cardio).sort(), ['2026-05-01']);
+});
+
+test('parseGistContent: a v3 payload with no nutrition key survives', () => {
+  // Old gists won't have store.nutrition. Parser must still yield a complete
+  // shape so the live app doesn't crash on access.
+  const r = T.parseGistContent(JSON.stringify({
+    store: {
+      cardio: { '2026-05-01': { mins: 50 } },
+      weight: {}, lifting: {}, intervals: {},
+      // no nutrition
+    },
+    meta: {
+      cardio: { '2026-05-01': 1 },
+      weight: {}, lifting: {}, intervals: {},
+      // no nutrition
+    },
+    deadline: '2026-12-01',
+  }));
+  assert.ok('nutrition' in r.store);
+  assert.deepEqual(r.store.nutrition, {});
+  assert.ok('nutrition' in r.meta);
+  assert.deepEqual(r.meta.nutrition, {});
+});
+
+test('countSessions on every TABS map yields a number, never throws', () => {
+  // Defensive: every tab's empty initial value must be safely countable.
+  const empty = T.sanitizeStore(null);
+  for (const tab of T.TABS) {
+    const n = T.countSessions(empty[tab]);
+    assert.equal(typeof n, 'number');
+    assert.equal(n, 0);
+  }
+});
+
+test('dayHasContent on every TABS empty entry returns false safely', () => {
+  for (const tab of T.TABS) {
+    assert.equal(T.dayHasContent(tab, undefined), false, `${tab} undefined`);
+    assert.equal(T.dayHasContent(tab, {}), false || tab === 'cardio' || tab === 'intervals',
+      `${tab} empty object`);
+  }
+});
