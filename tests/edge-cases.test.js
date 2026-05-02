@@ -413,3 +413,75 @@ test('TABS includes the 5 expected tabs', () => {
   const expected = ['cardio', 'weight', 'lifting', 'intervals', 'nutrition'];
   assert.deepEqual([...T.TABS].sort(), [...expected].sort());
 });
+
+// ============================================================
+// Nutrition day data + helpers.
+// ============================================================
+
+test('dayHasContent: nutrition empty entries array does not count', () => {
+  assert.equal(T.dayHasContent('nutrition', { entries: [] }), false);
+  assert.equal(T.dayHasContent('nutrition', {}), false);
+  assert.equal(T.dayHasContent('nutrition', { entries: null }), false);
+  assert.equal(T.dayHasContent('nutrition', undefined), false);
+});
+
+test('dayHasContent: nutrition with one entry counts', () => {
+  const entry = { entries: [{ food: 'eggs', macros: { calories: 140, protein_g: 12 } }] };
+  assert.equal(T.dayHasContent('nutrition', entry), true);
+});
+
+test('nutritionDayTotals: sums macros across multiple entries', () => {
+  const day = {
+    entries: [
+      { food: 'eggs',   macros: { calories: 140, protein_g: 12, carbs_g: 1, fat_g: 10 } },
+      { food: 'toast',  macros: { calories: 90,  protein_g: 4,  carbs_g: 18, fat_g: 1.5 } },
+      { food: 'coffee', macros: { calories: 5,   protein_g: 0,  carbs_g: 0,  fat_g: 0 } },
+    ],
+  };
+  const t = T.nutritionDayTotals(day);
+  assert.equal(t.calories, 235);
+  assert.equal(t.protein_g, 16);
+  assert.equal(t.carbs_g, 19);
+  assert.equal(t.fat_g, 11.5);
+});
+
+test('nutritionDayTotals: zeros for empty / missing inputs', () => {
+  assert.deepEqual(T.nutritionDayTotals({ entries: [] }), { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
+  assert.deepEqual(T.nutritionDayTotals(undefined), { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
+  assert.deepEqual(T.nutritionDayTotals(null), { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
+});
+
+test('nutritionDayTotals: skips entries with missing macros block', () => {
+  const day = {
+    entries: [
+      { food: 'eggs', macros: { calories: 140, protein_g: 12, carbs_g: 1, fat_g: 10 } },
+      { food: 'mystery food' /* no macros */ },
+      { food: 'broken', macros: null },
+    ],
+  };
+  const t = T.nutritionDayTotals(day);
+  assert.equal(t.calories, 140);
+  assert.equal(t.protein_g, 12);
+});
+
+test('nutritionDayTotals: skips non-numeric macros', () => {
+  const day = {
+    entries: [
+      { food: 'sketchy', macros: { calories: '500', protein_g: 30, carbs_g: 10, fat_g: 5 } },
+    ],
+  };
+  const t = T.nutritionDayTotals(day);
+  assert.equal(t.calories, 0); // string not coerced
+  assert.equal(t.protein_g, 30);
+});
+
+test('newNutritionEntryId: shape is n_<date>_<random>', () => {
+  const id = T.newNutritionEntryId('2026-05-02');
+  assert.match(id, /^n_2026-05-02_[a-z0-9]{6}$/);
+});
+
+test('newNutritionEntryId: two consecutive calls produce different ids', () => {
+  const a = T.newNutritionEntryId('2026-05-02');
+  const b = T.newNutritionEntryId('2026-05-02');
+  assert.notEqual(a, b);
+});

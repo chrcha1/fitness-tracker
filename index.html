@@ -104,6 +104,14 @@
     --shadow-accent: 0 4px 14px rgba(147, 51, 234, 0.25);
   }
 
+  /* Nutrition: warm paper accent. */
+  body[data-tab="nutrition"] {
+    --accent: #c06651; --accent-deep: #a04a3a;
+    --accent-bright: #d77d68; --accent-soft: #f6dfd6;
+    --accent-tint: #fdf6f1;
+    --shadow-accent: 0 4px 14px rgba(192, 102, 81, 0.25);
+  }
+
   /* Dark mode: auto from system. Same hierarchy, dark surfaces, brighter accents. */
   @media (prefers-color-scheme: dark) {
     :root {
@@ -339,6 +347,115 @@
   }
   .chart-wrap { width: 100%; height: 200px; }
   .chart-wrap svg { width: 100%; height: 100%; display: block; }
+
+  /* ===== NUTRITION TAB ===== */
+  .nutrition-day-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 6px 0 14px; padding: 8px 4px;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .nutrition-day-nav .nav-btn {
+    background: none; border: none; color: var(--ink-3); cursor: pointer;
+    font-size: 22px; padding: 4px 14px; border-radius: 8px; font-family: inherit;
+  }
+  .nutrition-day-nav .nav-btn:active { background: var(--surface-2); }
+  .nutrition-day-nav .nav-date {
+    font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: -0.01em;
+  }
+  .nutrition-entry {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: transform 120ms ease;
+  }
+  .nutrition-entry:active { transform: scale(0.98); }
+  .nutrition-entry.pending { opacity: 0.55; }
+  .nutrition-entry-time {
+    font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: 0.04em;
+    font-feature-settings: "tnum"; min-width: 38px;
+  }
+  .nutrition-entry-body { flex: 1; min-width: 0; }
+  .nutrition-entry-name {
+    font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .nutrition-entry-meta {
+    font-size: 11px; color: var(--ink-3); margin-top: 2px;
+    font-feature-settings: "tnum";
+  }
+  .nutrition-entry-cals {
+    font-size: 13px; font-weight: 700; color: var(--ink-2);
+    font-feature-settings: "tnum"; flex-shrink: 0;
+  }
+  .nutrition-empty {
+    text-align: center; color: var(--ink-3); padding: 28px 16px;
+    font-size: 13px;
+  }
+
+  /* Chat dock pinned above the tab bar */
+  .chat-dock {
+    position: fixed; left: 0; right: 0;
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 10px 14px 12px;
+    z-index: 40;
+    display: none;
+  }
+  body[data-tab="nutrition"] .chat-dock { display: block; }
+  body[data-tab="nutrition"] {
+    /* extra bottom padding so the entries scroll above the chat dock */
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 92px);
+  }
+  .chat-row { display: flex; gap: 8px; align-items: center; }
+  .chat-input {
+    flex: 1; height: 42px; padding: 0 14px;
+    border: 1px solid var(--border); border-radius: 100px;
+    background: var(--surface-2); color: var(--ink);
+    font-family: inherit; font-size: 14px;
+    outline: none; transition: border-color 120ms;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--ink-4); }
+  .chat-send {
+    flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
+    background: var(--accent); color: white; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 120ms;
+  }
+  .chat-send:active { transform: scale(0.92); }
+  .chat-send svg { width: 18px; height: 18px; }
+  .chat-send:disabled { background: var(--ink-4); cursor: wait; }
+  .chat-status {
+    font-size: 11px; color: var(--ink-3); margin-top: 6px; padding: 0 4px;
+  }
+  .chat-status.err { color: #b91c1c; }
+  .chat-status.ok { color: var(--accent-deep); }
+
+  /* Nutrition edit form */
+  .nutrition-form { padding: 0 6px; display: grid; gap: 10px; }
+  .nfield {
+    display: grid; gap: 4px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .nfield input {
+    height: 38px; padding: 0 12px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--surface-2); color: var(--ink);
+    font-family: inherit; font-size: 14px; font-weight: 500; letter-spacing: normal;
+    text-transform: none; outline: none;
+  }
+  .nfield input:focus { border-color: var(--accent); }
+  .nutrition-macros {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+
+  /* Settings: Anthropic API key field */
+  .menu-input {
+    width: 100%; height: 38px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--surface-2); color: var(--ink);
+    font-family: inherit; font-size: 13px; outline: none;
+  }
+  .menu-input:focus { border-color: var(--accent); }
 
   /* ===== MILESTONE CELEBRATION ===== */
   .celebrate-overlay {
@@ -833,6 +950,8 @@
   .modality-card[data-modality="lifting"] .ring-check { color: var(--c-lifting-deep); }
   .modality-card[data-modality="weight"] .ring-fg { stroke: var(--c-weight); }
   .modality-card[data-modality="weight"] .ring-check { color: var(--c-weight-deep); }
+  .modality-card[data-modality="nutrition"] .ring-fg { stroke: #c06651; }
+  .modality-card[data-modality="nutrition"] .ring-check { color: #a04a3a; }
   .modality-card.long-pressing { transform: scale(1.02); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
 
   .today-week-strip {
@@ -873,6 +992,7 @@
   .week-cell-dot.intervals { background: var(--c-intervals); }
   .week-cell-dot.lifting { background: var(--c-lifting); }
   .week-cell-dot.weight { background: var(--c-weight); }
+  .week-cell-dot.nutrition { background: #c06651; }
 
   .summary-card {
     background: linear-gradient(135deg, var(--c-cardio-tint), var(--c-weight-tint));
@@ -988,6 +1108,20 @@
     <div class="modality-info">
       <div class="modality-name">Lifting</div>
       <div class="modality-status" id="todayStatusLifting">-</div>
+    </div>
+  </div>
+
+  <div class="modality-card" data-modality="nutrition" id="todayCardNutrition">
+    <div class="modality-ring">
+      <svg viewBox="0 0 44 44">
+        <circle class="ring-bg" cx="22" cy="22" r="18"/>
+        <circle class="ring-fg" cx="22" cy="22" r="18" stroke-dasharray="113" stroke-dashoffset="113"/>
+      </svg>
+      <div class="ring-check"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="modality-info">
+      <div class="modality-name">Nutrition</div>
+      <div class="modality-status" id="todayStatusNutrition">-</div>
     </div>
   </div>
 
@@ -1172,6 +1306,64 @@
   <main id="intervalsMonths"></main>
 </div>
 
+<!-- ===== NUTRITION VIEW ===== -->
+<div class="view" id="view-nutrition">
+  <section class="hero nutrition-hero">
+    <div class="hero-label">Today</div>
+    <div class="hero-count">
+      <span class="num" id="nutritionCalories">0</span>
+      <span class="target" id="nutritionCalorieTarget">/ 1650 kcal</span>
+    </div>
+    <div class="hero-sub" id="nutritionHeroSub">Talk to log a meal.</div>
+    <div class="progress-track"><div class="progress-fill" id="nutritionCalorieBar" style="width:0%"></div></div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value" id="nutritionProtein">0</div><div class="stat-label">Protein g</div></div>
+      <div class="stat"><div class="stat-value" id="nutritionCarbs">0</div><div class="stat-label">Carbs g</div></div>
+      <div class="stat"><div class="stat-value" id="nutritionFat">0</div><div class="stat-label">Fat g</div></div>
+    </div>
+  </section>
+
+  <div class="nutrition-day-nav">
+    <button class="nav-btn" id="nutritionPrevDay" aria-label="Previous day">‹</button>
+    <div class="nav-date" id="nutritionDateLabel">Today</div>
+    <button class="nav-btn" id="nutritionNextDay" aria-label="Next day">›</button>
+  </div>
+
+  <main id="nutritionEntries"></main>
+
+  <div class="chat-dock" id="nutritionChatDock">
+    <div class="chat-row">
+      <input type="text" class="chat-input" id="nutritionChatInput" placeholder="What did you eat?" autocomplete="off" autocorrect="off" autocapitalize="sentences">
+      <button class="chat-send" id="nutritionChatSend" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="chat-status" id="nutritionChatStatus" hidden></div>
+  </div>
+</div>
+
+<!-- Nutrition entry editor -->
+<div class="sheet" id="nutritionSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-date" id="nutritionSheetDate">-</div>
+  <div class="sheet-title" id="nutritionSheetTitle">Edit entry</div>
+  <div class="nutrition-form">
+    <label class="nfield"><span>Food</span><input type="text" id="nutritionFoodInput" placeholder="e.g. scrambled eggs"></label>
+    <label class="nfield"><span>Portion</span><input type="text" id="nutritionPortionInput" placeholder="e.g. 2 large"></label>
+    <div class="nutrition-macros">
+      <label class="nfield"><span>kcal</span><input type="number" inputmode="decimal" id="nutritionCalInput"></label>
+      <label class="nfield"><span>P g</span><input type="number" inputmode="decimal" id="nutritionPInput"></label>
+      <label class="nfield"><span>C g</span><input type="number" inputmode="decimal" id="nutritionCInput"></label>
+      <label class="nfield"><span>F g</span><input type="number" inputmode="decimal" id="nutritionFInput"></label>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn ghost" id="nutritionCancelBtn">Cancel</button>
+    <button class="sheet-btn danger" id="nutritionRemoveBtn" hidden>Remove</button>
+    <button class="sheet-btn primary" id="nutritionSaveBtn">Save</button>
+  </div>
+</div>
+
 <!-- ===== TAB BAR ===== -->
 <nav class="tabbar">
   <button class="tab" data-tab="today" data-active="true">
@@ -1189,6 +1381,10 @@
   <button class="tab" data-tab="lifting" data-active="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M2 8h4M2 16h4M18 8h4M18 16h4M6 12h12"/></svg>
     <span class="tab-label">Lifting</span>
+  </button>
+  <button class="tab" data-tab="nutrition" data-active="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4c0 1.5-.5 2.5-1 3.5L12 22l-3-12.5c-.5-1-1-2-1-3.5a4 4 0 0 1 4-4z"/></svg>
+    <span class="tab-label">Nutrition</span>
   </button>
   <button class="tab" data-tab="weight" data-active="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -1335,6 +1531,12 @@
     <span class="menu-row-value" id="menuDeadline">Dec 1 ›</span>
   </div>
 
+  <div class="menu-section-title">AI logging</div>
+  <div class="menu-row" id="aiSetupBtn">
+    <span class="menu-row-label">Anthropic API key</span>
+    <span class="menu-row-value" id="menuAi">Not set ›</span>
+  </div>
+
   <div class="menu-section-title">Sync &amp; Data</div>
   <div class="menu-row" id="syncSetupBtn">
     <span class="menu-row-label">Cloud sync</span>
@@ -1395,6 +1597,33 @@
   <button class="sheet-btn danger" id="syncDisconnectBtn" style="width:100%; margin-top:10px; display:none;">Disconnect</button>
 </div>
 
+<!-- AI logging setup -->
+<div class="sheet" id="aiSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Anthropic API key</div>
+  <div class="sync-help" style="margin-bottom: 14px; font-size: 12px; color: var(--ink-3);">
+    Used to talk to Claude for nutrition logging. Stored only on this device. Get a key at console.anthropic.com.
+  </div>
+  <label class="nfield" style="margin-bottom: 10px;">
+    <span>API key (sk-ant-...)</span>
+    <input type="password" class="menu-input" id="aiKeyInput" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  </label>
+  <label class="nfield" style="margin-bottom: 10px;">
+    <span>Model</span>
+    <select class="menu-input" id="aiModelInput">
+      <option value="claude-haiku-4-5">Haiku 4.5 (fast, cheap, recommended)</option>
+      <option value="claude-sonnet-4-6">Sonnet 4.6 (smarter, pricier)</option>
+      <option value="claude-opus-4-7">Opus 4.7 (smartest, most expensive)</option>
+    </select>
+  </label>
+  <div class="sync-status" id="aiStatusText" style="margin-bottom: 6px;"></div>
+  <div class="sheet-actions">
+    <button class="sheet-btn ghost" id="aiCancelBtn">Cancel</button>
+    <button class="sheet-btn primary" id="aiSaveBtn">Save</button>
+  </div>
+  <button class="sheet-btn danger" id="aiDisconnectBtn" style="width:100%; margin-top:10px; display:none;">Remove key</button>
+</div>
+
 <script>
 (() => {
   // ===== CONSTS =====
@@ -1410,6 +1639,13 @@
   const WEIGHT_GOAL_START_KEY = '2026-05-09';
   const WEIGHT_GOAL_START_LB = 156;
   const WEIGHT_GOAL_TARGET_LB = 140;
+
+  // Nutrition daily goals (hardcoded; matches the cal-macro-track profile).
+  const NUTRITION_KCAL_GOAL = 1650;
+  const NUTRITION_PROTEIN_GOAL = 130;
+
+  // Anthropic API config keys
+  const ANTHROPIC_KEY = 'track-anthropic-v1';
   const TAGS = [
     { id: 'upper', label: 'Up' },
     { id: 'lower', label: 'Lo' },
@@ -1705,7 +1941,7 @@
   function mergeRemote(remote) {
     if (!remote) return false;
     let changed = false;
-    for (const tab of ['cardio','weight','lifting','intervals']) {
+    for (const tab of ['cardio','weight','lifting','intervals','nutrition']) {
       if (mergeOneTab(tab, remote.store[tab] || {}, remote.meta[tab] || {})) changed = true;
     }
     if (remote.deadline && !localStorage.getItem(DEADLINE_KEY)) {
@@ -1739,7 +1975,7 @@
   let currentTab = 'today';
 
   function setTab(tab) {
-    if (!['today','cardio','weight','lifting','intervals'].includes(tab)) tab = 'today';
+    if (!['today','cardio','weight','lifting','intervals','nutrition'].includes(tab)) tab = 'today';
     currentTab = tab;
     try { localStorage.setItem(TAB_KEY, tab); } catch(e) {}
     document.body.dataset.tab = tab;
@@ -1749,7 +1985,7 @@
     document.querySelectorAll('.view').forEach(v => {
       v.classList.toggle('active', v.id === `view-${tab}`);
     });
-    const titles = { today: 'Today', cardio: 'Zone 2', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals' };
+    const titles = { today: 'Today', cardio: 'Zone 2', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals', nutrition: 'Nutrition' };
     document.getElementById('appTitleText').textContent = titles[tab];
     haptic(5);
     // Render the new tab, then scroll so the current month is just below the today card
@@ -2448,7 +2684,7 @@
 
   // ===== SHEETS =====
   const backdrop = document.getElementById('backdrop');
-  const allSheets = ['cardioSheet','intervalsSheet','weightSheet','liftingSheet','confirmSheet','menuSheet','deadlineSheet','syncSheet']
+  const allSheets = ['cardioSheet','intervalsSheet','weightSheet','liftingSheet','nutritionSheet','aiSheet','confirmSheet','menuSheet','deadlineSheet','syncSheet']
     .map(id => document.getElementById(id));
 
   function closeAllSheets() {
@@ -2549,7 +2785,7 @@
   document.getElementById('resetAllBtn').addEventListener('click', () => {
     if (!confirm('Delete ALL logged data across all tabs? This cannot be undone.')) return;
     const now = Date.now();
-    for (const tab of ['cardio','weight','lifting','intervals']) {
+    for (const tab of ['cardio','weight','lifting','intervals','nutrition']) {
       Object.keys(store[tab]).forEach(k => { meta[tab][k] = { deleted: now }; });
       store[tab] = {};
     }
@@ -2577,12 +2813,61 @@
 
   function updateMenuSync() {
     if (syncConfig) {
-      menuSync.textContent = `${syncConfig.gistId.slice(0, 7)}… ›`;
+      menuSync.textContent = `${syncConfig.gistId.slice(0, 7)}... ›`;
     } else {
       menuSync.textContent = 'Not connected ›';
     }
   }
   updateMenuSync();
+
+  // ===== AI SETTINGS =====
+  const menuAi = document.getElementById('menuAi');
+  function updateMenuAi() {
+    if (anthropicConfig?.apiKey) {
+      const model = anthropicConfig.model || 'claude-haiku-4-5';
+      menuAi.textContent = `${model.replace('claude-','')} ›`;
+    } else {
+      menuAi.textContent = 'Not set ›';
+    }
+  }
+  updateMenuAi();
+
+  document.getElementById('aiSetupBtn').addEventListener('click', () => {
+    document.getElementById('aiKeyInput').value = anthropicConfig?.apiKey || '';
+    document.getElementById('aiModelInput').value = anthropicConfig?.model || 'claude-haiku-4-5';
+    document.getElementById('aiDisconnectBtn').style.display = anthropicConfig?.apiKey ? 'block' : 'none';
+    document.getElementById('aiStatusText').textContent = '';
+    document.getElementById('aiStatusText').className = 'sync-status';
+    document.getElementById('menuSheet').classList.remove('open');
+    document.getElementById('aiSheet').classList.add('open');
+  });
+  document.getElementById('aiCancelBtn').addEventListener('click', closeAllSheets);
+  document.getElementById('aiSaveBtn').addEventListener('click', () => {
+    const key = document.getElementById('aiKeyInput').value.trim();
+    const model = document.getElementById('aiModelInput').value;
+    const status = document.getElementById('aiStatusText');
+    if (!key) {
+      status.textContent = 'API key is required.';
+      status.className = 'sync-status err';
+      return;
+    }
+    if (!key.startsWith('sk-ant-')) {
+      status.textContent = 'Anthropic keys start with sk-ant-...';
+      status.className = 'sync-status err';
+      return;
+    }
+    anthropicConfig = { apiKey: key, model };
+    try { localStorage.setItem(ANTHROPIC_KEY, JSON.stringify(anthropicConfig)); } catch(e) {}
+    updateMenuAi();
+    closeAllSheets();
+  });
+  document.getElementById('aiDisconnectBtn').addEventListener('click', () => {
+    if (!confirm('Remove the saved API key?')) return;
+    anthropicConfig = null;
+    try { localStorage.removeItem(ANTHROPIC_KEY); } catch(e) {}
+    updateMenuAi();
+    closeAllSheets();
+  });
 
   function setSyncStatus(msg, kind = 'info') {
     syncStatusText.textContent = msg;
@@ -2652,6 +2937,7 @@
     else if (currentTab === 'weight') renderWeight();
     else if (currentTab === 'lifting') renderLifting();
     else if (currentTab === 'intervals') renderIntervals();
+    else if (currentTab === 'nutrition') renderNutrition();
   }
 
   // ===== TODAY TAB =====
@@ -2666,7 +2952,7 @@
     document.getElementById('todayGreetText').textContent = greet;
     // Cadence-aware encouragement. The user's plan isn't daily-everything.
     // Z2 averages ~3-4/wk, intervals ~1/wk, weight ~daily. Don't imply 4-a-day.
-    const todayCount = ['cardio','intervals','lifting','weight'].filter(
+    const todayCount = ['cardio','intervals','lifting','weight','nutrition'].filter(
       tab => TrackCore.dayHasContent(tab, store[tab][todayKey])
     ).length;
     const subs = [
@@ -2674,9 +2960,10 @@
       'One logged. Nice work.',
       'Two in the books today.',
       'Strong day already.',
+      'Solid day across the board.',
       'Big day. Rest is part of the plan too.',
     ];
-    document.getElementById('todayGreetSub').textContent = subs[todayCount];
+    document.getElementById('todayGreetSub').textContent = subs[Math.min(todayCount, subs.length - 1)];
 
     // Per-modality cards
     const modalityStatus = {
@@ -2718,16 +3005,29 @@
           : `${avg.toFixed(1)} lb`;
         return { done: true, status: detail };
       },
+      nutrition: () => {
+        const day = store.nutrition[todayKey];
+        const t = TrackCore.nutritionDayTotals(day);
+        if (t.calories === 0) return { done: false, status: 'Log a meal', fillPct: 0 };
+        const proteinPct = Math.min(1, t.protein_g / NUTRITION_PROTEIN_GOAL);
+        const status = `${Math.round(t.calories)} kcal · ${Math.round(t.protein_g)}g P`;
+        return { done: t.protein_g >= NUTRITION_PROTEIN_GOAL, status, fillPct: proteinPct };
+      },
     };
-    for (const tab of ['cardio','intervals','lifting','weight']) {
+    for (const tab of ['cardio','intervals','lifting','weight','nutrition']) {
       const card = document.getElementById('todayCard' + tab.charAt(0).toUpperCase() + tab.slice(1));
-      const { done, status } = modalityStatus[tab]();
+      if (!card) continue;
+      const r = modalityStatus[tab]();
+      const done = r.done;
       card.classList.toggle('done', done);
-      // Animate ring fill: 0% if not done, 100% if done. Circumference for r=18 is 113.
+      // Ring fill: nutrition uses partial fill based on protein progress; others are binary.
       const fg = card.querySelector('.ring-fg');
-      if (fg) fg.setAttribute('stroke-dashoffset', done ? 0 : 113);
+      if (fg) {
+        const fill = (typeof r.fillPct === 'number') ? r.fillPct : (done ? 1 : 0);
+        fg.setAttribute('stroke-dashoffset', String(113 * (1 - fill)));
+      }
       const statusEl = document.getElementById('todayStatus' + tab.charAt(0).toUpperCase() + tab.slice(1));
-      if (statusEl) statusEl.textContent = status;
+      if (statusEl) statusEl.textContent = r.status;
     }
 
     // 7-day strip ending today (Sun→Sat alignment for current week).
@@ -2753,7 +3053,7 @@
       cell.appendChild(num);
       const dots = document.createElement('div');
       dots.className = 'week-cell-dots';
-      for (const tab of ['cardio','intervals','lifting','weight']) {
+      for (const tab of ['cardio','intervals','lifting','weight','nutrition']) {
         if (!isFuture && TrackCore.dayHasContent(tab, store[tab][fmtKey(d)])) {
           const dot = document.createElement('div');
           dot.className = `week-cell-dot ${tab}`;
@@ -2821,7 +3121,9 @@
 
   // Modality cards: short-tap = handleShortTap (mark done for cardio/intervals
   // empty, open editor for others). Long-press = navigate to that tab.
-  for (const tab of ['cardio','intervals','lifting','weight']) {
+  // Nutrition is special-cased: short-tap navigates to the Nutrition tab so
+  // the chat input is the primary entry path.
+  for (const tab of ['cardio','intervals','lifting','weight','nutrition']) {
     const card = document.getElementById('todayCard' + tab.charAt(0).toUpperCase() + tab.slice(1));
     if (!card) continue;
     let pressTimer = null, longFired = false, pointerDown = false;
@@ -2837,7 +3139,8 @@
       if (!pointerDown) return;
       pointerDown = false; clearTimeout(pressTimer);
       if (longFired) return;
-      handleShortTap(tab, fmtKey(today));
+      if (tab === 'nutrition') setTab('nutrition');
+      else handleShortTap(tab, fmtKey(today));
     };
     const abort = () => { pointerDown = false; clearTimeout(pressTimer); };
     card.addEventListener('touchstart', begin, { passive: true });
@@ -3393,6 +3696,345 @@
 
     renderHeroAugment('intervals', { streakMode: 'weekly', deltaUnit: 'this wk' });
   }
+
+  // ===== NUTRITION TAB =====
+  let nutritionViewKey = fmtKey(today); // which day the user is looking at (default: today)
+
+  function renderNutrition() {
+    const day = store.nutrition[nutritionViewKey] || { entries: [] };
+    const totals = TrackCore.nutritionDayTotals(day);
+
+    document.getElementById('nutritionCalories').textContent = Math.round(totals.calories);
+    document.getElementById('nutritionCalorieTarget').textContent = `/ ${NUTRITION_KCAL_GOAL} kcal`;
+    document.getElementById('nutritionProtein').textContent = Math.round(totals.protein_g);
+    document.getElementById('nutritionCarbs').textContent = Math.round(totals.carbs_g);
+    document.getElementById('nutritionFat').textContent = Math.round(totals.fat_g);
+
+    const pct = Math.min(100, (totals.calories / NUTRITION_KCAL_GOAL) * 100);
+    document.getElementById('nutritionCalorieBar').style.width = pct + '%';
+
+    const proteinPct = Math.min(100, (totals.protein_g / NUTRITION_PROTEIN_GOAL) * 100);
+    let sub;
+    if (totals.calories === 0) sub = 'Talk to log a meal.';
+    else if (totals.protein_g >= NUTRITION_PROTEIN_GOAL) sub = `Protein hit. ${Math.round(NUTRITION_KCAL_GOAL - totals.calories)} kcal to go.`;
+    else sub = `${Math.round(NUTRITION_PROTEIN_GOAL - totals.protein_g)}g protein left, ${Math.round(NUTRITION_KCAL_GOAL - totals.calories)} kcal left.`;
+    document.getElementById('nutritionHeroSub').textContent = sub;
+
+    // Date label
+    const isToday = nutritionViewKey === fmtKey(today);
+    const [y, m, d] = nutritionViewKey.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    document.getElementById('nutritionDateLabel').textContent = isToday
+      ? 'Today'
+      : dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+    // Entries timeline
+    const list = document.getElementById('nutritionEntries');
+    list.innerHTML = '';
+    const entries = (day.entries || []).slice().sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    if (entries.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'nutrition-empty';
+      empty.textContent = isToday ? 'Nothing logged yet today.' : 'Nothing logged this day.';
+      list.appendChild(empty);
+    } else {
+      for (const e of entries) {
+        const row = document.createElement('div');
+        row.className = 'nutrition-entry';
+        if (e._pending) row.classList.add('pending');
+        row.dataset.entryId = e.id;
+
+        const time = document.createElement('div');
+        time.className = 'nutrition-entry-time';
+        time.textContent = e.time || '';
+        row.appendChild(time);
+
+        const body = document.createElement('div');
+        body.className = 'nutrition-entry-body';
+        const name = document.createElement('div');
+        name.className = 'nutrition-entry-name';
+        name.textContent = e.food || '(unnamed)';
+        body.appendChild(name);
+        const meta = document.createElement('div');
+        meta.className = 'nutrition-entry-meta';
+        const m = e.macros || {};
+        const parts = [];
+        if (e.portion) parts.push(e.portion);
+        if (typeof m.protein_g === 'number') parts.push(`${m.protein_g}g P`);
+        if (typeof m.carbs_g === 'number') parts.push(`${m.carbs_g}g C`);
+        if (typeof m.fat_g === 'number') parts.push(`${m.fat_g}g F`);
+        meta.textContent = parts.join(' · ');
+        body.appendChild(meta);
+        row.appendChild(body);
+
+        const cals = document.createElement('div');
+        cals.className = 'nutrition-entry-cals';
+        cals.textContent = typeof m.calories === 'number' ? `${Math.round(m.calories)}` : '-';
+        row.appendChild(cals);
+
+        row.addEventListener('click', () => openNutritionEditor(nutritionViewKey, e.id));
+        list.appendChild(row);
+      }
+    }
+  }
+
+  document.getElementById('nutritionPrevDay').addEventListener('click', () => {
+    const [y, m, d] = nutritionViewKey.split('-').map(Number);
+    const prev = new Date(y, m - 1, d - 1);
+    nutritionViewKey = fmtKey(prev);
+    render(); haptic(5);
+  });
+  document.getElementById('nutritionNextDay').addEventListener('click', () => {
+    const [y, m, d] = nutritionViewKey.split('-').map(Number);
+    const next = new Date(y, m - 1, d + 1);
+    if (next > today) return; // don't go past today
+    nutritionViewKey = fmtKey(next);
+    render(); haptic(5);
+  });
+
+  // Nutrition editor: edit existing entry (entryId) or create new (entryId == null).
+  let nutritionEditingKey = null;
+  let nutritionEditingId = null;
+
+  function openNutritionEditor(key, entryId) {
+    nutritionEditingKey = key;
+    nutritionEditingId = entryId || null;
+    const day = store.nutrition[key] || { entries: [] };
+    const entry = entryId ? (day.entries || []).find(e => e.id === entryId) : null;
+    document.getElementById('nutritionSheetTitle').textContent = entry ? 'Edit entry' : 'New entry';
+    const [y, m, d] = key.split('-').map(Number);
+    document.getElementById('nutritionSheetDate').textContent =
+      new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    document.getElementById('nutritionFoodInput').value = entry?.food || '';
+    document.getElementById('nutritionPortionInput').value = entry?.portion || '';
+    document.getElementById('nutritionCalInput').value = entry?.macros?.calories ?? '';
+    document.getElementById('nutritionPInput').value = entry?.macros?.protein_g ?? '';
+    document.getElementById('nutritionCInput').value = entry?.macros?.carbs_g ?? '';
+    document.getElementById('nutritionFInput').value = entry?.macros?.fat_g ?? '';
+    document.getElementById('nutritionRemoveBtn').hidden = !entry;
+    document.getElementById('backdrop').classList.add('open');
+    document.getElementById('nutritionSheet').classList.add('open');
+  }
+
+  document.getElementById('nutritionSaveBtn').addEventListener('click', () => {
+    if (!nutritionEditingKey) return;
+    const food = document.getElementById('nutritionFoodInput').value.trim();
+    const portion = document.getElementById('nutritionPortionInput').value.trim();
+    const num = (id) => {
+      const v = parseFloat(document.getElementById(id).value);
+      return isFinite(v) ? v : 0;
+    };
+    if (!food) { haptic(20); return; }
+
+    const macros = {
+      calories: num('nutritionCalInput'),
+      protein_g: num('nutritionPInput'),
+      carbs_g: num('nutritionCInput'),
+      fat_g: num('nutritionFInput'),
+    };
+
+    if (!store.nutrition[nutritionEditingKey]) store.nutrition[nutritionEditingKey] = { entries: [] };
+    const day = store.nutrition[nutritionEditingKey];
+    if (nutritionEditingId) {
+      const idx = day.entries.findIndex(e => e.id === nutritionEditingId);
+      if (idx >= 0) day.entries[idx] = { ...day.entries[idx], food, portion, macros };
+    } else {
+      day.entries.push({
+        id: TrackCore.newNutritionEntryId(nutritionEditingKey),
+        time: nowHHMM(),
+        food, portion, macros,
+        confidence: 'estimate',
+        source: 'manual',
+      });
+    }
+    touchMeta('nutrition', nutritionEditingKey);
+    save(); haptic(10);
+    closeAllSheets(); render();
+  });
+
+  document.getElementById('nutritionRemoveBtn').addEventListener('click', () => {
+    if (!nutritionEditingKey || !nutritionEditingId) return;
+    const day = store.nutrition[nutritionEditingKey];
+    if (!day) return;
+    day.entries = (day.entries || []).filter(e => e.id !== nutritionEditingId);
+    if (day.entries.length === 0) {
+      delete store.nutrition[nutritionEditingKey];
+      deleteMeta('nutrition', nutritionEditingKey);
+    } else {
+      touchMeta('nutrition', nutritionEditingKey);
+    }
+    save(); haptic(15);
+    closeAllSheets(); render();
+  });
+  document.getElementById('nutritionCancelBtn').addEventListener('click', closeAllSheets);
+
+  function nowHHMM() {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  // ===== CLAUDE WRAPPER (browser-direct call) =====
+  let anthropicConfig = null;
+  try {
+    const raw = localStorage.getItem(ANTHROPIC_KEY);
+    if (raw) anthropicConfig = JSON.parse(raw);
+  } catch(e) {}
+
+  const NUTRITION_SYSTEM_PROMPT = `You are a nutrition logging assistant for a personal tracker.
+
+Your only job: convert the user's freeform description of food into one or more
+structured entries by calling the log_food tool. Never reply with text. Always
+use the tool.
+
+User profile:
+- Goal: ${NUTRITION_KCAL_GOAL} kcal/day, at least ${NUTRITION_PROTEIN_GOAL}g protein/day
+- Currently 156 lb, target 140 lb at 1 lb/wk
+- Diet: omnivore, no allergies
+
+Rules:
+1. Estimate macros from typical USDA values when no brand is given. Set confidence: "estimate".
+2. When the user names a brand (e.g. "BUILT puff", "NURRI shake"), use labeled values from your knowledge. Set confidence: "labeled".
+3. When the user is vague (e.g. "a sandwich"), pick a sensible default and set confidence: "estimate". Do not ask clarifying questions.
+4. Round calories to nearest 5, protein/carbs/fat to nearest 0.5g.
+5. If the user describes multiple foods, emit one entry per food in a single tool call.
+6. Use HH:MM 24-hour local time for the time field. The current time is provided in the user message.`;
+
+  const LOG_FOOD_TOOL = {
+    name: 'log_food',
+    description: 'Append one or more food entries to the user\'s nutrition log.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        entries: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              time: { type: 'string', description: 'HH:MM 24-hour local time' },
+              food: { type: 'string', description: 'Concise food/dish name' },
+              portion: { type: 'string', description: 'Portion as natural language' },
+              macros: {
+                type: 'object',
+                properties: {
+                  calories: { type: 'number' },
+                  protein_g: { type: 'number' },
+                  carbs_g: { type: 'number' },
+                  fat_g: { type: 'number' },
+                },
+                required: ['calories', 'protein_g', 'carbs_g', 'fat_g'],
+              },
+              confidence: { type: 'string', enum: ['labeled', 'estimate', 'guess'] },
+              source_label: { type: 'string', description: 'Brand or reference, optional' },
+            },
+            required: ['time', 'food', 'portion', 'macros', 'confidence'],
+          },
+        },
+      },
+      required: ['entries'],
+    },
+  };
+
+  async function sendNutritionChat(userInput) {
+    if (!anthropicConfig?.apiKey) {
+      throw new Error('No API key. Set one in Settings → Anthropic API key.');
+    }
+    const todayKey = fmtKey(today);
+    const dayLog = store.nutrition[todayKey] || { entries: [] };
+    const recent = (dayLog.entries || []).slice(-5).map(e => `${e.time} ${e.food}`).join(', ');
+    const footer = `\n\n[Now: ${nowHHMM()}. Already logged today: ${recent || 'nothing'}]`;
+
+    const body = {
+      model: anthropicConfig.model || 'claude-haiku-4-5',
+      max_tokens: 1024,
+      system: [{ type: 'text', text: NUTRITION_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      tools: [LOG_FOOD_TOOL],
+      tool_choice: { type: 'tool', name: 'log_food' },
+      messages: [{ role: 'user', content: userInput + footer }],
+    };
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': anthropicConfig.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const text = await r.text();
+      let msg = `Claude returned ${r.status}.`;
+      if (r.status === 401) msg = 'API key rejected. Check the key in Settings.';
+      else if (r.status === 429) msg = 'Rate limited. Wait a minute and try again.';
+      else if (r.status === 529) msg = 'Anthropic is overloaded. Try again in a bit.';
+      else { try { const j = JSON.parse(text); if (j.error?.message) msg = j.error.message; } catch(_){} }
+      throw new Error(msg);
+    }
+    const json = await r.json();
+    const toolUse = (json.content || []).find(b => b.type === 'tool_use' && b.name === 'log_food');
+    if (!toolUse || !toolUse.input || !Array.isArray(toolUse.input.entries)) {
+      throw new Error('Claude did not return any entries.');
+    }
+    return toolUse.input.entries;
+  }
+
+  const chatInput = document.getElementById('nutritionChatInput');
+  const chatSend = document.getElementById('nutritionChatSend');
+  const chatStatus = document.getElementById('nutritionChatStatus');
+
+  function setChatStatus(text, kind) {
+    if (!text) { chatStatus.hidden = true; chatStatus.textContent = ''; return; }
+    chatStatus.hidden = false;
+    chatStatus.textContent = text;
+    chatStatus.className = 'chat-status ' + (kind || '');
+  }
+
+  async function handleChatSubmit() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    if (!anthropicConfig?.apiKey) {
+      setChatStatus('Set your Anthropic API key in Settings first.', 'err');
+      return;
+    }
+    chatSend.disabled = true;
+    setChatStatus('Logging...', 'ok');
+    try {
+      const entries = await sendNutritionChat(text);
+      const todayKey = fmtKey(today);
+      if (!store.nutrition[todayKey]) store.nutrition[todayKey] = { entries: [] };
+      const day = store.nutrition[todayKey];
+      for (const e of entries) {
+        day.entries.push({
+          id: TrackCore.newNutritionEntryId(todayKey),
+          time: e.time || nowHHMM(),
+          food: e.food, portion: e.portion || '',
+          macros: e.macros || {},
+          confidence: e.confidence || 'estimate',
+          source: anthropicConfig.model || 'claude',
+          source_label: e.source_label,
+          raw_input: text,
+        });
+      }
+      touchMeta('nutrition', todayKey);
+      save(); haptic(20);
+      chatInput.value = '';
+      // Make sure the user sees their newly-logged entries.
+      nutritionViewKey = todayKey;
+      render();
+      setChatStatus(`Logged ${entries.length} item${entries.length === 1 ? '' : 's'}.`, 'ok');
+      setTimeout(() => setChatStatus(''), 2500);
+    } catch (e) {
+      setChatStatus(e.message || 'Something went wrong.', 'err');
+    } finally {
+      chatSend.disabled = false;
+    }
+  }
+
+  chatSend.addEventListener('click', handleChatSubmit);
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); handleChatSubmit(); }
+  });
 
   // ===== INIT =====
   setTab(currentTab);

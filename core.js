@@ -173,7 +173,31 @@
     if (tab === 'lifting') {
       return Array.isArray(entry.tags) && entry.tags.length > 0;
     }
+    if (tab === 'nutrition') {
+      return Array.isArray(entry.entries) && entry.entries.length > 0;
+    }
     return true; // cardio, intervals: presence of the key counts
+  }
+
+  // Sum macros across a single day's nutrition entries. Returns zeros if empty.
+  function nutritionDayTotals(entry) {
+    const out = { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+    if (!entry || !Array.isArray(entry.entries)) return out;
+    for (const e of entry.entries) {
+      const m = e && e.macros;
+      if (!m) continue;
+      if (typeof m.calories === 'number') out.calories += m.calories;
+      if (typeof m.protein_g === 'number') out.protein_g += m.protein_g;
+      if (typeof m.carbs_g === 'number') out.carbs_g += m.carbs_g;
+      if (typeof m.fat_g === 'number') out.fat_g += m.fat_g;
+    }
+    return out;
+  }
+
+  // Generate a stable id for a new nutrition entry: n_<dateKey>_<rand>
+  function newNutritionEntryId(dateKey) {
+    const r = Math.random().toString(36).slice(2, 8);
+    return `n_${dateKey}_${r}`;
   }
 
   // Iterate dates from `today` backwards; useful for streak math.
@@ -359,6 +383,8 @@
     sparklineSeries,
     weightAvg,
     decideTapAction,
+    nutritionDayTotals,
+    newNutritionEntryId,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = TrackCore;
