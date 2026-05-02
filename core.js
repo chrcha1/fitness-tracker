@@ -1,9 +1,9 @@
-// Pure data logic — no DOM, no localStorage, no fetch.
+// Pure data logic. No DOM, no localStorage, no fetch.
 // Importable in Node for tests; exposed on window in the browser.
 (function (root) {
   'use strict';
 
-  const TABS = ['cardio', 'weight', 'lifting', 'intervals'];
+  const TABS = ['cardio', 'weight', 'lifting', 'intervals', 'nutrition'];
 
   function isDateKey(k) {
     if (typeof k !== 'string') return false;
@@ -26,14 +26,14 @@
   }
 
   function sanitizeStore(store) {
-    const out = { cardio: {}, weight: {}, lifting: {}, intervals: {} };
+    const out = { cardio: {}, weight: {}, lifting: {}, intervals: {}, nutrition: {} };
     if (!store || typeof store !== 'object') return out;
     for (const tab of TABS) out[tab] = sanitizeTabMap(store[tab]);
     return out;
   }
 
   function sanitizeMeta(meta) {
-    const out = { cardio: {}, weight: {}, lifting: {}, intervals: {} };
+    const out = { cardio: {}, weight: {}, lifting: {}, intervals: {}, nutrition: {} };
     if (!meta || typeof meta !== 'object') return out;
     for (const tab of TABS) out[tab] = sanitizeTabMap(meta[tab]);
     return out;
@@ -86,7 +86,7 @@
     }
 
     // v1: a bare cardio map. Only treat as such if at least one key looks like
-    // a date — otherwise a pristine seed like {cardio:{},weight:{},…} would be
+    // a date. Otherwise a pristine seed like {cardio:{},weight:{},...} would be
     // mistaken for cardio data and cause the bug we're trying to prevent.
     const looksLikeCardioMap = Object.keys(parsed).some(isDateKey);
     if (looksLikeCardioMap) {
@@ -213,7 +213,7 @@
       let cursor = weekStart(today);
       let shieldsUsed = 0;
       const used = [];
-      // Don't penalize the current incomplete week — start counting at "this week
+      // Don't penalize the current incomplete week. Start counting at "this week
       // OR last week" depending on whether this week has an entry.
       if (!weekHasEntry(cursor)) cursor.setDate(cursor.getDate() - 7);
       while (true) {
@@ -240,7 +240,7 @@
     let windowStartIdx = 0;
     let idx = 0;
     const used = [];
-    // Don't penalize the user for "today not yet logged" — if today is empty,
+    // Don't penalize the user for "today not yet logged". If today is empty,
     // start the chain at yesterday.
     const it = daysBackFrom(today);
     let first = it.next().value;
@@ -318,6 +318,19 @@
     return { values, min, max };
   }
 
+  // Decide what tapping a calendar/today cell should do.
+  // Returns one of: 'mark-empty' (write {mins:null} for today),
+  //                 'open-editor' (open the per-tab editor),
+  // The full handleShortTap branching collapsed to one pure call so it can be tested.
+  function decideTapAction(tab, key, todayKey, hasEntry) {
+    if (tab === 'cardio' || tab === 'intervals') {
+      if (hasEntry) return 'open-editor';
+      if (key === todayKey) return 'mark-empty';
+      return 'open-editor';
+    }
+    return 'open-editor'; // weight, lifting, nutrition all open the editor
+  }
+
   // Average AM/PM for a single weight entry, or null if neither set.
   function weightAvg(entry) {
     if (!entry) return null;
@@ -345,6 +358,7 @@
     trendDelta,
     sparklineSeries,
     weightAvg,
+    decideTapAction,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = TrackCore;

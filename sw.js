@@ -1,4 +1,4 @@
-// Track service worker — caches the app shell so launches work offline.
+// Track service worker. Caches the app shell so launches work offline.
 // Bypasses GitHub API/Gist URLs so sync still hits the network.
 const CACHE = 'track-v2';
 const ASSETS = ['./', 'index.html', 'core.js'];
@@ -18,7 +18,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  // Always bypass for the GitHub API and gist downloads — sync needs fresh data.
+  // Always bypass for the GitHub API and gist downloads. Sync needs fresh data.
   if (url.hostname === 'api.github.com' || url.hostname === 'gist.githubusercontent.com') {
     return;
   }

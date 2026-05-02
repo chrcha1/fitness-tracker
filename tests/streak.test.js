@@ -17,12 +17,12 @@ test('dayHasContent semantics per tab', () => {
   assert.equal(T.dayHasContent('lifting', {}), false);
 });
 
-test('currentStreak (daily) — empty data returns 0', () => {
+test('currentStreak (daily) : empty data returns 0', () => {
   const s = T.currentStreak('cardio', {}, today);
   assert.deepEqual(s, { length: 0, shieldsUsed: [] });
 });
 
-test('currentStreak (daily) — chain ending today', () => {
+test('currentStreak (daily) : chain ending today', () => {
   const map = {
     '2026-04-29': { mins: 50 },
     '2026-04-30': { mins: 50 },
@@ -32,7 +32,7 @@ test('currentStreak (daily) — chain ending today', () => {
   assert.equal(s.length, 3);
 });
 
-test('currentStreak (daily) — today empty doesn\'t penalize, chain continues from yesterday', () => {
+test('currentStreak (daily) : today empty doesn\'t penalize, chain continues from yesterday', () => {
   const map = {
     '2026-04-29': { mins: 50 },
     '2026-04-30': { mins: 50 },
@@ -41,7 +41,7 @@ test('currentStreak (daily) — today empty doesn\'t penalize, chain continues f
   assert.equal(s.length, 2);
 });
 
-test('currentStreak (daily) — gap breaks streak without shield', () => {
+test('currentStreak (daily) : gap breaks streak without shield', () => {
   const map = {
     '2026-04-28': { mins: 50 }, // 4/28
     // 4/29 missing
@@ -52,7 +52,7 @@ test('currentStreak (daily) — gap breaks streak without shield', () => {
   assert.equal(s.length, 2, 'chain breaks at the missed 4/29');
 });
 
-test('currentStreak (daily) — one shield/wk forgives a single missed day', () => {
+test('currentStreak (daily) : one shield/wk forgives a single missed day', () => {
   const map = {
     '2026-04-26': { mins: 50 },
     '2026-04-27': { mins: 50 },
@@ -66,12 +66,12 @@ test('currentStreak (daily) — one shield/wk forgives a single missed day', () 
   assert.deepEqual(s.shieldsUsed, ['2026-04-29']);
 });
 
-test('currentStreak (daily) — shield runs out on second miss in same window', () => {
+test('currentStreak (daily) : shield runs out on second miss in same window', () => {
   const map = {
     '2026-04-26': { mins: 50 },
     // 4/27 missing
     '2026-04-28': { mins: 50 },
-    // 4/29 missing — second miss, no more shields
+    // 4/29 missing : second miss, no more shields
     '2026-04-30': { mins: 50 },
     '2026-05-01': { mins: 50 },
   };
@@ -81,7 +81,7 @@ test('currentStreak (daily) — shield runs out on second miss in same window', 
   assert.deepEqual(s.shieldsUsed, ['2026-04-29']);
 });
 
-test('currentStreak (weekly) — counts consecutive weeks with ≥1 entry', () => {
+test('currentStreak (weekly) : counts consecutive weeks with ≥1 entry', () => {
   // weekly streak for intervals: weeks of 4/26, 4/19, 4/12 all have entries.
   const map = {
     '2026-04-13': { mins: 30 }, // week of 4/12
@@ -92,7 +92,7 @@ test('currentStreak (weekly) — counts consecutive weeks with ≥1 entry', () =
   assert.equal(s.length, 3);
 });
 
-test('currentStreak (weekly) — current empty week does not penalize', () => {
+test('currentStreak (weekly) : current empty week does not penalize', () => {
   // No entry in current week (4/26-5/2), but last week had one.
   const map = {
     '2026-04-22': { mins: 30 }, // week of 4/19
@@ -101,7 +101,7 @@ test('currentStreak (weekly) — current empty week does not penalize', () => {
   assert.equal(s.length, 1);
 });
 
-test('trendDelta — count of days, week-over-week', () => {
+test('trendDelta : count of days, week-over-week', () => {
   const map = {
     // last 7 days (4/25-5/1): 3 entries
     '2026-04-26': { mins: 50 },
@@ -116,7 +116,7 @@ test('trendDelta — count of days, week-over-week', () => {
   assert.equal(t.delta, 2);
 });
 
-test('trendDelta — custom metric (sum of minutes)', () => {
+test('trendDelta : custom metric (sum of minutes)', () => {
   const map = {
     '2026-04-26': { mins: 50 },
     '2026-04-29': { mins: 30 },
@@ -131,7 +131,7 @@ test('trendDelta — custom metric (sum of minutes)', () => {
   assert.equal(t.delta, 95);
 });
 
-test('sparklineSeries — 14-day window, oldest→newest', () => {
+test('sparklineSeries : 14-day window, oldest→newest', () => {
   const map = {
     '2026-05-01': { mins: 50 }, // last
     '2026-04-29': { mins: 50 },
@@ -143,7 +143,7 @@ test('sparklineSeries — 14-day window, oldest→newest', () => {
   assert.equal(s.values[0], 0, '4/18 has no entry');
 });
 
-test('sparklineSeries — custom value extractor (weight avg)', () => {
+test('sparklineSeries : custom value extractor (weight avg)', () => {
   const map = {
     '2026-05-01': { am: null, pm: 157 },
     '2026-04-30': { am: 158, pm: 156 },

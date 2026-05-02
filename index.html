@@ -59,7 +59,7 @@
     --c-intervals-soft: #ede9fe;
     --c-intervals-tint: #faf5ff;
 
-    /* Active accent — set per tab via [data-tab] */
+    /* Active accent: set per tab via [data-tab] */
     --accent: var(--c-cardio);
     --accent-deep: var(--c-cardio-deep);
     --accent-bright: var(--c-cardio-bright);
@@ -104,7 +104,7 @@
     --shadow-accent: 0 4px 14px rgba(147, 51, 234, 0.25);
   }
 
-  /* Dark mode — auto from system. Same hierarchy, dark surfaces, brighter accents. */
+  /* Dark mode: auto from system. Same hierarchy, dark surfaces, brighter accents. */
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0a0a0a;
@@ -833,9 +833,7 @@
   .modality-card[data-modality="lifting"] .ring-check { color: var(--c-lifting-deep); }
   .modality-card[data-modality="weight"] .ring-fg { stroke: var(--c-weight); }
   .modality-card[data-modality="weight"] .ring-check { color: var(--c-weight-deep); }
-  .modality-arrow {
-    flex-shrink: 0; color: var(--ink-4); font-size: 18px;
-  }
+  .modality-card.long-pressing { transform: scale(1.02); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
 
   .today-week-strip {
     margin: 22px 0 18px;
@@ -944,7 +942,7 @@
 <!-- ===== TODAY VIEW ===== -->
 <div class="view active" id="view-today">
   <div class="today-greet">
-    <div class="today-greet-date" id="todayGreetDate">—</div>
+    <div class="today-greet-date" id="todayGreetDate">-</div>
     <div class="today-greet-text" id="todayGreetText">Good morning.</div>
     <div class="today-greet-sub" id="todayGreetSub">Let's see what's up.</div>
   </div>
@@ -961,9 +959,8 @@
     </div>
     <div class="modality-info">
       <div class="modality-name">Zone 2</div>
-      <div class="modality-status" id="todayStatusCardio">—</div>
+      <div class="modality-status" id="todayStatusCardio">-</div>
     </div>
-    <div class="modality-arrow">›</div>
   </div>
 
   <div class="modality-card" data-modality="intervals" id="todayCardIntervals">
@@ -976,9 +973,8 @@
     </div>
     <div class="modality-info">
       <div class="modality-name">Intervals</div>
-      <div class="modality-status" id="todayStatusIntervals">—</div>
+      <div class="modality-status" id="todayStatusIntervals">-</div>
     </div>
-    <div class="modality-arrow">›</div>
   </div>
 
   <div class="modality-card" data-modality="lifting" id="todayCardLifting">
@@ -991,9 +987,8 @@
     </div>
     <div class="modality-info">
       <div class="modality-name">Lifting</div>
-      <div class="modality-status" id="todayStatusLifting">—</div>
+      <div class="modality-status" id="todayStatusLifting">-</div>
     </div>
-    <div class="modality-arrow">›</div>
   </div>
 
   <div class="modality-card" data-modality="weight" id="todayCardWeight">
@@ -1006,9 +1001,8 @@
     </div>
     <div class="modality-info">
       <div class="modality-name">Weight</div>
-      <div class="modality-status" id="todayStatusWeight">—</div>
+      <div class="modality-status" id="todayStatusWeight">-</div>
     </div>
-    <div class="modality-arrow">›</div>
   </div>
 
   <div class="today-week-strip">
@@ -1030,8 +1024,8 @@
     <div class="progress-track"><div class="progress-fill" id="cardioProgress" style="width:0%"></div></div>
     <div class="stats-row">
       <div class="stat"><div class="stat-value" id="cardioRemaining">100</div><div class="stat-label">To go</div></div>
-      <div class="stat"><div class="stat-value" id="cardioDaysLeft">—</div><div class="stat-label">Days left</div></div>
-      <div class="stat"><div class="stat-value" id="cardioPace">—</div><div class="stat-label">Pace/wk</div></div>
+      <div class="stat"><div class="stat-value" id="cardioDaysLeft">-</div><div class="stat-label">Days left</div></div>
+      <div class="stat"><div class="stat-value" id="cardioPace">-</div><div class="stat-label">Pace/wk</div></div>
     </div>
   </section>
 
@@ -1055,14 +1049,14 @@
   <section class="hero">
     <div class="hero-label">Latest weigh-in</div>
     <div class="hero-count">
-      <span class="num" id="weightLatest">—</span>
+      <span class="num" id="weightLatest">-</span>
       <span class="unit">lb</span>
     </div>
     <div class="hero-sub" id="weightSubtitle">No weigh-ins logged yet</div>
     <div class="hero-augment" id="weightAugment"></div>
     <div class="stats-row">
-      <div class="stat"><div class="stat-value" id="weight7d">—</div><div class="stat-label">7-day avg</div></div>
-      <div class="stat"><div class="stat-value" id="weightTrend">—</div><div class="stat-label">7d change</div></div>
+      <div class="stat"><div class="stat-value" id="weight7d">-</div><div class="stat-label">7-day avg</div></div>
+      <div class="stat"><div class="stat-value" id="weightTrend">-</div><div class="stat-label">7d change</div></div>
       <div class="stat"><div class="stat-value" id="weightCount">0</div><div class="stat-label">Logged</div></div>
     </div>
   </section>
@@ -1083,18 +1077,18 @@
     <div class="goal-row">
       <div class="goal-block">
         <div class="goal-label">NEXT GOAL</div>
-        <div class="goal-value" id="weightGoalNext">—</div>
-        <div class="goal-sub" id="weightGoalNextDate">—</div>
+        <div class="goal-value" id="weightGoalNext">-</div>
+        <div class="goal-sub" id="weightGoalNextDate">-</div>
       </div>
       <div class="goal-block">
         <div class="goal-label">VS GOAL</div>
-        <div class="goal-value" id="weightGoalDelta">—</div>
-        <div class="goal-sub" id="weightGoalStatus">—</div>
+        <div class="goal-value" id="weightGoalDelta">-</div>
+        <div class="goal-sub" id="weightGoalStatus">-</div>
       </div>
       <div class="goal-block">
         <div class="goal-label">TARGET</div>
         <div class="goal-value" id="weightGoalTarget">140</div>
-        <div class="goal-sub" id="weightGoalEta">—</div>
+        <div class="goal-sub" id="weightGoalEta">-</div>
       </div>
     </div>
   </div>
@@ -1126,7 +1120,7 @@
     <div class="stats-row">
       <div class="stat"><div class="stat-value" id="liftingWeek">0</div><div class="stat-label">This week</div></div>
       <div class="stat"><div class="stat-value" id="liftingStreak">0</div><div class="stat-label">Streak</div></div>
-      <div class="stat"><div class="stat-value" id="liftingTopTag">—</div><div class="stat-label">Most</div></div>
+      <div class="stat"><div class="stat-value" id="liftingTopTag">-</div><div class="stat-label">Most</div></div>
     </div>
   </section>
 
@@ -1159,7 +1153,7 @@
     <div class="stats-row">
       <div class="stat"><div class="stat-value" id="intervalsTotal">0</div><div class="stat-label">Total</div></div>
       <div class="stat"><div class="stat-value" id="intervalsStreak">0</div><div class="stat-label">Wk streak</div></div>
-      <div class="stat"><div class="stat-value" id="intervalsHitRate">—</div><div class="stat-label">Hit rate</div></div>
+      <div class="stat"><div class="stat-value" id="intervalsHitRate">-</div><div class="stat-label">Hit rate</div></div>
     </div>
   </section>
 
@@ -1216,7 +1210,7 @@
 <!-- Cardio duration sheet -->
 <div class="sheet" id="cardioSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-date" id="cardioSheetDate">—</div>
+  <div class="sheet-date" id="cardioSheetDate">-</div>
   <div class="sheet-title">Zone 2 duration</div>
   <div class="wheel-container">
     <div class="wheel-selection"></div>
@@ -1238,7 +1232,7 @@
 <!-- Weight sheet -->
 <div class="sheet" id="weightSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-date" id="weightSheetDate">—</div>
+  <div class="sheet-date" id="weightSheetDate">-</div>
   <div class="sheet-title">Weigh-in</div>
   <div class="weight-slots">
     <div class="slot" data-slot="am" id="slotAM">
@@ -1263,7 +1257,7 @@
 <!-- Lifting sheet -->
 <div class="sheet" id="liftingSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-date" id="liftingSheetDate">—</div>
+  <div class="sheet-date" id="liftingSheetDate">-</div>
   <div class="sheet-title">What did you lift?</div>
   <div class="chips" id="liftingChips">
     <button class="chip" data-tag="upper">Upper
@@ -1291,7 +1285,7 @@
 <!-- Intervals duration sheet -->
 <div class="sheet" id="intervalsSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-date" id="intervalsSheetDate">—</div>
+  <div class="sheet-date" id="intervalsSheetDate">-</div>
   <div class="sheet-title">Interval session</div>
   <div class="wheel-container">
     <div class="wheel-selection"></div>
@@ -1987,26 +1981,14 @@
   }
 
   function handleShortTap(tab, key) {
-    if (tab === 'cardio' || tab === 'intervals') {
-      // Existing entry → open editor (Save / Remove inside).
-      // Empty + today → quick mark done with no time.
-      // Empty + past day → open editor so the user can pick a duration.
-      if (store[tab][key]) {
-        openEditor(tab, key);
-      } else if (key === fmtKey(today)) {
-        store[tab][key] = { mins: null };
-        touchMeta(tab, key);
-        save(); haptic(10); render();
-        flashCell(key);
-        if (tab === 'cardio') checkZone2Milestone();
-      } else {
-        openEditor(tab, key);
-      }
-    } else if (tab === 'weight') {
-      // Always open editor — no meaningful "just mark"
-      openEditor(tab, key);
-    } else if (tab === 'lifting') {
-      // Always open editor — multi-select
+    const action = TrackCore.decideTapAction(tab, key, fmtKey(today), !!store[tab]?.[key]);
+    if (action === 'mark-empty') {
+      store[tab][key] = { mins: null };
+      touchMeta(tab, key);
+      save(); haptic(10); render();
+      flashCell(key);
+      if (tab === 'cardio') checkZone2Milestone();
+    } else {
       openEditor(tab, key);
     }
   }
@@ -2251,7 +2233,7 @@
     if (commitToSlot && activeSlot) {
       weightDraft[activeSlot] = v;
       paintWeightSlots();
-      // Persist as user scrolls — no separate Save button per slot
+      // Persist as user scrolls. No separate Save button per slot.
       writeWeightDraft();
     }
   }
@@ -2642,7 +2624,7 @@
       }
       syncConfig = { token, gistId };
       try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncConfig)); } catch(e) {}
-      setSyncStatus('Connected — syncing…', 'ok');
+      setSyncStatus('Connected. Syncing...', 'ok');
       updateMenuSync();
       setSyncState('syncing', 'Syncing…');
       await gistPull();
@@ -2682,7 +2664,7 @@
     const dateLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
     document.getElementById('todayGreetDate').textContent = dateLabel.toUpperCase();
     document.getElementById('todayGreetText').textContent = greet;
-    // Cadence-aware encouragement. The user's plan isn't daily-everything —
+    // Cadence-aware encouragement. The user's plan isn't daily-everything.
     // Z2 averages ~3-4/wk, intervals ~1/wk, weight ~daily. Don't imply 4-a-day.
     const todayCount = ['cardio','intervals','lifting','weight'].filter(
       tab => TrackCore.dayHasContent(tab, store[tab][todayKey])
@@ -2704,7 +2686,7 @@
         return { done: true, status: e.mins ? `Done · ${e.mins} min` : 'Marked complete' };
       },
       intervals: () => {
-        // Goal cadence is 1/week — closure tracks the WEEK, not just today.
+        // Goal cadence is 1/week. Closure tracks the WEEK, not just today.
         const todayE = store.intervals[todayKey];
         const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
         let weekCount = 0;
@@ -2716,7 +2698,7 @@
           return { done: true, status: todayE.mins ? `Done today · ${todayE.mins} min` : 'Done today' };
         }
         if (weekCount > 0) {
-          return { done: true, status: `${weekCount} this week — on plan` };
+          return { done: true, status: `${weekCount} this week, on plan` };
         }
         return { done: false, status: 'Goal: 1 session this week' };
       },
@@ -2782,7 +2764,7 @@
       grid.appendChild(cell);
     }
 
-    // Weekly summary card on Sundays (and Mondays — give a 2-day window so it's not missed).
+    // Weekly summary card on Sundays (and Mondays, with a 2-day window so it's not missed).
     const summaryWrap = document.getElementById('todayWeeklySummary');
     if (today.getDay() === 0 || today.getDay() === 1) {
       summaryWrap.hidden = false;
@@ -2837,10 +2819,33 @@
     return n ? sum / n : null;
   }
 
-  // Tap a modality card → jump to that tab.
+  // Modality cards: short-tap = handleShortTap (mark done for cardio/intervals
+  // empty, open editor for others). Long-press = navigate to that tab.
   for (const tab of ['cardio','intervals','lifting','weight']) {
     const card = document.getElementById('todayCard' + tab.charAt(0).toUpperCase() + tab.slice(1));
-    if (card) card.addEventListener('click', () => setTab(tab));
+    if (!card) continue;
+    let pressTimer = null, longFired = false, pointerDown = false;
+    const begin = () => {
+      pointerDown = true; longFired = false;
+      pressTimer = setTimeout(() => {
+        if (!pointerDown) return;
+        longFired = true; haptic(15);
+        setTab(tab);
+      }, LONG_PRESS_MS);
+    };
+    const finish = () => {
+      if (!pointerDown) return;
+      pointerDown = false; clearTimeout(pressTimer);
+      if (longFired) return;
+      handleShortTap(tab, fmtKey(today));
+    };
+    const abort = () => { pointerDown = false; clearTimeout(pressTimer); };
+    card.addEventListener('touchstart', begin, { passive: true });
+    card.addEventListener('touchend', (e) => { e.preventDefault(); finish(); });
+    card.addEventListener('touchcancel', abort);
+    card.addEventListener('mousedown', begin);
+    card.addEventListener('mouseup', finish);
+    card.addEventListener('mouseleave', abort);
   }
 
   // ===== HERO AUGMENT (streak + delta + sparkline) =====
@@ -2923,7 +2928,7 @@
     const remaining = Math.max(0, TARGET - total);
     let pace;
     if (total >= TARGET) pace = '✓';
-    else if (daysLeft === 0) pace = '—';
+    else if (daysLeft === 0) pace = '-';
     else pace = (remaining / daysLeft * 7).toFixed(1);
     document.getElementById('cardioPace').textContent = pace;
 
@@ -2987,7 +2992,7 @@
       .sort((a,b) => a.key.localeCompare(b.key));
 
     const latest = allEntries[allEntries.length - 1];
-    document.getElementById('weightLatest').textContent = latest ? latest.avg.toFixed(1) : '—';
+    document.getElementById('weightLatest').textContent = latest ? latest.avg.toFixed(1) : '-';
     if (latest) {
       const [y,m,d] = latest.key.split('-').map(Number);
       const dateObj = new Date(y, m-1, d);
@@ -3007,7 +3012,7 @@
       const avg = last7.reduce((s,e) => s + e.avg, 0) / last7.length;
       document.getElementById('weight7d').textContent = avg.toFixed(1);
     } else {
-      document.getElementById('weight7d').textContent = '—';
+      document.getElementById('weight7d').textContent = '-';
     }
 
     // 7d trend = latest vs earliest in last 7 logged entries
@@ -3016,7 +3021,7 @@
       const sign = delta > 0 ? '+' : '';
       document.getElementById('weightTrend').textContent = `${sign}${delta.toFixed(1)}`;
     } else {
-      document.getElementById('weightTrend').textContent = '—';
+      document.getElementById('weightTrend').textContent = '-';
     }
 
     // Total logged days
@@ -3061,7 +3066,7 @@
     const nextGoal = TrackCore.weeklyWeightGoal(nextSat, startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
     const fmtMD = (d) => `${d.toLocaleString('en-US', { month: 'short' })} ${d.getDate()}`;
 
-    document.getElementById('weightGoalNext').textContent = nextGoal != null ? `${nextGoal}` : '—';
+    document.getElementById('weightGoalNext').textContent = nextGoal != null ? `${nextGoal}` : '-';
     document.getElementById('weightGoalNextDate').textContent = nextGoal != null
       ? `Sat · ${fmtMD(nextSat)}` : 'plan starts 5/9';
     document.getElementById('weightGoalTarget').textContent = WEIGHT_GOAL_TARGET_LB;
@@ -3078,9 +3083,9 @@
       goalDeltaEl.classList.toggle('miss', delta > 0);
       goalStatusEl.textContent = delta <= 0 ? 'on pace' : 'catch up';
     } else {
-      goalDeltaEl.textContent = '—';
+      goalDeltaEl.textContent = '-';
       goalDeltaEl.classList.remove('win','miss');
-      goalStatusEl.textContent = latest ? '—' : 'log to start';
+      goalStatusEl.textContent = latest ? '-' : 'log to start';
     }
 
     // ETA: number of weeks of plan remaining from now.
@@ -3245,13 +3250,13 @@
     Object.values(store.lifting).forEach(e => {
       (e.tags || []).forEach(t => { tagCount[t] = (tagCount[t]||0) + 1; });
     });
-    let topTag = '—';
+    let topTag = '-';
     let topN = 0;
     for (const [t,n] of Object.entries(tagCount)) {
       if (n > topN) { topN = n; topTag = t; }
     }
     const labelMap = { upper:'Upper', lower:'Lower', core:'Core', pullups:'Pull', stretch:'Strch' };
-    document.getElementById('liftingTopTag').textContent = labelMap[topTag] || '—';
+    document.getElementById('liftingTopTag').textContent = labelMap[topTag] || '-';
 
     // Subtitle
     const sub = document.getElementById('liftingSubtitle');
@@ -3334,7 +3339,7 @@
     let streak = 0;
     let cursor = new Date(thisWeekStart);
     if (!weeksHit.has(fmtKey(cursor))) {
-      // This week not hit yet — start counting from last week
+      // This week not hit yet, start counting from last week
       cursor.setDate(cursor.getDate() - 7);
     }
     while (weeksHit.has(fmtKey(cursor))) {
@@ -3345,7 +3350,7 @@
 
     // Hit rate: % of weeks since first session that had ≥1
     if (allKeys.length === 0) {
-      document.getElementById('intervalsHitRate').textContent = '—';
+      document.getElementById('intervalsHitRate').textContent = '-';
     } else {
       const firstKey = allKeys[0];
       const [fy,fm,fd] = firstKey.split('-').map(Number);
