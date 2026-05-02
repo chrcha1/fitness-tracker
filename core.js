@@ -113,6 +113,17 @@
     return new Date(y, m - 1, d);
   }
 
+  // Compute the "logical today" given a cutoff hour.
+  // If the current local hour is before cutoffHour, return yesterday's date,
+  // so logging at 1 AM goes into the previous calendar day's bucket.
+  // Returns a Date set to local midnight.
+  function logicalToday(now, cutoffHour) {
+    if (cutoffHour == null) cutoffHour = 0;
+    const out = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (now.getHours() < cutoffHour) out.setDate(out.getDate() - 1);
+    return out;
+  }
+
   // Find the next Saturday on or after a given date (local time).
   function nextSaturday(d) {
     const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -373,6 +384,7 @@
     parseGistContent,
     fmtKey,
     parseDate,
+    logicalToday,
     nextSaturday,
     weeklyWeightGoal,
     weightGoalSchedule,

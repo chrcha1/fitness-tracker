@@ -1654,7 +1654,11 @@
     { id: 'stretch', label: 'St' }
   ];
 
-  const today = new Date(); today.setHours(0,0,0,0);
+  // 2 AM day cutoff: a session at 1 AM still belongs to the previous calendar
+  // day. Past 2 AM, the day flips. Computed once at app load; force-quit and
+  // reopen past 2 AM to roll over.
+  const DAY_CUTOFF_HOUR = 2;
+  const today = TrackCore.logicalToday(new Date(), DAY_CUTOFF_HOUR);
 
   // ===== HELPERS =====
   const fmtKey = (d) => {

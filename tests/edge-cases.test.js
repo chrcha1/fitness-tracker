@@ -485,3 +485,68 @@ test('newNutritionEntryId: two consecutive calls produce different ids', () => {
   const b = T.newNutritionEntryId('2026-05-02');
   assert.notEqual(a, b);
 });
+
+// ============================================================
+// logicalToday: 2 AM day cutoff for late-night logging.
+// ============================================================
+
+test('logicalToday: at 1 AM, today is yesterday', () => {
+  const at1am = new Date(2026, 4, 2, 1, 30, 0);
+  const result = T.logicalToday(at1am, 2);
+  assert.equal(T.fmtKey(result), '2026-05-01', '1 AM Saturday should still log to Friday');
+});
+
+test('logicalToday: at 1:59 AM, today is still yesterday', () => {
+  const at = new Date(2026, 4, 2, 1, 59, 59);
+  const result = T.logicalToday(at, 2);
+  assert.equal(T.fmtKey(result), '2026-05-01');
+});
+
+test('logicalToday: at 2:00 AM exactly, today flips', () => {
+  const at2am = new Date(2026, 4, 2, 2, 0, 0);
+  const result = T.logicalToday(at2am, 2);
+  assert.equal(T.fmtKey(result), '2026-05-02', 'cutoff is exclusive at 2 AM');
+});
+
+test('logicalToday: noon is always today regardless of cutoff', () => {
+  const noon = new Date(2026, 4, 2, 12, 0, 0);
+  assert.equal(T.fmtKey(T.logicalToday(noon, 2)), '2026-05-02');
+  assert.equal(T.fmtKey(T.logicalToday(noon, 4)), '2026-05-02');
+});
+
+test('logicalToday: 11 PM is today (well before any reasonable cutoff)', () => {
+  const at = new Date(2026, 4, 2, 23, 0, 0);
+  assert.equal(T.fmtKey(T.logicalToday(at, 2)), '2026-05-02');
+});
+
+test('logicalToday: cutoff=0 (no shift) returns calendar date as-is', () => {
+  const at1am = new Date(2026, 4, 2, 1, 30, 0);
+  assert.equal(T.fmtKey(T.logicalToday(at1am, 0)), '2026-05-02');
+});
+
+test('logicalToday: cutoff=4 (4 AM) keeps anything before 4 AM as yesterday', () => {
+  const at3am = new Date(2026, 4, 2, 3, 0, 0);
+  assert.equal(T.fmtKey(T.logicalToday(at3am, 4)), '2026-05-01');
+  const at4am = new Date(2026, 4, 2, 4, 0, 0);
+  assert.equal(T.fmtKey(T.logicalToday(at4am, 4)), '2026-05-02');
+});
+
+test('logicalToday: cutoff handles month boundary correctly', () => {
+  // 2026-05-01 at 1 AM should yield 2026-04-30.
+  const at1am = new Date(2026, 4, 1, 1, 0, 0);
+  assert.equal(T.fmtKey(T.logicalToday(at1am, 2)), '2026-04-30');
+});
+
+test('logicalToday: cutoff handles year boundary correctly', () => {
+  // 2026-01-01 at 1 AM should yield 2025-12-31.
+  const at1am = new Date(2026, 0, 1, 1, 0, 0);
+  assert.equal(T.fmtKey(T.logicalToday(at1am, 2)), '2025-12-31');
+});
+
+test('logicalToday: returns a Date at local midnight', () => {
+  const at1am = new Date(2026, 4, 2, 1, 30, 45);
+  const result = T.logicalToday(at1am, 2);
+  assert.equal(result.getHours(), 0);
+  assert.equal(result.getMinutes(), 0);
+  assert.equal(result.getSeconds(), 0);
+});
