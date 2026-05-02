@@ -10,6 +10,7 @@
 <link rel="manifest" href='data:application/manifest+json,{"name":"Track","short_name":"Track","start_url":".","display":"standalone","background_color":"%23ffffff","theme_color":"%23ffffff","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22%3E%3Crect fill=%22%230a0a0a%22 width=%22192%22 height=%22192%22 rx=%2244%22/%3E%3Ccircle cx=%2256%22 cy=%2296%22 r=%2214%22 fill=%22%2316a34a%22/%3E%3Ccircle cx=%2296%22 cy=%2296%22 r=%2214%22 fill=%22%232563eb%22/%3E%3Ccircle cx=%22136%22 cy=%2296%22 r=%2214%22 fill=%22%23ea580c%22/%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22%3E%3Crect fill=%22%230a0a0a%22 width=%22192%22 height=%22192%22 rx=%2244%22/%3E%3Ccircle cx=%2256%22 cy=%2296%22 r=%2214%22 fill=%22%2316a34a%22/%3E%3Ccircle cx=%2296%22 cy=%2296%22 r=%2214%22 fill=%22%232563eb%22/%3E%3Ccircle cx=%22136%22 cy=%2296%22 r=%2214%22 fill=%22%23ea580c%22/%3E%3C/svg%3E">
 <title>Track</title>
+<script src="core.js"></script>
 <style>
   :root {
     --bg: #ffffff;
@@ -241,6 +242,85 @@
     border: 1px solid var(--accent-soft); box-shadow: var(--shadow-sm);
   }
   .today-btn svg { width: 16px; height: 16px; }
+
+  /* ===== GOAL + CHART CARDS (weight tab) ===== */
+  .goal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 18px;
+    box-shadow: var(--shadow-sm);
+  }
+  .goal-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .goal-block { text-align: center; padding: 4px 2px; }
+  .goal-block + .goal-block { border-left: 1px solid var(--border); }
+  .goal-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
+  }
+  .goal-value {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .goal-value.win { color: var(--c-cardio-deep); }
+  .goal-value.miss { color: var(--c-lifting-deep); }
+  .goal-sub {
+    font-size: 11px; font-weight: 500; color: var(--ink-3); margin-top: 2px;
+  }
+
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 12px 8px; margin-bottom: 26px;
+    box-shadow: var(--shadow-sm);
+  }
+  .chart-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 4px 8px;
+  }
+  .chart-title {
+    font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: -0.01em;
+  }
+  .chart-legend {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; font-weight: 500; color: var(--ink-3);
+  }
+  .legend-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    margin-right: 4px; vertical-align: middle;
+  }
+  .legend-actual { background: var(--c-weight); }
+  .legend-goal {
+    background: transparent;
+    border: 2px dashed var(--c-lifting); width: 12px; height: 0; border-radius: 0;
+    border-top: 2px dashed var(--c-lifting); border-left: none; border-right: none; border-bottom: none;
+    margin-top: 6px;
+  }
+  .chart-wrap { width: 100%; height: 200px; }
+  .chart-wrap svg { width: 100%; height: 100%; display: block; }
+
+  /* ===== MILESTONE CELEBRATION ===== */
+  .celebrate-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.7), transparent 60%);
+    opacity: 0; transition: opacity 300ms ease;
+  }
+  .celebrate-overlay.show { opacity: 1; pointer-events: auto; }
+  .celebrate-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 28px 32px; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    transform: scale(0.85); transition: transform 400ms cubic-bezier(.2,1.4,.4,1);
+  }
+  .celebrate-overlay.show .celebrate-card { transform: scale(1); }
+  .celebrate-emoji { font-size: 56px; margin-bottom: 8px; }
+  .celebrate-title {
+    font-size: 22px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.02em; margin-bottom: 4px;
+  }
+  .celebrate-sub { font-size: 14px; color: var(--ink-3); }
+  .confetti {
+    position: absolute; width: 8px; height: 14px; border-radius: 2px;
+    pointer-events: none; will-change: transform;
+  }
 
   /* ===== MONTHS ===== */
   .month-block { margin-bottom: 28px; }
@@ -629,7 +709,7 @@
 
 <header class="topbar">
   <div class="topbar-title" id="appTitle">
-    <span class="title-dot"></span><span id="appTitleText">Cardio</span>
+    <span class="title-dot"></span><span id="appTitleText">Zone 2</span>
   </div>
   <div style="display:flex; gap:8px; align-items:center;">
     <div class="sync-pill" id="syncPill" hidden>
@@ -704,6 +784,37 @@
     </button>
   </div>
 
+  <div class="goal-card" id="weightGoalCard">
+    <div class="goal-row">
+      <div class="goal-block">
+        <div class="goal-label">NEXT GOAL</div>
+        <div class="goal-value" id="weightGoalNext">—</div>
+        <div class="goal-sub" id="weightGoalNextDate">—</div>
+      </div>
+      <div class="goal-block">
+        <div class="goal-label">VS GOAL</div>
+        <div class="goal-value" id="weightGoalDelta">—</div>
+        <div class="goal-sub" id="weightGoalStatus">—</div>
+      </div>
+      <div class="goal-block">
+        <div class="goal-label">TARGET</div>
+        <div class="goal-value" id="weightGoalTarget">140</div>
+        <div class="goal-sub" id="weightGoalEta">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">Trajectory</span>
+      <span class="chart-legend">
+        <span class="legend-dot legend-actual"></span>You
+        <span class="legend-dot legend-goal"></span>Goal
+      </span>
+    </div>
+    <div class="chart-wrap"><svg id="weightChart" viewBox="0 0 600 220" preserveAspectRatio="none"></svg></div>
+  </div>
+
   <main id="weightMonths"></main>
 </div>
 
@@ -774,29 +885,38 @@
 <nav class="tabbar">
   <button class="tab" data-tab="cardio" data-active="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    <span class="tab-label">Cardio</span>
-  </button>
-  <button class="tab" data-tab="weight" data-active="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-    <span class="tab-label">Weight</span>
-  </button>
-  <button class="tab" data-tab="lifting" data-active="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M2 8h4M2 16h4M18 8h4M18 16h4M6 12h12"/></svg>
-    <span class="tab-label">Lifting</span>
+    <span class="tab-label">Zone 2</span>
   </button>
   <button class="tab" data-tab="intervals" data-active="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 12 7 12 10 4 14 20 17 12 21 12"/></svg>
     <span class="tab-label">Intervals</span>
   </button>
+  <button class="tab" data-tab="lifting" data-active="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M2 8h4M2 16h4M18 8h4M18 16h4M6 12h12"/></svg>
+    <span class="tab-label">Lifting</span>
+  </button>
+  <button class="tab" data-tab="weight" data-active="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span class="tab-label">Weight</span>
+  </button>
 </nav>
 
 <div class="sheet-backdrop" id="backdrop"></div>
+
+<!-- Milestone celebration overlay -->
+<div class="celebrate-overlay" id="celebrateOverlay">
+  <div class="celebrate-card">
+    <div class="celebrate-emoji" id="celebrateEmoji">🎉</div>
+    <div class="celebrate-title" id="celebrateTitle">Milestone</div>
+    <div class="celebrate-sub" id="celebrateSub">Keep going.</div>
+  </div>
+</div>
 
 <!-- Cardio duration sheet -->
 <div class="sheet" id="cardioSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-date" id="cardioSheetDate">—</div>
-  <div class="sheet-title">Workout duration</div>
+  <div class="sheet-title">Zone 2 duration</div>
   <div class="wheel-container">
     <div class="wheel-selection"></div>
     <div class="wheel" id="cardioWheel"></div>
@@ -908,7 +1028,7 @@
     <strong>Tap</strong> a day to toggle / edit · <strong>Long-press</strong> for the editor
   </div>
 
-  <div class="menu-section-title">Cardio</div>
+  <div class="menu-section-title">Zone 2</div>
   <div class="menu-row">
     <span class="menu-row-label">Goal</span>
     <span class="menu-row-value">100 sessions</span>
@@ -937,7 +1057,7 @@
 <!-- Deadline editor -->
 <div class="sheet" id="deadlineSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">Set cardio deadline</div>
+  <div class="sheet-title">Set Zone 2 deadline</div>
   <div class="deadline-input-wrap">
     <input type="date" id="deadlineInput" class="deadline-input">
   </div>
@@ -988,6 +1108,11 @@
   const TAB_KEY = 'track-tab-v1';
   const TARGET = 100;
   const LONG_PRESS_MS = 450;
+
+  // Weight goal trajectory: -1 lb every Saturday from 2026-05-09 (156) → 140.
+  const WEIGHT_GOAL_START_KEY = '2026-05-09';
+  const WEIGHT_GOAL_START_LB = 156;
+  const WEIGHT_GOAL_TARGET_LB = 140;
   const TAGS = [
     { id: 'upper', label: 'Up' },
     { id: 'lower', label: 'Lo' },
@@ -1010,6 +1135,75 @@
   const weekdayShort = ['S','M','T','W','T','F','S'];
   const haptic = (ms = 10) => { try { navigator.vibrate?.(ms); } catch(e) {} };
 
+  // ===== MILESTONE CELEBRATION =====
+  const ZONE2_MILESTONES = [10, 25, 50, 75, 100];
+  const CELEBRATED_KEY = 'track-celebrated-v1';
+  let celebrated;
+  try { celebrated = JSON.parse(localStorage.getItem(CELEBRATED_KEY) || '{}'); } catch(e) { celebrated = {}; }
+  function markCelebrated(token) {
+    celebrated[token] = 1;
+    try { localStorage.setItem(CELEBRATED_KEY, JSON.stringify(celebrated)); } catch(e) {}
+  }
+  function celebrate(emoji, title, sub) {
+    const overlay = document.getElementById('celebrateOverlay');
+    document.getElementById('celebrateEmoji').textContent = emoji;
+    document.getElementById('celebrateTitle').textContent = title;
+    document.getElementById('celebrateSub').textContent = sub;
+    overlay.classList.add('show');
+    haptic(40);
+    // Confetti.
+    const colors = ['#16a34a','#2563eb','#ea580c','#9333ea','#f59e0b'];
+    const burst = 22;
+    for (let i = 0; i < burst; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.background = colors[i % colors.length];
+      c.style.left = (50 + (Math.random() - 0.5) * 12) + '%';
+      c.style.top = '50%';
+      const dx = (Math.random() - 0.5) * 600;
+      const dy = -300 - Math.random() * 200;
+      const rot = (Math.random() - 0.5) * 720;
+      c.animate(
+        [
+          { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`, opacity: 0 },
+        ],
+        { duration: 1400 + Math.random() * 400, easing: 'cubic-bezier(.2,.7,.4,1)' }
+      );
+      overlay.appendChild(c);
+      setTimeout(() => c.remove(), 1900);
+    }
+    setTimeout(() => overlay.classList.remove('show'), 2200);
+    overlay.onclick = () => overlay.classList.remove('show');
+  }
+  function checkZone2Milestone() {
+    const n = TrackCore.countSessions(store.cardio);
+    for (const m of ZONE2_MILESTONES) {
+      const token = `z2-${m}`;
+      if (n >= m && !celebrated[token]) {
+        markCelebrated(token);
+        const sub = m === 100 ? 'You hit 100. Goal complete.' : `${100 - m} more to 100.`;
+        celebrate(m === 100 ? '🏆' : '🔥', `${m} Zone 2 sessions!`, sub);
+        break;
+      }
+    }
+  }
+  function checkWeightGoalHit(latest) {
+    if (!latest) return;
+    const startSat = TrackCore.parseDate(WEIGHT_GOAL_START_KEY);
+    const goalToday = TrackCore.weeklyWeightGoal(today, startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+    if (goalToday == null) return;
+    if (today.getDay() !== 6) return; // only celebrate on the Saturday checkpoint
+    if (latest.key !== fmtKey(today)) return;
+    if (latest.avg > goalToday) return;
+    const token = `wt-${fmtKey(today)}`;
+    if (celebrated[token]) return;
+    markCelebrated(token);
+    const remaining = goalToday - WEIGHT_GOAL_TARGET_LB;
+    const sub = remaining <= 0 ? 'Target reached!' : `${remaining} lb to ${WEIGHT_GOAL_TARGET_LB}.`;
+    celebrate('⚖️', `Goal: ${goalToday} lb hit`, sub);
+  }
+
   // ===== DATA =====
   // Three independent dicts inside one root
   // cardio: { "YYYY-MM-DD": { mins: number|null } }
@@ -1018,26 +1212,20 @@
   // intervals: { "YYYY-MM-DD": { mins: number|null } }
   let store = { cardio: {}, weight: {}, lifting: {}, intervals: {} };
   let meta = { cardio: {}, weight: {}, lifting: {}, intervals: {} };
+  // True if loading detected & repaired the phantom-tab-key bug. Triggers a
+  // gist push after sync is initialized so every device sees the cleaned data.
+  let needsRepairPush = false;
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      store.cardio = parsed.cardio || {};
-      store.weight = parsed.weight || {};
-      store.lifting = parsed.lifting || {};
-      store.intervals = parsed.intervals || {};
+    const rawStore = localStorage.getItem(STORAGE_KEY);
+    const rawMeta = localStorage.getItem(META_KEY);
+    const parsedStore = rawStore ? JSON.parse(rawStore) : null;
+    const parsedMeta = rawMeta ? JSON.parse(rawMeta) : null;
+    if (parsedStore || parsedMeta) {
+      needsRepairPush = TrackCore.needsRepair(parsedStore, parsedMeta);
     }
-  } catch(e) {}
-  try {
-    const raw = localStorage.getItem(META_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      meta.cardio = parsed.cardio || {};
-      meta.weight = parsed.weight || {};
-      meta.lifting = parsed.lifting || {};
-      meta.intervals = parsed.intervals || {};
-    }
+    if (parsedStore) store = TrackCore.sanitizeStore(parsedStore);
+    if (parsedMeta) meta = TrackCore.sanitizeMeta(parsedMeta);
   } catch(e) {}
 
   // Migrate from v2 (cardio-only)
@@ -1113,6 +1301,10 @@
     } catch(e) {}
   };
 
+  // Persist the sanitized shape immediately so a future load (without core.js)
+  // never sees the corrupted form again.
+  if (needsRepairPush) saveLocal();
+
   // ===== SYNC =====
   let syncConfig = null;
   try {
@@ -1139,45 +1331,9 @@
     if (!r.ok) throw new Error(`GitHub returned ${r.status}`);
     const gist = await r.json();
     const file = gist.files['track.json'] || gist.files['zone2.json'];
-    if (!file) return { store: {cardio:{},weight:{},lifting:{}}, meta: {cardio:{},weight:{},lifting:{}}, deadline: null };
-    let content = file.truncated ? await (await fetch(file.raw_url)).text() : file.content;
-    try {
-      const parsed = JSON.parse(content);
-      // New shape: { store: {...}, meta: {...}, deadline: "..." }
-      if (parsed.store) {
-        return {
-          store: {
-            cardio: parsed.store.cardio || {},
-            weight: parsed.store.weight || {},
-            lifting: parsed.store.lifting || {},
-            intervals: parsed.store.intervals || {}
-          },
-          meta: {
-            cardio: parsed.meta?.cardio || {},
-            weight: parsed.meta?.weight || {},
-            lifting: parsed.meta?.lifting || {},
-            intervals: parsed.meta?.intervals || {}
-          },
-          deadline: parsed.deadline || null
-        };
-      }
-      // Legacy shape from v2: { data: {...cardio}, meta: {...}, deadline: "..." }
-      if (parsed.data) {
-        return {
-          store: { cardio: parsed.data, weight: {}, lifting: {}, intervals: {} },
-          meta: { cardio: parsed.meta || {}, weight: {}, lifting: {}, intervals: {} },
-          deadline: parsed.deadline || null
-        };
-      }
-      // Older still: just the cardio map
-      return {
-        store: { cardio: parsed, weight: {}, lifting: {}, intervals: {} },
-        meta: { cardio: {}, weight: {}, lifting: {}, intervals: {} },
-        deadline: null
-      };
-    } catch (e) {
-      return { store: {cardio:{},weight:{},lifting:{},intervals:{}}, meta: {cardio:{},weight:{},lifting:{},intervals:{}}, deadline: null };
-    }
+    if (!file) return TrackCore.parseGistContent(null);
+    const content = file.truncated ? await (await fetch(file.raw_url)).text() : file.content;
+    return TrackCore.parseGistContent(content);
   }
 
   async function gistPush() {
@@ -1215,6 +1371,9 @@
     clearTimeout(pushTimer);
     pushTimer = setTimeout(gistPush, 600);
   }
+
+  // If load-time sanitize cleaned up corrupted state, push the fix to the gist.
+  if (needsRepairPush) schedulePush();
 
   function mergeOneTab(tab, remoteStore, remoteMeta) {
     let changed = false;
@@ -1292,7 +1451,7 @@
     document.querySelectorAll('.view').forEach(v => {
       v.classList.toggle('active', v.id === `view-${tab}`);
     });
-    const titles = { cardio: 'Cardio', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals' };
+    const titles = { cardio: 'Zone 2', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals' };
     document.getElementById('appTitleText').textContent = titles[tab];
     haptic(5);
     // Render the new tab, then scroll so the current month is just below the today card
@@ -1516,6 +1675,7 @@
         touchMeta(tab, key);
         save(); haptic(10); render();
         flashCell(key);
+        if (tab === 'cardio') checkZone2Milestone();
       }
     } else if (tab === 'weight') {
       // Always open editor — no meaningful "just mark"
@@ -1626,7 +1786,7 @@
     save(); haptic(10);
     const k = currentEditKey;
     closeAllSheets(); render();
-    if (wasNew) flashCell(k);
+    if (wasNew) { flashCell(k); checkZone2Milestone(); }
   });
   document.getElementById('cardioCancelBtn').addEventListener('click', closeAllSheets);
 
@@ -1824,6 +1984,11 @@
     save();
     // Re-render the calendar in the background so the day cell updates
     if (currentTab === 'weight') render();
+    // Celebrate if the latest weigh-in lands on or below today's Saturday goal.
+    if (currentEditKey === fmtKey(today) && hasAny) {
+      const series = TrackCore.weightSeries(store.weight);
+      checkWeightGoalHit(series[series.length - 1]);
+    }
   }
 
   function selectWeightSlot(slot) {
@@ -2294,6 +2459,153 @@
     } else {
       todayCard.classList.remove('completed');
       todayText.textContent = 'Log a weigh-in';
+    }
+
+    renderWeightGoalCard(latest);
+    renderWeightChart(allEntries);
+  }
+
+  // ----- WEIGHT GOAL + CHART -----
+  function weightGoalStartDate() { return TrackCore.parseDate(WEIGHT_GOAL_START_KEY); }
+
+  function renderWeightGoalCard(latest) {
+    const startSat = weightGoalStartDate();
+    const goalToday = TrackCore.weeklyWeightGoal(today, startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+    // Find next upcoming Saturday checkpoint.
+    let nextSat = TrackCore.nextSaturday(today);
+    if (nextSat < startSat) nextSat = startSat;
+    const nextGoal = TrackCore.weeklyWeightGoal(nextSat, startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+    const fmtMD = (d) => `${d.toLocaleString('en-US', { month: 'short' })} ${d.getDate()}`;
+
+    document.getElementById('weightGoalNext').textContent = nextGoal != null ? `${nextGoal}` : '—';
+    document.getElementById('weightGoalNextDate').textContent = nextGoal != null
+      ? `Sat · ${fmtMD(nextSat)}` : 'plan starts 5/9';
+    document.getElementById('weightGoalTarget').textContent = WEIGHT_GOAL_TARGET_LB;
+
+    // Delta vs the goal that applies right now (or the upcoming one if before plan start).
+    const goalRef = goalToday != null ? goalToday : nextGoal;
+    const goalDeltaEl = document.getElementById('weightGoalDelta');
+    const goalStatusEl = document.getElementById('weightGoalStatus');
+    if (latest && goalRef != null) {
+      const delta = latest.avg - goalRef;
+      const sign = delta > 0 ? '+' : '';
+      goalDeltaEl.textContent = `${sign}${delta.toFixed(1)}`;
+      goalDeltaEl.classList.toggle('win', delta <= 0);
+      goalDeltaEl.classList.toggle('miss', delta > 0);
+      goalStatusEl.textContent = delta <= 0 ? 'on pace' : 'catch up';
+    } else {
+      goalDeltaEl.textContent = '—';
+      goalDeltaEl.classList.remove('win','miss');
+      goalStatusEl.textContent = latest ? '—' : 'log to start';
+    }
+
+    // ETA: number of weeks of plan remaining from now.
+    const schedule = TrackCore.weightGoalSchedule(startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+    const last = schedule[schedule.length - 1];
+    document.getElementById('weightGoalEta').textContent = `by ${fmtMD(last.date)}`;
+  }
+
+  function renderWeightChart(entries) {
+    const svg = document.getElementById('weightChart');
+    if (!svg) return;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    const W = 600, H = 220;
+    const padL = 36, padR = 12, padT = 12, padB = 26;
+    const innerW = W - padL - padR, innerH = H - padT - padB;
+
+    const startSat = weightGoalStartDate();
+    const schedule = TrackCore.weightGoalSchedule(startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+
+    // X domain: from earliest of (first weight entry, plan start) to plan end.
+    const xMinDate = entries.length
+      ? new Date(Math.min(entries[0].date.getTime(), startSat.getTime() - 7 * 86400000))
+      : new Date(startSat.getTime() - 7 * 86400000);
+    const xMaxDate = schedule[schedule.length - 1].date;
+    const xRange = Math.max(1, xMaxDate - xMinDate);
+    const xOf = (d) => padL + ((d - xMinDate) / xRange) * innerW;
+
+    // Y domain: pad around min/max of {actuals, plan goals}, clamp to nice range.
+    const allWeights = entries.map(e => e.avg).concat(schedule.map(s => s.weight));
+    const yMin = Math.floor(Math.min(...allWeights, WEIGHT_GOAL_TARGET_LB) - 1);
+    const yMax = Math.ceil(Math.max(...allWeights, WEIGHT_GOAL_START_LB + 1) + 1);
+    const yRange = Math.max(1, yMax - yMin);
+    const yOf = (w) => padT + (1 - (w - yMin) / yRange) * innerH;
+
+    const NS = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs) => {
+      const n = document.createElementNS(NS, tag);
+      for (const k in attrs) n.setAttribute(k, attrs[k]);
+      return n;
+    };
+
+    // Y gridlines + labels at integer steps.
+    const stepY = yRange <= 8 ? 1 : Math.ceil(yRange / 6);
+    for (let w = yMin; w <= yMax; w += stepY) {
+      const y = yOf(w);
+      svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: y, y2: y, stroke: '#f0f0f0', 'stroke-width': 1 }));
+      const t = el('text', { x: padL - 6, y: y + 3, 'text-anchor': 'end', 'font-size': 10, fill: '#a3a3a3' });
+      t.textContent = w;
+      svg.appendChild(t);
+    }
+
+    // Target horizontal line (140).
+    const yTarget = yOf(WEIGHT_GOAL_TARGET_LB);
+    svg.appendChild(el('line', {
+      x1: padL, x2: W - padR, y1: yTarget, y2: yTarget,
+      stroke: '#16a34a', 'stroke-width': 1.5, 'stroke-dasharray': '2 4', opacity: 0.5,
+    }));
+
+    // Goal trajectory (dashed orange).
+    if (schedule.length > 1) {
+      const d = schedule.map((s, i) => `${i === 0 ? 'M' : 'L'}${xOf(s.date).toFixed(1)},${yOf(s.weight).toFixed(1)}`).join(' ');
+      svg.appendChild(el('path', {
+        d, fill: 'none', stroke: '#ea580c', 'stroke-width': 2,
+        'stroke-dasharray': '5 4', 'stroke-linecap': 'round',
+      }));
+    }
+
+    // Actual weight line (solid blue) with dots.
+    if (entries.length) {
+      if (entries.length > 1) {
+        const d = entries.map((e, i) => `${i === 0 ? 'M' : 'L'}${xOf(e.date).toFixed(1)},${yOf(e.avg).toFixed(1)}`).join(' ');
+        svg.appendChild(el('path', {
+          d, fill: 'none', stroke: '#2563eb', 'stroke-width': 2.5,
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+        }));
+      }
+      for (const e of entries) {
+        svg.appendChild(el('circle', {
+          cx: xOf(e.date), cy: yOf(e.avg), r: 3.5,
+          fill: '#fff', stroke: '#2563eb', 'stroke-width': 2,
+        }));
+      }
+    }
+
+    // X axis: month tick labels.
+    const months = new Set();
+    let cursor = new Date(xMinDate.getFullYear(), xMinDate.getMonth(), 1);
+    while (cursor <= xMaxDate) {
+      const key = `${cursor.getFullYear()}-${cursor.getMonth()}`;
+      if (!months.has(key)) {
+        months.add(key);
+        const x = xOf(cursor);
+        if (x >= padL - 1 && x <= W - padR + 1) {
+          const t = el('text', { x, y: H - 8, 'text-anchor': 'middle', 'font-size': 10, fill: '#a3a3a3' });
+          t.textContent = cursor.toLocaleString('en-US', { month: 'short' });
+          svg.appendChild(t);
+        }
+      }
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    // Today marker.
+    const xToday = xOf(today);
+    if (xToday >= padL && xToday <= W - padR) {
+      svg.appendChild(el('line', {
+        x1: xToday, x2: xToday, y1: padT, y2: H - padB,
+        stroke: '#0a0a0a', 'stroke-width': 1, opacity: 0.15,
+      }));
     }
   }
 
