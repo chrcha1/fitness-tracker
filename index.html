@@ -6,11 +6,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Track">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href='data:application/manifest+json,{"name":"Track","short_name":"Track","start_url":".","display":"standalone","background_color":"%23ffffff","theme_color":"%23ffffff","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22%3E%3Crect fill=%22%230a0a0a%22 width=%22192%22 height=%22192%22 rx=%2244%22/%3E%3Ccircle cx=%2256%22 cy=%2296%22 r=%2214%22 fill=%22%2316a34a%22/%3E%3Ccircle cx=%2296%22 cy=%2296%22 r=%2214%22 fill=%22%232563eb%22/%3E%3Ccircle cx=%22136%22 cy=%2296%22 r=%2214%22 fill=%22%23ea580c%22/%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22%3E%3Crect fill=%22%230a0a0a%22 width=%22192%22 height=%22192%22 rx=%2244%22/%3E%3Ccircle cx=%2256%22 cy=%2296%22 r=%2214%22 fill=%22%2316a34a%22/%3E%3Ccircle cx=%2296%22 cy=%2296%22 r=%2214%22 fill=%22%232563eb%22/%3E%3Ccircle cx=%22136%22 cy=%2296%22 r=%2214%22 fill=%22%23ea580c%22/%3E%3C/svg%3E">
 <title>Track</title>
 <script src="core.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
 <style>
   :root {
     --bg: #ffffff;
@@ -94,6 +102,42 @@
     --accent-bright: var(--c-intervals-bright); --accent-soft: var(--c-intervals-soft);
     --accent-tint: var(--c-intervals-tint);
     --shadow-accent: 0 4px 14px rgba(147, 51, 234, 0.25);
+  }
+
+  /* Dark mode — auto from system. Same hierarchy, dark surfaces, brighter accents. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a0a0a;
+      --surface: #161616;
+      --surface-2: #1f1f1f;
+      --border: #2a2a2a;
+      --border-strong: #353535;
+      --ink: #f5f5f5;
+      --ink-2: #c8c8c8;
+      --ink-3: #8e8e8e;
+      --ink-4: #5e5e5e;
+
+      --c-cardio-tint: rgba(34,197,94,0.10);
+      --c-cardio-soft: rgba(34,197,94,0.22);
+      --c-weight-tint: rgba(59,130,246,0.10);
+      --c-weight-soft: rgba(59,130,246,0.22);
+      --c-lifting-tint: rgba(249,115,22,0.10);
+      --c-lifting-soft: rgba(249,115,22,0.22);
+      --c-intervals-tint: rgba(168,85,247,0.10);
+      --c-intervals-soft: rgba(168,85,247,0.22);
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.5);
+    }
+    /* The tabbar uses an explicit white background; override for dark. */
+    .tabbar { background: rgba(20,20,20,0.92) !important; }
+    /* Per-tab summary tint backgrounds need re-tuning for dark. */
+    .summary-card {
+      background: linear-gradient(135deg, rgba(34,197,94,0.10), rgba(59,130,246,0.10)) !important;
+    }
+    /* SVG chart gridlines should be more visible on dark. */
+    .chart-wrap svg line[stroke="#f0f0f0"] { stroke: #2a2a2a !important; }
+    .chart-wrap svg text[fill="#a3a3a3"] { fill: #707070 !important; }
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -735,13 +779,151 @@
   .view { display: none; }
   .view.active { display: block; }
 
+  /* ===== TODAY TAB ===== */
+  .today-greet {
+    margin-bottom: 18px;
+  }
+  .today-greet-date {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
+  }
+  .today-greet-text {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
+    line-height: 1.15;
+  }
+  .today-greet-sub {
+    font-size: 14px; color: var(--ink-3); margin-top: 4px; font-weight: 500;
+  }
+
+  .modality-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 16px;
+    margin-bottom: 12px; box-shadow: var(--shadow-sm);
+    cursor: pointer; transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+  .modality-card:active { transform: scale(0.98); }
+  .modality-ring {
+    flex-shrink: 0; width: 44px; height: 44px; position: relative;
+  }
+  .modality-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .modality-ring .ring-bg { fill: none; stroke: var(--border); stroke-width: 4; }
+  .modality-ring .ring-fg { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 400ms ease; }
+  .modality-ring .ring-check {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--accent-deep); opacity: 0; transition: opacity 200ms ease;
+  }
+  .modality-card.done .ring-check { opacity: 1; }
+  .modality-card.done .ring-fg { stroke-dashoffset: 0 !important; }
+  .modality-info { flex: 1; min-width: 0; }
+  .modality-name {
+    font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em;
+  }
+  .modality-status {
+    font-size: 13px; color: var(--ink-3); margin-top: 2px; font-weight: 500;
+  }
+  .modality-card[data-modality="cardio"] .ring-fg { stroke: var(--c-cardio); }
+  .modality-card[data-modality="cardio"] .ring-check { color: var(--c-cardio-deep); }
+  .modality-card[data-modality="intervals"] .ring-fg { stroke: var(--c-intervals); }
+  .modality-card[data-modality="intervals"] .ring-check { color: var(--c-intervals-deep); }
+  .modality-card[data-modality="lifting"] .ring-fg { stroke: var(--c-lifting); }
+  .modality-card[data-modality="lifting"] .ring-check { color: var(--c-lifting-deep); }
+  .modality-card[data-modality="weight"] .ring-fg { stroke: var(--c-weight); }
+  .modality-card[data-modality="weight"] .ring-check { color: var(--c-weight-deep); }
+  .modality-arrow {
+    flex-shrink: 0; color: var(--ink-4); font-size: 18px;
+  }
+
+  .today-week-strip {
+    margin: 22px 0 18px;
+  }
+  .today-week-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px;
+  }
+  .today-week-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+  }
+  .week-cell {
+    aspect-ratio: 1; border-radius: 12px;
+    background: var(--surface-2); border: 1px solid transparent;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; padding: 4px;
+  }
+  .week-cell.today {
+    border: 1.5px solid var(--ink); background: var(--surface);
+  }
+  .week-cell.future { background: transparent; border: 1px dashed var(--border); }
+  .week-cell-dow {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
+    color: var(--ink-4); text-transform: uppercase;
+  }
+  .week-cell-num {
+    font-size: 14px; font-weight: 700; color: var(--ink-2);
+    line-height: 1; font-feature-settings: "tnum"; margin-top: 2px;
+  }
+  .week-cell.today .week-cell-num { color: var(--ink); }
+  .week-cell-dots {
+    position: absolute; bottom: 5px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 2px;
+  }
+  .week-cell-dot { width: 4px; height: 4px; border-radius: 50%; }
+  .week-cell-dot.cardio { background: var(--c-cardio); }
+  .week-cell-dot.intervals { background: var(--c-intervals); }
+  .week-cell-dot.lifting { background: var(--c-lifting); }
+  .week-cell-dot.weight { background: var(--c-weight); }
+
+  .summary-card {
+    background: linear-gradient(135deg, var(--c-cardio-tint), var(--c-weight-tint));
+    border: 1px solid var(--c-cardio-soft);
+    border-radius: var(--radius-xl); padding: 18px 18px 16px;
+    margin: 18px 0 22px;
+  }
+  .summary-title {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--c-cardio-deep); margin-bottom: 6px;
+  }
+  .summary-headline {
+    font-size: 18px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.01em; line-height: 1.3;
+  }
+  .summary-rows { margin-top: 10px; display: grid; gap: 6px; }
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px;
+  }
+  .summary-row-label { color: var(--ink-2); font-weight: 500; }
+  .summary-row-value {
+    color: var(--ink); font-weight: 700; font-feature-settings: "tnum";
+  }
+  .summary-row-value.up { color: var(--c-cardio-deep); }
+  .summary-row-value.down { color: var(--c-lifting-deep); }
+
+  /* Sparkline + delta on hero numbers */
+  .hero-augment {
+    display: flex; align-items: center; gap: 10px; margin-top: 6px;
+    font-size: 12px; color: var(--ink-3); font-weight: 500;
+  }
+  .hero-augment .delta {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-weight: 600; font-feature-settings: "tnum";
+  }
+  .hero-augment .delta.up { color: var(--c-cardio-deep); }
+  .hero-augment .delta.down { color: var(--c-lifting-deep); }
+  .hero-augment .delta.flat { color: var(--ink-3); }
+  .hero-augment .streak {
+    display: inline-flex; align-items: center; gap: 3px; font-weight: 600;
+    color: var(--ink-2);
+  }
+  .hero-augment svg.sparkline { display: block; height: 22px; width: 80px; }
+
 </style>
 </head>
-<body data-tab="cardio">
+<body data-tab="today">
 
 <header class="topbar">
   <div class="topbar-title" id="appTitle">
-    <span class="title-dot"></span><span id="appTitleText">Zone 2</span>
+    <span class="title-dot"></span><span id="appTitleText">Today</span>
   </div>
   <div style="display:flex; gap:8px; align-items:center;">
     <div class="sync-pill" id="syncPill" hidden>
@@ -756,8 +938,84 @@
   </div>
 </header>
 
+<!-- ===== TODAY VIEW ===== -->
+<div class="view active" id="view-today">
+  <div class="today-greet">
+    <div class="today-greet-date" id="todayGreetDate">—</div>
+    <div class="today-greet-text" id="todayGreetText">Good morning.</div>
+    <div class="today-greet-sub" id="todayGreetSub">Let's see what's up.</div>
+  </div>
+
+  <div id="todayWeeklySummary" hidden></div>
+
+  <div class="modality-card" data-modality="cardio" id="todayCardCardio">
+    <div class="modality-ring">
+      <svg viewBox="0 0 44 44">
+        <circle class="ring-bg" cx="22" cy="22" r="18"/>
+        <circle class="ring-fg" cx="22" cy="22" r="18" stroke-dasharray="113" stroke-dashoffset="113"/>
+      </svg>
+      <div class="ring-check"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="modality-info">
+      <div class="modality-name">Zone 2</div>
+      <div class="modality-status" id="todayStatusCardio">—</div>
+    </div>
+    <div class="modality-arrow">›</div>
+  </div>
+
+  <div class="modality-card" data-modality="intervals" id="todayCardIntervals">
+    <div class="modality-ring">
+      <svg viewBox="0 0 44 44">
+        <circle class="ring-bg" cx="22" cy="22" r="18"/>
+        <circle class="ring-fg" cx="22" cy="22" r="18" stroke-dasharray="113" stroke-dashoffset="113"/>
+      </svg>
+      <div class="ring-check"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="modality-info">
+      <div class="modality-name">Intervals</div>
+      <div class="modality-status" id="todayStatusIntervals">—</div>
+    </div>
+    <div class="modality-arrow">›</div>
+  </div>
+
+  <div class="modality-card" data-modality="lifting" id="todayCardLifting">
+    <div class="modality-ring">
+      <svg viewBox="0 0 44 44">
+        <circle class="ring-bg" cx="22" cy="22" r="18"/>
+        <circle class="ring-fg" cx="22" cy="22" r="18" stroke-dasharray="113" stroke-dashoffset="113"/>
+      </svg>
+      <div class="ring-check"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="modality-info">
+      <div class="modality-name">Lifting</div>
+      <div class="modality-status" id="todayStatusLifting">—</div>
+    </div>
+    <div class="modality-arrow">›</div>
+  </div>
+
+  <div class="modality-card" data-modality="weight" id="todayCardWeight">
+    <div class="modality-ring">
+      <svg viewBox="0 0 44 44">
+        <circle class="ring-bg" cx="22" cy="22" r="18"/>
+        <circle class="ring-fg" cx="22" cy="22" r="18" stroke-dasharray="113" stroke-dashoffset="113"/>
+      </svg>
+      <div class="ring-check"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div class="modality-info">
+      <div class="modality-name">Weight</div>
+      <div class="modality-status" id="todayStatusWeight">—</div>
+    </div>
+    <div class="modality-arrow">›</div>
+  </div>
+
+  <div class="today-week-strip">
+    <div class="today-week-label">This week</div>
+    <div class="today-week-grid" id="todayWeekGrid"></div>
+  </div>
+</div>
+
 <!-- ===== CARDIO VIEW ===== -->
-<div class="view active" id="view-cardio">
+<div class="view" id="view-cardio">
   <section class="hero">
     <div class="hero-label">Progress</div>
     <div class="hero-count">
@@ -765,6 +1023,7 @@
       <span class="target">/ 100 sessions</span>
     </div>
     <div class="hero-sub"><strong id="cardioHours">0h</strong> logged · goal by <strong id="cardioDeadline">Dec 1</strong></div>
+    <div class="hero-augment" id="cardioAugment"></div>
     <div class="progress-track"><div class="progress-fill" id="cardioProgress" style="width:0%"></div></div>
     <div class="stats-row">
       <div class="stat"><div class="stat-value" id="cardioRemaining">100</div><div class="stat-label">To go</div></div>
@@ -797,6 +1056,7 @@
       <span class="unit">lb</span>
     </div>
     <div class="hero-sub" id="weightSubtitle">No weigh-ins logged yet</div>
+    <div class="hero-augment" id="weightAugment"></div>
     <div class="stats-row">
       <div class="stat"><div class="stat-value" id="weight7d">—</div><div class="stat-label">7-day avg</div></div>
       <div class="stat"><div class="stat-value" id="weightTrend">—</div><div class="stat-label">7d change</div></div>
@@ -859,6 +1119,7 @@
       <span class="target">days logged</span>
     </div>
     <div class="hero-sub" id="liftingSubtitle">No sessions yet</div>
+    <div class="hero-augment" id="liftingAugment"></div>
     <div class="stats-row">
       <div class="stat"><div class="stat-value" id="liftingWeek">0</div><div class="stat-label">This week</div></div>
       <div class="stat"><div class="stat-value" id="liftingStreak">0</div><div class="stat-label">Streak</div></div>
@@ -890,6 +1151,7 @@
       <span class="target">/ 1 session</span>
     </div>
     <div class="hero-sub" id="intervalsSubtitle">Get one in this week</div>
+    <div class="hero-augment" id="intervalsAugment"></div>
     <div class="progress-track"><div class="progress-fill" id="intervalsProgress" style="width:0%"></div></div>
     <div class="stats-row">
       <div class="stat"><div class="stat-value" id="intervalsTotal">0</div><div class="stat-label">Total</div></div>
@@ -915,7 +1177,11 @@
 
 <!-- ===== TAB BAR ===== -->
 <nav class="tabbar">
-  <button class="tab" data-tab="cardio" data-active="true">
+  <button class="tab" data-tab="today" data-active="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+    <span class="tab-label">Today</span>
+  </button>
+  <button class="tab" data-tab="cardio" data-active="false">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
     <span class="tab-label">Zone 2</span>
   </button>
@@ -1469,11 +1735,11 @@
   const save = () => { saveLocal(); schedulePush(); };
 
   // ===== TABS =====
-  let currentTab = 'cardio';
-  try { currentTab = localStorage.getItem(TAB_KEY) || 'cardio'; } catch(e) {}
+  let currentTab = 'today';
+  try { currentTab = localStorage.getItem(TAB_KEY) || 'today'; } catch(e) {}
 
   function setTab(tab) {
-    if (!['cardio','weight','lifting','intervals'].includes(tab)) tab = 'cardio';
+    if (!['today','cardio','weight','lifting','intervals'].includes(tab)) tab = 'today';
     currentTab = tab;
     try { localStorage.setItem(TAB_KEY, tab); } catch(e) {}
     document.body.dataset.tab = tab;
@@ -1483,7 +1749,7 @@
     document.querySelectorAll('.view').forEach(v => {
       v.classList.toggle('active', v.id === `view-${tab}`);
     });
-    const titles = { cardio: 'Zone 2', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals' };
+    const titles = { today: 'Today', cardio: 'Zone 2', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals' };
     document.getElementById('appTitleText').textContent = titles[tab];
     haptic(5);
     // Render the new tab, then scroll so the current month is just below the today card
@@ -2369,10 +2635,219 @@
 
   // ===== RENDER =====
   function render() {
-    if (currentTab === 'cardio') renderCardio();
+    if (currentTab === 'today') renderToday();
+    else if (currentTab === 'cardio') renderCardio();
     else if (currentTab === 'weight') renderWeight();
     else if (currentTab === 'lifting') renderLifting();
     else if (currentTab === 'intervals') renderIntervals();
+  }
+
+  // ===== TODAY TAB =====
+  function renderToday() {
+    const todayKey = fmtKey(today);
+
+    // Greeting (time-of-day aware)
+    const hour = new Date().getHours();
+    const greet = hour < 5 ? 'Late night.' : hour < 12 ? 'Good morning.' : hour < 17 ? 'Good afternoon.' : 'Good evening.';
+    const dateLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    document.getElementById('todayGreetDate').textContent = dateLabel.toUpperCase();
+    document.getElementById('todayGreetText').textContent = greet;
+    const completed = ['cardio','intervals','lifting','weight'].filter(
+      tab => TrackCore.dayHasContent(tab, store[tab][todayKey])
+    ).length;
+    const subs = [
+      'Nothing logged yet — pick one to start.',
+      `1 of 4 done. Keep going.`,
+      `2 of 4 down.`,
+      `3 of 4 — one to go.`,
+      `All four. Today is yours.`,
+    ];
+    document.getElementById('todayGreetSub').textContent = subs[completed];
+
+    // Per-modality cards
+    const modalityStatus = {
+      cardio: () => {
+        const e = store.cardio[todayKey];
+        if (!e) return { done: false, status: 'Mark today complete' };
+        return { done: true, status: e.mins ? `Done · ${e.mins} min` : 'Marked complete' };
+      },
+      intervals: () => {
+        const e = store.intervals[todayKey];
+        if (!e) return { done: false, status: 'Tap when you finish a session' };
+        return { done: true, status: e.mins ? `Done · ${e.mins} min` : 'Marked complete' };
+      },
+      lifting: () => {
+        const e = store.lifting[todayKey];
+        if (!e || !e.tags || !e.tags.length) return { done: false, status: 'Log today\'s lift' };
+        const map = { upper:'Upper', lower:'Lower', core:'Core', pullups:'Pullups', stretch:'Stretch' };
+        return { done: true, status: e.tags.map(t => map[t] || t).join(' · ') };
+      },
+      weight: () => {
+        const e = store.weight[todayKey];
+        const avg = TrackCore.weightAvg(e);
+        if (avg == null) return { done: false, status: 'Log a weigh-in' };
+        const goalToday = TrackCore.weeklyWeightGoal(today, TrackCore.parseDate(WEIGHT_GOAL_START_KEY), WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+        const detail = goalToday != null
+          ? `${avg.toFixed(1)} lb · goal ${goalToday}` + (avg <= goalToday ? ' · on pace' : '')
+          : `${avg.toFixed(1)} lb`;
+        return { done: true, status: detail };
+      },
+    };
+    for (const tab of ['cardio','intervals','lifting','weight']) {
+      const card = document.getElementById('todayCard' + tab.charAt(0).toUpperCase() + tab.slice(1));
+      const { done, status } = modalityStatus[tab]();
+      card.classList.toggle('done', done);
+      // Animate ring fill: 0% if not done, 100% if done. Circumference for r=18 is 113.
+      const fg = card.querySelector('.ring-fg');
+      if (fg) fg.setAttribute('stroke-dashoffset', done ? 0 : 113);
+      const statusEl = document.getElementById('todayStatus' + tab.charAt(0).toUpperCase() + tab.slice(1));
+      if (statusEl) statusEl.textContent = status;
+    }
+
+    // 7-day strip ending today (Sun→Sat alignment for current week).
+    const grid = document.getElementById('todayWeekGrid');
+    grid.innerHTML = '';
+    const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+    const dows = ['S','M','T','W','T','F','S'];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
+      const cell = document.createElement('div');
+      cell.className = 'week-cell';
+      const isToday = fmtKey(d) === todayKey;
+      const isFuture = d > today;
+      if (isToday) cell.classList.add('today');
+      if (isFuture) cell.classList.add('future');
+      const dow = document.createElement('div');
+      dow.className = 'week-cell-dow';
+      dow.textContent = dows[i];
+      const num = document.createElement('div');
+      num.className = 'week-cell-num';
+      num.textContent = d.getDate();
+      cell.appendChild(dow);
+      cell.appendChild(num);
+      const dots = document.createElement('div');
+      dots.className = 'week-cell-dots';
+      for (const tab of ['cardio','intervals','lifting','weight']) {
+        if (!isFuture && TrackCore.dayHasContent(tab, store[tab][fmtKey(d)])) {
+          const dot = document.createElement('div');
+          dot.className = `week-cell-dot ${tab}`;
+          dots.appendChild(dot);
+        }
+      }
+      cell.appendChild(dots);
+      grid.appendChild(cell);
+    }
+
+    // Weekly summary card on Sundays (and Mondays — give a 2-day window so it's not missed).
+    const summaryWrap = document.getElementById('todayWeeklySummary');
+    if (today.getDay() === 0 || today.getDay() === 1) {
+      summaryWrap.hidden = false;
+      summaryWrap.innerHTML = buildWeeklySummaryHTML();
+    } else {
+      summaryWrap.hidden = true;
+      summaryWrap.innerHTML = '';
+    }
+  }
+
+  function buildWeeklySummaryHTML() {
+    const tabs = [
+      { id: 'cardio', label: 'Zone 2 sessions' },
+      { id: 'intervals', label: 'Intervals sessions' },
+      { id: 'lifting', label: 'Lifting days' },
+    ];
+    const rows = tabs.map(t => {
+      const d = TrackCore.trendDelta(t.id, store[t.id], today);
+      const arrow = d.delta > 0 ? '▲' : d.delta < 0 ? '▼' : '–';
+      const klass = d.delta > 0 ? 'up' : d.delta < 0 ? 'down' : '';
+      const sign = d.delta > 0 ? '+' : '';
+      return `<div class="summary-row"><span class="summary-row-label">${t.label}</span><span class="summary-row-value ${klass}">${d.current} · ${arrow} ${sign}${d.delta}</span></div>`;
+    }).join('');
+    // Weight: 7-day avg vs prior 7-day avg.
+    const wtNow = weekAvgWeight(0);
+    const wtPrev = weekAvgWeight(7);
+    let wtRow = '';
+    if (wtNow != null && wtPrev != null) {
+      const delta = wtNow - wtPrev;
+      const klass = delta < 0 ? 'up' : delta > 0 ? 'down' : '';
+      const sign = delta > 0 ? '+' : '';
+      wtRow = `<div class="summary-row"><span class="summary-row-label">Avg weight</span><span class="summary-row-value ${klass}">${wtNow.toFixed(1)} · ${sign}${delta.toFixed(1)}</span></div>`;
+    } else if (wtNow != null) {
+      wtRow = `<div class="summary-row"><span class="summary-row-label">Avg weight</span><span class="summary-row-value">${wtNow.toFixed(1)}</span></div>`;
+    }
+    return `
+      <div class="summary-card">
+        <div class="summary-title">Last week</div>
+        <div class="summary-headline">Here's how the past 7 days went.</div>
+        <div class="summary-rows">${rows}${wtRow}</div>
+      </div>
+    `;
+  }
+
+  function weekAvgWeight(offsetDays) {
+    let sum = 0, n = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - offsetDays - i);
+      const avg = TrackCore.weightAvg(store.weight[fmtKey(d)]);
+      if (avg != null) { sum += avg; n++; }
+    }
+    return n ? sum / n : null;
+  }
+
+  // Tap a modality card → jump to that tab.
+  for (const tab of ['cardio','intervals','lifting','weight']) {
+    const card = document.getElementById('todayCard' + tab.charAt(0).toUpperCase() + tab.slice(1));
+    if (card) card.addEventListener('click', () => setTab(tab));
+  }
+
+  // ===== HERO AUGMENT (streak + delta + sparkline) =====
+  function renderHeroAugment(tab, opts) {
+    opts = opts || {};
+    const el = document.getElementById(tab + 'Augment');
+    if (!el) return;
+    const map = store[tab];
+    const streak = TrackCore.currentStreak(tab, map, today, {
+      mode: opts.streakMode || 'daily',
+      shieldsPerWeek: 1,
+    });
+    const delta = TrackCore.trendDelta(tab, map, today, opts.metric ? { metric: opts.metric } : undefined);
+    const spark = TrackCore.sparklineSeries(tab, map, today, {
+      days: 14,
+      value: opts.sparkValue || ((tab, e) => TrackCore.dayHasContent(tab, e) ? 1 : 0),
+    });
+
+    let deltaHtml = '';
+    if (delta.previous !== 0 || delta.current !== 0) {
+      const arrow = delta.delta > 0 ? '▲' : delta.delta < 0 ? '▼' : '–';
+      const klass = delta.delta > 0 ? (opts.lowerIsBetter ? 'down' : 'up')
+                  : delta.delta < 0 ? (opts.lowerIsBetter ? 'up' : 'down')
+                  : 'flat';
+      const sign = delta.delta > 0 ? '+' : '';
+      const fmt = opts.deltaFmt || ((v) => v);
+      deltaHtml = `<span class="delta ${klass}">${arrow} ${sign}${fmt(delta.delta)} ${opts.deltaUnit || ''}</span>`;
+    }
+
+    const streakHtml = streak.length > 0
+      ? `<span class="streak">🔥 ${streak.length}${streak.shieldsUsed.length ? ' 🛡️' : ''}</span>`
+      : '';
+
+    const sparkHtml = renderSparklineSVG(spark.values);
+    el.innerHTML = `${streakHtml}${deltaHtml}${sparkHtml}`;
+  }
+
+  function renderSparklineSVG(values) {
+    if (!values || !values.length) return '';
+    const w = 80, h = 22, pad = 2;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = Math.max(1, max - min);
+    const step = (w - pad * 2) / Math.max(1, values.length - 1);
+    const points = values.map((v, i) => {
+      const x = pad + i * step;
+      const y = pad + (1 - (v - min) / range) * (h - pad * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const path = `M${points.join(' L')}`;
+    return `<svg class="sparkline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/></svg>`;
   }
 
   function renderCardio() {
@@ -2426,6 +2901,8 @@
       btnText.textContent = 'Mark done';
       btnSvg.style.display = 'block';
     }
+
+    renderHeroAugment('cardio', { deltaUnit: 'this wk' });
   }
 
   function renderWeight() {
@@ -2519,6 +2996,13 @@
 
     renderWeightGoalCard(latest);
     renderWeightChart(allEntries);
+    renderHeroAugment('weight', {
+      lowerIsBetter: true,
+      deltaUnit: 'lb',
+      deltaFmt: (v) => v.toFixed(1),
+      metric: (_t, e) => TrackCore.weightAvg(e) || 0,
+      sparkValue: (_t, e) => TrackCore.weightAvg(e) || 0,
+    });
   }
 
   // ----- WEIGHT GOAL + CHART -----
@@ -2746,6 +3230,8 @@
       todayCard.classList.remove('completed');
       todayText.textContent = "Log today's lift";
     }
+
+    renderHeroAugment('lifting', { deltaUnit: 'this wk' });
   }
 
   function renderIntervals() {
@@ -2855,6 +3341,8 @@
       btnText.textContent = 'Mark done';
       btnSvg.style.display = 'block';
     }
+
+    renderHeroAugment('intervals', { streakMode: 'weekly', deltaUnit: 'this wk' });
   }
 
   // ===== INIT =====

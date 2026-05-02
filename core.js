@@ -163,6 +163,168 @@
     return out;
   }
 
+  // Returns true if the user logged anything for the given tab on the given key.
+  // For weight, requires at least one of am/pm to be a number.
+  function dayHasContent(tab, entry) {
+    if (!entry) return false;
+    if (tab === 'weight') {
+      return typeof entry.am === 'number' || typeof entry.pm === 'number';
+    }
+    if (tab === 'lifting') {
+      return Array.isArray(entry.tags) && entry.tags.length > 0;
+    }
+    return true; // cardio, intervals: presence of the key counts
+  }
+
+  // Iterate dates from `today` backwards; useful for streak math.
+  function* daysBackFrom(today) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    while (true) {
+      yield new Date(d);
+      d.setDate(d.getDate() - 1);
+    }
+  }
+
+  // currentStreak: longest run of "complete" days ending at or just before today.
+  // mode: 'daily' = consecutive days; 'weekly' = consecutive weeks (Sun-Sat) with ≥1 entry.
+  // shieldsPerWeek: how many missed days/weeks to forgive per 7-day window (auto-applied).
+  // Returns { length, shieldsUsed: [keys] }.
+  function currentStreak(tab, tabMap, today, opts) {
+    opts = opts || {};
+    const mode = opts.mode || 'daily';
+    const shieldsPerWeek = opts.shieldsPerWeek != null ? opts.shieldsPerWeek : 0;
+    const clean = sanitizeTabMap(tabMap);
+
+    if (mode === 'weekly') {
+      // A "week unit" = the Sunday→Saturday week containing the date.
+      const weekStart = (d) => {
+        const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        out.setDate(out.getDate() - out.getDay());
+        return out;
+      };
+      const weekHasEntry = (sun) => {
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate() + i);
+          if (dayHasContent(tab, clean[fmtKey(d)])) return true;
+        }
+        return false;
+      };
+      let length = 0;
+      let cursor = weekStart(today);
+      let shieldsUsed = 0;
+      const used = [];
+      // Don't penalize the current incomplete week — start counting at "this week
+      // OR last week" depending on whether this week has an entry.
+      if (!weekHasEntry(cursor)) cursor.setDate(cursor.getDate() - 7);
+      while (true) {
+        if (weekHasEntry(cursor)) {
+          length++;
+          cursor.setDate(cursor.getDate() - 7);
+          continue;
+        }
+        if (shieldsUsed < Math.max(0, shieldsPerWeek)) {
+          shieldsUsed++;
+          used.push(fmtKey(cursor));
+          length++;
+          cursor.setDate(cursor.getDate() - 7);
+          continue;
+        }
+        break;
+      }
+      return { length, shieldsUsed: used };
+    }
+
+    // Daily mode.
+    let length = 0;
+    let shieldsUsedThisWindow = 0;
+    let windowStartIdx = 0;
+    let idx = 0;
+    const used = [];
+    // Don't penalize the user for "today not yet logged" — if today is empty,
+    // start the chain at yesterday.
+    const it = daysBackFrom(today);
+    let first = it.next().value;
+    if (!dayHasContent(tab, clean[fmtKey(first)])) {
+      first = it.next().value;
+      idx++;
+      windowStartIdx++;
+    }
+    let cur = first;
+    while (true) {
+      if (dayHasContent(tab, clean[fmtKey(cur)])) {
+        length++;
+      } else {
+        // Reset shield-per-week window if we've moved past 7 days.
+        if (idx - windowStartIdx >= 7) {
+          shieldsUsedThisWindow = 0;
+          windowStartIdx = idx;
+        }
+        if (shieldsUsedThisWindow < Math.max(0, shieldsPerWeek)) {
+          shieldsUsedThisWindow++;
+          used.push(fmtKey(cur));
+          length++;
+        } else {
+          break;
+        }
+      }
+      cur = it.next().value;
+      idx++;
+      if (idx > 730) break; // hard cap, ~2 years
+    }
+    return { length, shieldsUsed: used };
+  }
+
+  // Compare current 7-day window to the previous 7 days.
+  // metricFn(entry) returns a number; defaults to 1 (count of days with content).
+  function trendDelta(tab, tabMap, today, opts) {
+    opts = opts || {};
+    const metric = opts.metric || ((tab, entry) => dayHasContent(tab, entry) ? 1 : 0);
+    const clean = sanitizeTabMap(tabMap);
+    const sumWindow = (offset) => {
+      let s = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - offset - i);
+        s += metric(tab, clean[fmtKey(d)]);
+      }
+      return s;
+    };
+    const current = sumWindow(0);
+    const previous = sumWindow(7);
+    return { current, previous, delta: current - previous };
+  }
+
+  // Daily values for a sparkline. days = window length, default 14.
+  // valueFn(entry) → number; default = 1 if has content, 0 otherwise.
+  // Returns { values: number[], min, max } with values ordered oldest→newest.
+  function sparklineSeries(tab, tabMap, today, opts) {
+    opts = opts || {};
+    const days = opts.days || 14;
+    const valueFn = opts.value || ((tab, entry) => dayHasContent(tab, entry) ? 1 : 0);
+    const clean = sanitizeTabMap(tabMap);
+    const values = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+      values.push(valueFn(tab, clean[fmtKey(d)]));
+    }
+    let min = Infinity, max = -Infinity;
+    for (const v of values) {
+      if (typeof v === 'number') {
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+    }
+    if (!isFinite(min)) min = 0;
+    if (!isFinite(max)) max = 0;
+    return { values, min, max };
+  }
+
+  // Average AM/PM for a single weight entry, or null if neither set.
+  function weightAvg(entry) {
+    if (!entry) return null;
+    const vs = [entry.am, entry.pm].filter((x) => typeof x === 'number');
+    return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
+  }
+
   const TrackCore = {
     TABS,
     isDateKey,
@@ -178,6 +340,11 @@
     weeklyWeightGoal,
     weightGoalSchedule,
     weightSeries,
+    dayHasContent,
+    currentStreak,
+    trendDelta,
+    sparklineSeries,
+    weightAvg,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = TrackCore;
