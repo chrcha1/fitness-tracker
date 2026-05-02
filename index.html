@@ -1,0 +1,2508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Track">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Track","short_name":"Track","start_url":".","display":"standalone","background_color":"%23ffffff","theme_color":"%23ffffff","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22%3E%3Crect fill=%22%230a0a0a%22 width=%22192%22 height=%22192%22 rx=%2244%22/%3E%3Ccircle cx=%2256%22 cy=%2296%22 r=%2214%22 fill=%22%2316a34a%22/%3E%3Ccircle cx=%2296%22 cy=%2296%22 r=%2214%22 fill=%22%232563eb%22/%3E%3Ccircle cx=%22136%22 cy=%2296%22 r=%2214%22 fill=%22%23ea580c%22/%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22%3E%3Crect fill=%22%230a0a0a%22 width=%22192%22 height=%22192%22 rx=%2244%22/%3E%3Ccircle cx=%2256%22 cy=%2296%22 r=%2214%22 fill=%22%2316a34a%22/%3E%3Ccircle cx=%2296%22 cy=%2296%22 r=%2214%22 fill=%22%232563eb%22/%3E%3Ccircle cx=%22136%22 cy=%2296%22 r=%2214%22 fill=%22%23ea580c%22/%3E%3C/svg%3E">
+<title>Track</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #fafaf9;
+    --border: #ececec;
+    --border-strong: #e0e0e0;
+    --ink: #0a0a0a;
+    --ink-2: #404040;
+    --ink-3: #737373;
+    --ink-4: #a3a3a3;
+
+    /* Cardio (green) */
+    --c-cardio: #16a34a;
+    --c-cardio-deep: #15803d;
+    --c-cardio-bright: #22c55e;
+    --c-cardio-soft: #dcfce7;
+    --c-cardio-tint: #f0fdf4;
+
+    /* Weight (blue) */
+    --c-weight: #2563eb;
+    --c-weight-deep: #1d4ed8;
+    --c-weight-bright: #3b82f6;
+    --c-weight-soft: #dbeafe;
+    --c-weight-tint: #eff6ff;
+
+    /* Lifting (orange) */
+    --c-lifting: #ea580c;
+    --c-lifting-deep: #c2410c;
+    --c-lifting-bright: #f97316;
+    --c-lifting-soft: #ffedd5;
+    --c-lifting-tint: #fff7ed;
+
+    /* Intervals (purple) */
+    --c-intervals: #9333ea;
+    --c-intervals-deep: #7e22ce;
+    --c-intervals-bright: #a855f7;
+    --c-intervals-soft: #ede9fe;
+    --c-intervals-tint: #faf5ff;
+
+    /* Active accent — set per tab via [data-tab] */
+    --accent: var(--c-cardio);
+    --accent-deep: var(--c-cardio-deep);
+    --accent-bright: var(--c-cardio-bright);
+    --accent-soft: var(--c-cardio-soft);
+    --accent-tint: var(--c-cardio-tint);
+
+    --radius-md: 14px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-accent: 0 4px 14px rgba(0,0,0,0.15);
+
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+
+    --tabbar-h: 64px;
+  }
+
+  body[data-tab="cardio"] {
+    --accent: var(--c-cardio); --accent-deep: var(--c-cardio-deep);
+    --accent-bright: var(--c-cardio-bright); --accent-soft: var(--c-cardio-soft);
+    --accent-tint: var(--c-cardio-tint);
+    --shadow-accent: 0 4px 14px rgba(22, 163, 74, 0.25);
+  }
+  body[data-tab="weight"] {
+    --accent: var(--c-weight); --accent-deep: var(--c-weight-deep);
+    --accent-bright: var(--c-weight-bright); --accent-soft: var(--c-weight-soft);
+    --accent-tint: var(--c-weight-tint);
+    --shadow-accent: 0 4px 14px rgba(37, 99, 235, 0.25);
+  }
+  body[data-tab="lifting"] {
+    --accent: var(--c-lifting); --accent-deep: var(--c-lifting-deep);
+    --accent-bright: var(--c-lifting-bright); --accent-soft: var(--c-lifting-soft);
+    --accent-tint: var(--c-lifting-tint);
+    --shadow-accent: 0 4px 14px rgba(234, 88, 12, 0.25);
+  }
+  body[data-tab="intervals"] {
+    --accent: var(--c-intervals); --accent-deep: var(--c-intervals-deep);
+    --accent-bright: var(--c-intervals-bright); --accent-soft: var(--c-intervals-soft);
+    --accent-tint: var(--c-intervals-tint);
+    --shadow-accent: 0 4px 14px rgba(147, 51, 234, 0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg); color: var(--ink); font-family: var(--font);
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    min-height: 100vh; min-height: 100dvh;
+    padding: max(env(safe-area-inset-top), 16px) 18px calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 16px) + 16px);
+    display: flex; flex-direction: column;
+    user-select: none; -webkit-user-select: none;
+  }
+
+  /* ===== TOP BAR ===== */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 22px; padding-top: 4px;
+  }
+  .topbar-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); display: flex; align-items: center; gap: 10px; }
+  .title-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent);
+    transition: background 240ms ease;
+    flex-shrink: 0;
+  }
+  .topbar-action {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--surface-2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-2); cursor: pointer; transition: all 150ms ease;
+  }
+  .topbar-action:active { background: var(--border); transform: scale(0.94); }
+  .topbar-action svg { width: 18px; height: 18px; }
+
+  .sync-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 100px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    font-size: 11px; font-weight: 600; color: var(--ink-3);
+  }
+  .sync-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--ink-4); transition: background 200ms ease;
+  }
+  .sync-pill[data-state="ok"] .sync-dot { background: var(--c-cardio); }
+  .sync-pill[data-state="syncing"] .sync-dot { background: #f59e0b; animation: pulse 1s ease-in-out infinite; }
+  .sync-pill[data-state="error"] .sync-dot { background: #dc2626; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  /* ===== HERO CARD ===== */
+  .hero {
+    background: linear-gradient(160deg, #ffffff 0%, var(--accent-tint) 100%);
+    border: 1px solid var(--border); border-radius: var(--radius-xl);
+    padding: 24px 22px 22px; box-shadow: var(--shadow-md);
+    margin-bottom: 22px; position: relative; overflow: hidden;
+    transition: background 320ms ease;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+    pointer-events: none; transition: background 320ms ease;
+  }
+  .hero-label {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent-deep);
+    margin-bottom: 10px; position: relative;
+    transition: color 240ms ease;
+  }
+  .hero-count {
+    display: flex; align-items: baseline; gap: 6px;
+    margin-bottom: 4px; position: relative;
+  }
+  .hero-count .num {
+    font-size: 64px; font-weight: 700; letter-spacing: -0.04em;
+    line-height: 1; color: var(--ink); font-feature-settings: "tnum";
+  }
+  .hero-count .target {
+    font-size: 20px; font-weight: 500; color: var(--ink-3); letter-spacing: -0.02em;
+  }
+  .hero-count .unit {
+    font-size: 22px; font-weight: 500; color: var(--ink-3); margin-left: 4px;
+  }
+  .hero-sub { font-size: 14px; color: var(--ink-3); margin-bottom: 18px; position: relative; min-height: 18px;}
+  .hero-sub strong { color: var(--ink); font-weight: 600; }
+  .progress-track {
+    height: 8px; background: rgba(0,0,0,0.05); border-radius: 100px;
+    overflow: hidden; position: relative; margin-bottom: 16px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent-bright) 100%);
+    border-radius: 100px;
+    transition: width 500ms cubic-bezier(0.4, 0, 0.2, 1), background 320ms ease;
+  }
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; position: relative; }
+  .stat { text-align: center; padding: 0 4px; position: relative; }
+  .stat + .stat::before {
+    content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 1px; background: var(--border-strong);
+  }
+  .stat-value {
+    font-size: 18px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.02em; font-feature-settings: "tnum";
+  }
+  .stat-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-3); margin-top: 2px;
+  }
+
+  /* ===== TODAY CARD ===== */
+  .today-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 26px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; box-shadow: var(--shadow-sm); transition: all 200ms ease;
+  }
+  .today-card.completed { background: var(--accent-tint); border-color: var(--accent-soft); }
+  .today-info { flex: 1; min-width: 0; }
+  .today-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 3px;
+  }
+  .today-card.completed .today-label { color: var(--accent-deep); }
+  .today-text {
+    font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em;
+  }
+  .today-hint {
+    font-size: 11px; color: var(--ink-4); margin-top: 2px; font-weight: 500;
+  }
+  .today-btn {
+    flex-shrink: 0; height: 44px; padding: 0 18px; border-radius: 100px;
+    background: var(--accent); color: white; border: none;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; box-shadow: var(--shadow-accent);
+    transition: all 150ms ease;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .today-btn:active { transform: scale(0.96); }
+  .today-card.completed .today-btn {
+    background: white; color: var(--accent-deep);
+    border: 1px solid var(--accent-soft); box-shadow: var(--shadow-sm);
+  }
+  .today-btn svg { width: 16px; height: 16px; }
+
+  /* ===== MONTHS ===== */
+  .month-block { margin-bottom: 28px; }
+  .month-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 14px; padding: 0 4px;
+  }
+  .month-name {
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
+  }
+  .month-name .year { color: var(--ink-4); font-weight: 500; margin-left: 6px; }
+  .month-stat {
+    font-size: 12px; font-weight: 600; color: var(--ink-3);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .month-stat .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .month-stat.empty .dot { background: var(--ink-4); }
+
+  .weekday-row {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 6px; margin-bottom: 8px; padding: 0 2px;
+  }
+  .weekday-row span {
+    text-align: center; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-4);
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+
+  .day {
+    aspect-ratio: 1; border-radius: 12px;
+    background: var(--surface-2); border: 1px solid transparent;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: inherit; cursor: pointer;
+    transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative; padding: 0; overflow: hidden;
+    touch-action: manipulation;
+  }
+  .day-num {
+    font-size: 14px; font-weight: 600; color: var(--ink-2);
+    line-height: 1; font-feature-settings: "tnum";
+  }
+  .day-mins, .day-sub {
+    font-size: 9px; font-weight: 600; color: var(--ink-3);
+    margin-top: 2px; line-height: 1; font-feature-settings: "tnum";
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .day.empty { background: transparent; pointer-events: none; }
+  .day.future {
+    background: transparent; border: 1px dashed var(--border);
+  }
+  .day.future .day-num { color: var(--ink-4); font-weight: 500; }
+  .day.today {
+    border: 1.5px solid var(--ink); background: var(--surface);
+  }
+  .day.today .day-num { color: var(--ink); font-weight: 700; }
+  .day.done {
+    background: var(--accent); border-color: var(--accent);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .day.done .day-num { color: white; font-weight: 700; }
+  .day.done .day-mins, .day.done .day-sub { color: rgba(255,255,255,0.85); }
+  .day.done.today {
+    border: 1.5px solid var(--accent-deep);
+  }
+  .day:active:not(.future):not(.empty) { transform: scale(0.92); }
+  .day.long-pressing { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.18); z-index: 2; }
+
+  @keyframes pop {
+    0% { transform: scale(0.85); }
+    50% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+  .day.just-done { animation: pop 280ms cubic-bezier(0.4, 0, 0.2, 1); }
+
+  /* ===== TAB BAR ===== */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    display: flex; z-index: 50;
+  }
+  .tab {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; padding: 8px 2px;
+    background: none; border: none; font-family: inherit;
+    color: var(--ink-3); transition: color 200ms ease;
+    position: relative; min-width: 0;
+  }
+  .tab svg { width: 22px; height: 22px; }
+  .tab-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+  .tab[data-active="true"] { color: var(--ink); }
+  .tab[data-active="true"][data-tab="cardio"] { color: var(--c-cardio-deep); }
+  .tab[data-active="true"][data-tab="weight"] { color: var(--c-weight-deep); }
+  .tab[data-active="true"][data-tab="lifting"] { color: var(--c-lifting-deep); }
+  .tab[data-active="true"][data-tab="intervals"] { color: var(--c-intervals-deep); }
+  .tab:active { opacity: 0.7; }
+
+  /* ===== SHEETS ===== */
+  .sheet-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    opacity: 0; pointer-events: none; transition: opacity 250ms ease;
+    z-index: 100; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-radius: 28px 28px 0 0;
+    padding: 12px 22px max(env(safe-area-inset-bottom), 24px);
+    transform: translateY(100%);
+    transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 101; box-shadow: 0 -8px 40px rgba(0,0,0,0.12);
+    max-height: 88vh; overflow-y: auto;
+  }
+  .sheet.open { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 36px; height: 5px; background: var(--border-strong);
+    border-radius: 100px; margin: 0 auto 18px;
+  }
+
+  .sheet-date {
+    font-size: 13px; font-weight: 600; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    text-align: center; margin-bottom: 4px;
+  }
+  .sheet-title {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+    text-align: center; margin-bottom: 18px;
+  }
+
+  /* Wheel picker (cardio + weight) */
+  .wheel-container {
+    position: relative; height: 220px; margin-bottom: 8px; overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+  }
+  .wheel-selection {
+    position: absolute; left: 12px; right: 12px; top: 50%; height: 56px;
+    transform: translateY(-50%);
+    border-top: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border-strong);
+    pointer-events: none; z-index: 1;
+  }
+  .wheel {
+    height: 100%; overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding: 82px 0;
+  }
+  .wheel::-webkit-scrollbar { display: none; }
+  .wheel-item {
+    height: 56px; display: flex; align-items: center; justify-content: center;
+    scroll-snap-align: center;
+    font-size: 28px; font-weight: 600; color: var(--ink-4);
+    font-feature-settings: "tnum"; letter-spacing: -0.02em;
+    transition: color 150ms ease, font-size 150ms ease, font-weight 150ms ease;
+  }
+  .wheel-item.selected {
+    color: var(--ink); font-size: 36px; font-weight: 700;
+  }
+  .wheel-item .unit {
+    font-size: 0.5em; font-weight: 500; color: var(--ink-3); margin-left: 6px;
+  }
+
+  .wheel-quick-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin-bottom: 18px;
+  }
+  .wheel-quick-btn {
+    height: 38px; border-radius: 10px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    color: var(--ink-2); cursor: pointer; transition: all 150ms ease;
+  }
+  .wheel-quick-btn:active { transform: scale(0.96); background: var(--border); }
+  .wheel-quick-btn.active {
+    background: var(--accent); color: white; border-color: var(--accent);
+  }
+
+  /* AM / PM segmented control */
+  .segment {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 4px; margin-bottom: 16px;
+  }
+  .segment-btn {
+    height: 40px; border-radius: 9px; border: none;
+    background: transparent; font-family: inherit;
+    font-size: 14px; font-weight: 600; color: var(--ink-2);
+    cursor: pointer; transition: all 180ms ease;
+  }
+  .segment-btn.active {
+    background: var(--surface); color: var(--ink);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* Lifting tag chips */
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 18px; justify-content: center;
+  }
+  .chip {
+    padding: 10px 16px; border-radius: 100px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    color: var(--ink-2); cursor: pointer;
+    transition: all 150ms ease;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip:active { transform: scale(0.96); }
+  .chip.active {
+    background: var(--accent); color: white; border-color: var(--accent);
+    box-shadow: var(--shadow-accent);
+  }
+  .chip-check {
+    width: 14px; height: 14px; opacity: 0;
+    transition: opacity 150ms ease;
+  }
+  .chip.active .chip-check { opacity: 1; }
+
+  /* Weight slot (AM/PM cards) */
+  .weight-slots {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 18px;
+  }
+  .slot {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px; cursor: pointer;
+    transition: all 150ms ease; position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .slot:active { transform: scale(0.97); }
+  .slot.filled {
+    background: var(--accent-tint); border-color: var(--accent-soft);
+  }
+  .slot.editing {
+    border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .slot-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--ink-3); text-transform: uppercase;
+  }
+  .slot.filled .slot-label, .slot.editing .slot-label { color: var(--accent-deep); }
+  .slot-value {
+    font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--ink); font-feature-settings: "tnum";
+    line-height: 1.1;
+  }
+  .slot-value .small { font-size: 14px; color: var(--ink-3); margin-left: 2px; font-weight: 500; }
+  .slot-empty { color: var(--ink-4); font-style: italic; font-weight: 500; font-size: 16px; }
+  .slot-clear {
+    position: absolute; top: 6px; right: 6px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(0,0,0,0.06); color: var(--ink-2);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; line-height: 1;
+  }
+  .slot-clear:active { background: rgba(0,0,0,0.12); }
+
+  .sheet-actions { display: flex; gap: 10px; }
+  .sheet-btn {
+    flex: 1; height: 52px; border-radius: 14px; border: none;
+    font-family: inherit; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: all 150ms ease; letter-spacing: -0.01em;
+  }
+  .sheet-btn:active { transform: scale(0.97); }
+  .sheet-btn.primary {
+    background: var(--accent); color: white; box-shadow: var(--shadow-accent);
+  }
+  .sheet-btn.danger {
+    background: var(--surface-2); color: #b91c1c;
+    border: 1px solid var(--border);
+  }
+  .sheet-btn.secondary {
+    background: var(--surface-2); color: var(--ink-2);
+    border: 1px solid var(--border);
+  }
+  .sheet-btn.ghost {
+    background: transparent; color: var(--ink-3);
+    border: 1px solid var(--border);
+  }
+
+  /* Confirm sheet */
+  .confirm-content { padding: 4px 0 22px; text-align: center; }
+  .confirm-text {
+    font-size: 16px; color: var(--ink-2); line-height: 1.4; margin-bottom: 6px;
+  }
+  .confirm-text strong { color: var(--ink); font-weight: 600; }
+
+  /* Menu */
+  .menu-row {
+    padding: 16px 0; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+  }
+  .menu-row:last-of-type { border-bottom: none; }
+  .menu-row-label { font-size: 16px; font-weight: 500; color: var(--ink); }
+  .menu-row-value { font-size: 14px; color: var(--ink-3); font-weight: 500; }
+  .menu-row.danger .menu-row-label { color: #b91c1c; }
+  .menu-hint {
+    font-size: 13px; color: var(--ink-3); padding: 12px 0 4px;
+    border-bottom: 1px solid var(--border); line-height: 1.5;
+  }
+  .menu-hint strong { color: var(--ink); font-weight: 600; }
+
+  .menu-section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-3);
+    padding: 16px 0 8px;
+  }
+
+  /* Date input */
+  .deadline-input-wrap { display: flex; justify-content: center; margin-bottom: 22px; }
+  .deadline-input {
+    -webkit-appearance: none; appearance: none;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px;
+    font-family: inherit; font-size: 20px; font-weight: 600;
+    color: var(--ink); width: 100%; max-width: 280px;
+    text-align: center; outline: none; font-feature-settings: "tnum";
+  }
+  .deadline-input:focus { border-color: var(--accent); }
+
+  /* Sync */
+  .sync-help {
+    font-size: 13px; color: var(--ink-3); line-height: 1.5;
+    margin-bottom: 14px; padding: 0 4px;
+  }
+  .sync-help a {
+    color: var(--accent-deep); text-decoration: underline;
+    font-weight: 600; display: inline-block; margin-top: 4px;
+  }
+  .sync-help-detail {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px 12px 28px;
+    font-size: 13px; color: var(--ink-2); line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .sync-help-detail ol { padding-left: 4px; }
+  .sync-help-detail li { margin-bottom: 8px; }
+  .sync-help-detail li:last-child { margin-bottom: 0; }
+  .sync-help-detail code {
+    background: var(--surface); padding: 1px 6px; border-radius: 4px;
+    font-size: 12px; border: 1px solid var(--border);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .field-group { margin-bottom: 12px; }
+  .field-label {
+    display: block; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 6px; padding-left: 4px;
+  }
+  .field-input {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 14px; color: var(--ink); outline: none;
+  }
+  .field-input:focus { border-color: var(--accent); }
+  .sync-status {
+    font-size: 13px; font-weight: 500; padding: 4px 4px;
+    min-height: 20px; text-align: center;
+  }
+  .sync-status.ok { color: var(--accent-deep); }
+  .sync-status.err { color: #b91c1c; }
+  .sync-status.info { color: var(--ink-3); }
+
+  /* View toggle */
+  .view { display: none; }
+  .view.active { display: block; }
+
+</style>
+</head>
+<body data-tab="cardio">
+
+<header class="topbar">
+  <div class="topbar-title" id="appTitle">
+    <span class="title-dot"></span><span id="appTitleText">Cardio</span>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <div class="sync-pill" id="syncPill" hidden>
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncText">Synced</span>
+    </div>
+    <button class="topbar-action" id="menuBtn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- ===== CARDIO VIEW ===== -->
+<div class="view active" id="view-cardio">
+  <section class="hero">
+    <div class="hero-label">Progress</div>
+    <div class="hero-count">
+      <span class="num" id="cardioCount">0</span>
+      <span class="target">/ 100 sessions</span>
+    </div>
+    <div class="hero-sub"><strong id="cardioHours">0h</strong> logged · goal by <strong id="cardioDeadline">Dec 1</strong></div>
+    <div class="progress-track"><div class="progress-fill" id="cardioProgress" style="width:0%"></div></div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value" id="cardioRemaining">100</div><div class="stat-label">To go</div></div>
+      <div class="stat"><div class="stat-value" id="cardioDaysLeft">—</div><div class="stat-label">Days left</div></div>
+      <div class="stat"><div class="stat-value" id="cardioPace">—</div><div class="stat-label">Pace/wk</div></div>
+    </div>
+  </section>
+
+  <div class="today-card" id="cardioTodayCard">
+    <div class="today-info">
+      <div class="today-label">TODAY</div>
+      <div class="today-text" id="cardioTodayText">Mark today complete</div>
+      <div class="today-hint">Tap to toggle · Long-press for time</div>
+    </div>
+    <button class="today-btn" id="cardioTodayBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <span id="cardioTodayBtnText">Mark done</span>
+    </button>
+  </div>
+
+  <main id="cardioMonths"></main>
+</div>
+
+<!-- ===== WEIGHT VIEW ===== -->
+<div class="view" id="view-weight">
+  <section class="hero">
+    <div class="hero-label">Latest weigh-in</div>
+    <div class="hero-count">
+      <span class="num" id="weightLatest">—</span>
+      <span class="unit">lb</span>
+    </div>
+    <div class="hero-sub" id="weightSubtitle">No weigh-ins logged yet</div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value" id="weight7d">—</div><div class="stat-label">7-day avg</div></div>
+      <div class="stat"><div class="stat-value" id="weightTrend">—</div><div class="stat-label">7d change</div></div>
+      <div class="stat"><div class="stat-value" id="weightCount">0</div><div class="stat-label">Logged</div></div>
+    </div>
+  </section>
+
+  <div class="today-card" id="weightTodayCard">
+    <div class="today-info">
+      <div class="today-label">TODAY</div>
+      <div class="today-text" id="weightTodayText">Log a weigh-in</div>
+      <div class="today-hint">Tap any day to log AM/PM</div>
+    </div>
+    <button class="today-btn" id="weightTodayBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Log</span>
+    </button>
+  </div>
+
+  <main id="weightMonths"></main>
+</div>
+
+<!-- ===== LIFTING VIEW ===== -->
+<div class="view" id="view-lifting">
+  <section class="hero">
+    <div class="hero-label">Lifting log</div>
+    <div class="hero-count">
+      <span class="num" id="liftingCount">0</span>
+      <span class="target">days logged</span>
+    </div>
+    <div class="hero-sub" id="liftingSubtitle">No sessions yet</div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value" id="liftingWeek">0</div><div class="stat-label">This week</div></div>
+      <div class="stat"><div class="stat-value" id="liftingStreak">0</div><div class="stat-label">Streak</div></div>
+      <div class="stat"><div class="stat-value" id="liftingTopTag">—</div><div class="stat-label">Most</div></div>
+    </div>
+  </section>
+
+  <div class="today-card" id="liftingTodayCard">
+    <div class="today-info">
+      <div class="today-label">TODAY</div>
+      <div class="today-text" id="liftingTodayText">Log today's lift</div>
+      <div class="today-hint">Tap to open · pick categories</div>
+    </div>
+    <button class="today-btn" id="liftingTodayBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>Log</span>
+    </button>
+  </div>
+
+  <main id="liftingMonths"></main>
+</div>
+
+<!-- ===== INTERVALS VIEW ===== -->
+<div class="view" id="view-intervals">
+  <section class="hero">
+    <div class="hero-label">This week</div>
+    <div class="hero-count">
+      <span class="num" id="intervalsWeek">0</span>
+      <span class="target">/ 1 session</span>
+    </div>
+    <div class="hero-sub" id="intervalsSubtitle">Get one in this week</div>
+    <div class="progress-track"><div class="progress-fill" id="intervalsProgress" style="width:0%"></div></div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value" id="intervalsTotal">0</div><div class="stat-label">Total</div></div>
+      <div class="stat"><div class="stat-value" id="intervalsStreak">0</div><div class="stat-label">Wk streak</div></div>
+      <div class="stat"><div class="stat-value" id="intervalsHitRate">—</div><div class="stat-label">Hit rate</div></div>
+    </div>
+  </section>
+
+  <div class="today-card" id="intervalsTodayCard">
+    <div class="today-info">
+      <div class="today-label">TODAY</div>
+      <div class="today-text" id="intervalsTodayText">Mark today complete</div>
+      <div class="today-hint">Tap to toggle · Long-press for time</div>
+    </div>
+    <button class="today-btn" id="intervalsTodayBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <span id="intervalsTodayBtnText">Mark done</span>
+    </button>
+  </div>
+
+  <main id="intervalsMonths"></main>
+</div>
+
+<!-- ===== TAB BAR ===== -->
+<nav class="tabbar">
+  <button class="tab" data-tab="cardio" data-active="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <span class="tab-label">Cardio</span>
+  </button>
+  <button class="tab" data-tab="weight" data-active="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span class="tab-label">Weight</span>
+  </button>
+  <button class="tab" data-tab="lifting" data-active="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M2 8h4M2 16h4M18 8h4M18 16h4M6 12h12"/></svg>
+    <span class="tab-label">Lifting</span>
+  </button>
+  <button class="tab" data-tab="intervals" data-active="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 12 7 12 10 4 14 20 17 12 21 12"/></svg>
+    <span class="tab-label">Intervals</span>
+  </button>
+</nav>
+
+<div class="sheet-backdrop" id="backdrop"></div>
+
+<!-- Cardio duration sheet -->
+<div class="sheet" id="cardioSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-date" id="cardioSheetDate">—</div>
+  <div class="sheet-title">Workout duration</div>
+  <div class="wheel-container">
+    <div class="wheel-selection"></div>
+    <div class="wheel" id="cardioWheel"></div>
+  </div>
+  <div class="wheel-quick-row">
+    <button class="wheel-quick-btn" data-mins="30">30</button>
+    <button class="wheel-quick-btn" data-mins="45">45</button>
+    <button class="wheel-quick-btn" data-mins="60">60</button>
+    <button class="wheel-quick-btn" data-mins="90">90</button>
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn ghost" id="cardioCancelBtn">Cancel</button>
+    <button class="sheet-btn primary" id="cardioSaveBtn">Save</button>
+  </div>
+</div>
+
+<!-- Weight sheet -->
+<div class="sheet" id="weightSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-date" id="weightSheetDate">—</div>
+  <div class="sheet-title">Weigh-in</div>
+  <div class="weight-slots">
+    <div class="slot" data-slot="am" id="slotAM">
+      <div class="slot-label">AM</div>
+      <div class="slot-value" id="slotAMValue"><span class="slot-empty">tap to set</span></div>
+    </div>
+    <div class="slot" data-slot="pm" id="slotPM">
+      <div class="slot-label">PM</div>
+      <div class="slot-value" id="slotPMValue"><span class="slot-empty">tap to set</span></div>
+    </div>
+  </div>
+  <div class="wheel-container">
+    <div class="wheel-selection"></div>
+    <div class="wheel" id="weightWheel"></div>
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn ghost" id="weightCancelBtn">Done</button>
+    <button class="sheet-btn danger" id="weightRemoveBtn" style="display:none;">Remove all</button>
+  </div>
+</div>
+
+<!-- Lifting sheet -->
+<div class="sheet" id="liftingSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-date" id="liftingSheetDate">—</div>
+  <div class="sheet-title">What did you lift?</div>
+  <div class="chips" id="liftingChips">
+    <button class="chip" data-tag="upper">Upper
+      <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+    <button class="chip" data-tag="lower">Lower
+      <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+    <button class="chip" data-tag="core">Core
+      <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+    <button class="chip" data-tag="pullups">Pull-ups
+      <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+    <button class="chip" data-tag="stretch">Stretching
+      <svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn danger" id="liftingRemoveBtn" style="display:none;">Remove</button>
+    <button class="sheet-btn primary" id="liftingSaveBtn">Save</button>
+  </div>
+</div>
+
+<!-- Intervals duration sheet -->
+<div class="sheet" id="intervalsSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-date" id="intervalsSheetDate">—</div>
+  <div class="sheet-title">Interval session</div>
+  <div class="wheel-container">
+    <div class="wheel-selection"></div>
+    <div class="wheel" id="intervalsWheel"></div>
+  </div>
+  <div class="wheel-quick-row">
+    <button class="wheel-quick-btn" data-mins="15" data-tab="intervals">15</button>
+    <button class="wheel-quick-btn" data-mins="20" data-tab="intervals">20</button>
+    <button class="wheel-quick-btn" data-mins="30" data-tab="intervals">30</button>
+    <button class="wheel-quick-btn" data-mins="45" data-tab="intervals">45</button>
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn ghost" id="intervalsCancelBtn">Cancel</button>
+    <button class="sheet-btn primary" id="intervalsSaveBtn">Save</button>
+  </div>
+</div>
+
+<!-- Confirm sheet -->
+<div class="sheet" id="confirmSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="confirmTitle">Remove?</div>
+  <div class="confirm-content">
+    <div class="confirm-text" id="confirmText">This will be unmarked.</div>
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn ghost" id="confirmCancelBtn">Keep it</button>
+    <button class="sheet-btn danger" id="confirmRemoveBtn">Remove</button>
+  </div>
+</div>
+
+<!-- Menu -->
+<div class="sheet" id="menuSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" style="margin-bottom: 4px;">Settings</div>
+  <div class="menu-hint">
+    <strong>Tap</strong> a day to toggle / edit · <strong>Long-press</strong> for the editor
+  </div>
+
+  <div class="menu-section-title">Cardio</div>
+  <div class="menu-row">
+    <span class="menu-row-label">Goal</span>
+    <span class="menu-row-value">100 sessions</span>
+  </div>
+  <div class="menu-row" id="editDeadlineBtn">
+    <span class="menu-row-label">Deadline</span>
+    <span class="menu-row-value" id="menuDeadline">Dec 1 ›</span>
+  </div>
+
+  <div class="menu-section-title">Sync &amp; Data</div>
+  <div class="menu-row" id="syncSetupBtn">
+    <span class="menu-row-label">Cloud sync</span>
+    <span class="menu-row-value" id="menuSync">Not connected ›</span>
+  </div>
+  <div class="menu-row" id="exportBtn">
+    <span class="menu-row-label">Export data</span>
+    <span class="menu-row-value">JSON</span>
+  </div>
+  <div class="menu-row danger" id="resetAllBtn">
+    <span class="menu-row-label">Reset all data</span>
+  </div>
+  <div style="height: 12px;"></div>
+  <button class="sheet-btn secondary" id="closeMenuBtn" style="width:100%;">Close</button>
+</div>
+
+<!-- Deadline editor -->
+<div class="sheet" id="deadlineSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Set cardio deadline</div>
+  <div class="deadline-input-wrap">
+    <input type="date" id="deadlineInput" class="deadline-input">
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn ghost" id="deadlineCancelBtn">Cancel</button>
+    <button class="sheet-btn primary" id="deadlineSaveBtn">Save</button>
+  </div>
+</div>
+
+<!-- Sync setup -->
+<div class="sheet" id="syncSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Cloud sync</div>
+  <div class="sync-help">
+    Save data to a private GitHub Gist so it survives across devices.
+    <a href="#" id="syncHelpToggle">How do I set this up?</a>
+  </div>
+  <div class="sync-help-detail" id="syncHelpDetail" hidden>
+    <ol>
+      <li>Go to <strong>github.com/settings/tokens?type=beta</strong>, generate a fine-grained token with <strong>Gists: Read and Write</strong>.</li>
+      <li>Go to <strong>gist.github.com</strong>, create a <strong>secret gist</strong> with file <code>track.json</code> containing <code>{}</code>. Copy the long ID from the URL.</li>
+      <li>Paste both below.</li>
+    </ol>
+  </div>
+  <div class="field-group">
+    <label class="field-label" for="tokenInput">GitHub token</label>
+    <input type="password" id="tokenInput" class="field-input" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  </div>
+  <div class="field-group">
+    <label class="field-label" for="gistIdInput">Gist ID</label>
+    <input type="text" id="gistIdInput" class="field-input" placeholder="abc123def456..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  </div>
+  <div class="sync-status" id="syncStatusText"></div>
+  <div class="sheet-actions" style="margin-top: 14px;">
+    <button class="sheet-btn ghost" id="syncCancelBtn">Cancel</button>
+    <button class="sheet-btn primary" id="syncConnectBtn">Connect</button>
+  </div>
+  <button class="sheet-btn danger" id="syncDisconnectBtn" style="width:100%; margin-top:10px; display:none;">Disconnect</button>
+</div>
+
+<script>
+(() => {
+  // ===== CONSTS =====
+  const STORAGE_KEY = 'track-data-v1';
+  const META_KEY = 'track-meta-v1';
+  const DEADLINE_KEY = 'track-deadline-v1';
+  const SYNC_KEY = 'track-sync-v1';
+  const TAB_KEY = 'track-tab-v1';
+  const TARGET = 100;
+  const LONG_PRESS_MS = 450;
+  const TAGS = [
+    { id: 'upper', label: 'Up' },
+    { id: 'lower', label: 'Lo' },
+    { id: 'core', label: 'Co' },
+    { id: 'pullups', label: 'Pu' },
+    { id: 'stretch', label: 'St' }
+  ];
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // ===== HELPERS =====
+  const fmtKey = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  };
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const weekdayShort = ['S','M','T','W','T','F','S'];
+  const haptic = (ms = 10) => { try { navigator.vibrate?.(ms); } catch(e) {} };
+
+  // ===== DATA =====
+  // Three independent dicts inside one root
+  // cardio: { "YYYY-MM-DD": { mins: number|null } }
+  // weight: { "YYYY-MM-DD": { am: number|null, pm: number|null } }
+  // lifting: { "YYYY-MM-DD": { tags: string[] } }
+  // intervals: { "YYYY-MM-DD": { mins: number|null } }
+  let store = { cardio: {}, weight: {}, lifting: {}, intervals: {} };
+  let meta = { cardio: {}, weight: {}, lifting: {}, intervals: {} };
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      store.cardio = parsed.cardio || {};
+      store.weight = parsed.weight || {};
+      store.lifting = parsed.lifting || {};
+      store.intervals = parsed.intervals || {};
+    }
+  } catch(e) {}
+  try {
+    const raw = localStorage.getItem(META_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      meta.cardio = parsed.cardio || {};
+      meta.weight = parsed.weight || {};
+      meta.lifting = parsed.lifting || {};
+      meta.intervals = parsed.intervals || {};
+    }
+  } catch(e) {}
+
+  // Migrate from v2 (cardio-only)
+  try {
+    const oldRaw = localStorage.getItem('zone2-tracker-v2');
+    if (oldRaw && Object.keys(store.cardio).length === 0) {
+      store.cardio = JSON.parse(oldRaw);
+      const now = Date.now();
+      Object.keys(store.cardio).forEach(k => { meta.cardio[k] = now; });
+    }
+  } catch(e) {}
+
+  // Migrate sync config from old key
+  try {
+    const oldSync = localStorage.getItem('zone2-sync-v1');
+    if (oldSync && !localStorage.getItem(SYNC_KEY)) {
+      localStorage.setItem(SYNC_KEY, oldSync);
+    }
+  } catch(e) {}
+
+  // Deadline
+  let deadline;
+  try {
+    const saved = localStorage.getItem(DEADLINE_KEY) || localStorage.getItem('zone2-deadline-v1');
+    if (saved) {
+      const [y, m, d] = saved.split('-').map(Number);
+      deadline = new Date(y, m - 1, d);
+    }
+  } catch(e) {}
+  if (!deadline) {
+    const yr = today.getFullYear();
+    deadline = new Date(yr, 11, 1);
+    if (today > deadline) deadline = new Date(yr + 1, 11, 1);
+  }
+  const saveDeadline = () => {
+    try { localStorage.setItem(DEADLINE_KEY, fmtKey(deadline)); } catch(e) {}
+  };
+
+  // One-time backfill of historical cardio sessions (Apr 22–May 1, 2026).
+  // Gated by a flag so deletes stick after the first run.
+  let backfillTouched = false;
+  try {
+    const BACKFILL_FLAG = 'track-backfill-zone2-2026-04';
+    if (!localStorage.getItem(BACKFILL_FLAG)) {
+      const sessions = [
+        ['2026-04-22', 50],
+        ['2026-04-23', 50],
+        ['2026-04-24', 51],
+        ['2026-04-28', 50],
+        ['2026-04-29', 50],
+        ['2026-05-01', 50],
+      ];
+      const now = Date.now();
+      sessions.forEach(([k, mins], i) => {
+        if (!store.cardio[k]) {
+          store.cardio[k] = { mins };
+          meta.cardio[k] = now - (sessions.length - i) * 10;
+          backfillTouched = true;
+        }
+      });
+      localStorage.setItem(BACKFILL_FLAG, '1');
+      if (backfillTouched) saveLocal();
+    }
+  } catch(e) {}
+
+  function touchMeta(tab, key) { meta[tab][key] = Date.now(); }
+  function deleteMeta(tab, key) { meta[tab][key] = { deleted: Date.now() }; }
+
+  const saveLocal = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      localStorage.setItem(META_KEY, JSON.stringify(meta));
+    } catch(e) {}
+  };
+
+  // ===== SYNC =====
+  let syncConfig = null;
+  try {
+    const raw = localStorage.getItem(SYNC_KEY);
+    if (raw) syncConfig = JSON.parse(raw);
+  } catch(e) {}
+
+  const syncPill = document.getElementById('syncPill');
+  const syncText = document.getElementById('syncText');
+  function setSyncState(state, label) {
+    if (!syncConfig) { syncPill.hidden = true; return; }
+    syncPill.hidden = false;
+    syncPill.dataset.state = state;
+    syncText.textContent = label;
+  }
+
+  let pushTimer = null, pushInFlight = false, pendingPush = false;
+
+  async function gistFetch() {
+    if (!syncConfig) return null;
+    const r = await fetch(`https://api.github.com/gists/${syncConfig.gistId}`, {
+      headers: { 'Authorization': `Bearer ${syncConfig.token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (!r.ok) throw new Error(`GitHub returned ${r.status}`);
+    const gist = await r.json();
+    const file = gist.files['track.json'] || gist.files['zone2.json'];
+    if (!file) return { store: {cardio:{},weight:{},lifting:{}}, meta: {cardio:{},weight:{},lifting:{}}, deadline: null };
+    let content = file.truncated ? await (await fetch(file.raw_url)).text() : file.content;
+    try {
+      const parsed = JSON.parse(content);
+      // New shape: { store: {...}, meta: {...}, deadline: "..." }
+      if (parsed.store) {
+        return {
+          store: {
+            cardio: parsed.store.cardio || {},
+            weight: parsed.store.weight || {},
+            lifting: parsed.store.lifting || {},
+            intervals: parsed.store.intervals || {}
+          },
+          meta: {
+            cardio: parsed.meta?.cardio || {},
+            weight: parsed.meta?.weight || {},
+            lifting: parsed.meta?.lifting || {},
+            intervals: parsed.meta?.intervals || {}
+          },
+          deadline: parsed.deadline || null
+        };
+      }
+      // Legacy shape from v2: { data: {...cardio}, meta: {...}, deadline: "..." }
+      if (parsed.data) {
+        return {
+          store: { cardio: parsed.data, weight: {}, lifting: {}, intervals: {} },
+          meta: { cardio: parsed.meta || {}, weight: {}, lifting: {}, intervals: {} },
+          deadline: parsed.deadline || null
+        };
+      }
+      // Older still: just the cardio map
+      return {
+        store: { cardio: parsed, weight: {}, lifting: {}, intervals: {} },
+        meta: { cardio: {}, weight: {}, lifting: {}, intervals: {} },
+        deadline: null
+      };
+    } catch (e) {
+      return { store: {cardio:{},weight:{},lifting:{},intervals:{}}, meta: {cardio:{},weight:{},lifting:{},intervals:{}}, deadline: null };
+    }
+  }
+
+  async function gistPush() {
+    if (!syncConfig) return;
+    if (pushInFlight) { pendingPush = true; return; }
+    pushInFlight = true;
+    setSyncState('syncing', 'Saving…');
+    try {
+      const payload = {
+        store, meta,
+        deadline: fmtKey(deadline),
+        updatedAt: new Date().toISOString()
+      };
+      const body = JSON.stringify({ files: { 'track.json': { content: JSON.stringify(payload, null, 2) } } });
+      const r = await fetch(`https://api.github.com/gists/${syncConfig.gistId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${syncConfig.token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        }, body
+      });
+      if (!r.ok) throw new Error(`GitHub returned ${r.status}`);
+      setSyncState('ok', 'Synced');
+    } catch (e) {
+      console.error('Sync push failed', e);
+      setSyncState('error', 'Sync error');
+    } finally {
+      pushInFlight = false;
+      if (pendingPush) { pendingPush = false; setTimeout(gistPush, 100); }
+    }
+  }
+  function schedulePush() {
+    if (!syncConfig) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(gistPush, 600);
+  }
+
+  function mergeOneTab(tab, remoteStore, remoteMeta) {
+    let changed = false;
+    const allKeys = new Set([
+      ...Object.keys(remoteStore || {}), ...Object.keys(store[tab] || {}),
+      ...Object.keys(remoteMeta || {}), ...Object.keys(meta[tab] || {})
+    ]);
+    for (const key of allKeys) {
+      const localTs = typeof meta[tab][key] === 'number' ? meta[tab][key] : (meta[tab][key]?.deleted || 0);
+      const remoteTs = typeof remoteMeta[key] === 'number' ? remoteMeta[key] : (remoteMeta[key]?.deleted || 0);
+      const remoteDeleted = remoteMeta[key]?.deleted;
+      if (remoteTs > localTs) {
+        if (remoteDeleted) {
+          if (store[tab][key]) { delete store[tab][key]; changed = true; }
+          meta[tab][key] = { deleted: remoteDeleted };
+        } else if (remoteStore[key]) {
+          if (JSON.stringify(store[tab][key]) !== JSON.stringify(remoteStore[key])) {
+            store[tab][key] = remoteStore[key];
+            changed = true;
+          }
+          meta[tab][key] = remoteTs;
+        }
+      } else if (localTs === 0 && remoteTs === 0 && remoteStore[key] && !store[tab][key]) {
+        store[tab][key] = remoteStore[key];
+        meta[tab][key] = Date.now();
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  function mergeRemote(remote) {
+    if (!remote) return false;
+    let changed = false;
+    for (const tab of ['cardio','weight','lifting','intervals']) {
+      if (mergeOneTab(tab, remote.store[tab] || {}, remote.meta[tab] || {})) changed = true;
+    }
+    if (remote.deadline && !localStorage.getItem(DEADLINE_KEY)) {
+      const [y,m,d] = remote.deadline.split('-').map(Number);
+      deadline = new Date(y, m - 1, d);
+      saveDeadline();
+      changed = true;
+    }
+    return changed;
+  }
+
+  async function gistPull() {
+    if (!syncConfig) return;
+    setSyncState('syncing', 'Loading…');
+    try {
+      const remote = await gistFetch();
+      const changed = mergeRemote(remote);
+      if (changed) { saveLocal(); render(); schedulePush(); }
+      else setSyncState('ok', 'Synced');
+    } catch (e) {
+      console.error('Sync pull failed', e);
+      setSyncState('error', 'Sync error');
+    }
+  }
+
+  const save = () => { saveLocal(); schedulePush(); };
+
+  // ===== TABS =====
+  let currentTab = 'cardio';
+  try { currentTab = localStorage.getItem(TAB_KEY) || 'cardio'; } catch(e) {}
+
+  function setTab(tab) {
+    if (!['cardio','weight','lifting','intervals'].includes(tab)) tab = 'cardio';
+    currentTab = tab;
+    try { localStorage.setItem(TAB_KEY, tab); } catch(e) {}
+    document.body.dataset.tab = tab;
+    document.querySelectorAll('.tab').forEach(b => {
+      b.dataset.active = (b.dataset.tab === tab) ? 'true' : 'false';
+    });
+    document.querySelectorAll('.view').forEach(v => {
+      v.classList.toggle('active', v.id === `view-${tab}`);
+    });
+    const titles = { cardio: 'Cardio', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals' };
+    document.getElementById('appTitleText').textContent = titles[tab];
+    haptic(5);
+    // Render the new tab, then scroll so the current month is just below the today card
+    render();
+    requestAnimationFrame(() => {
+      const todayCell = document.querySelector('.view.active .day.today');
+      if (todayCell) {
+        // Find the month-block containing today and scroll to put its header near the top of the viewport
+        const monthBlock = todayCell.closest('.month-block');
+        if (monthBlock) {
+          const rect = monthBlock.getBoundingClientRect();
+          const offset = window.scrollY + rect.top - 16;
+          window.scrollTo({ top: offset, behavior: 'instant' });
+          return;
+        }
+      }
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  }
+
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => setTab(btn.dataset.tab));
+  });
+
+  // ===== DAY GRID BUILDERS (per tab) =====
+  function buildDayCell(tab, dateObj, isFuture, isToday) {
+    const key = fmtKey(dateObj);
+    const cell = document.createElement('div');
+    cell.className = 'day';
+    cell.dataset.key = key;
+    cell.dataset.tab = tab;
+
+    const numEl = document.createElement('div');
+    numEl.className = 'day-num';
+    numEl.textContent = dateObj.getDate();
+    cell.appendChild(numEl);
+
+    if (isFuture) cell.classList.add('future');
+    if (isToday) cell.classList.add('today');
+
+    const entry = store[tab][key];
+    if (entry && hasContent(tab, entry)) {
+      cell.classList.add('done');
+      // sub label
+      const sub = renderDaySub(tab, entry);
+      if (sub) {
+        const subEl = document.createElement('div');
+        subEl.className = 'day-mins';
+        subEl.textContent = sub;
+        cell.appendChild(subEl);
+      }
+    }
+
+    if (!isFuture) attachDayInteractions(cell, tab, key);
+    return cell;
+  }
+
+  function hasContent(tab, entry) {
+    if (!entry) return false;
+    if (tab === 'cardio' || tab === 'intervals') return true;
+    if (tab === 'weight') return entry.am != null || entry.pm != null;
+    if (tab === 'lifting') return Array.isArray(entry.tags) && entry.tags.length > 0;
+    return false;
+  }
+
+  function renderDaySub(tab, entry) {
+    if (tab === 'cardio' || tab === 'intervals') return entry.mins ? `${entry.mins}m` : '';
+    if (tab === 'weight') {
+      // Show whichever is filled. If both, show average rounded to 0.5.
+      if (entry.am != null && entry.pm != null) {
+        const avg = (entry.am + entry.pm) / 2;
+        return Math.round(avg * 2) / 2 + '';
+      }
+      const v = entry.am ?? entry.pm;
+      return v != null ? String(v) : '';
+    }
+    if (tab === 'lifting') {
+      const tags = entry.tags || [];
+      if (tags.length === 0) return '';
+      // Show first 1-2 letters of each tag, max 4 chars
+      const map = { upper:'U', lower:'L', core:'C', pullups:'P', stretch:'S' };
+      return tags.map(t => map[t] || '?').join('');
+    }
+    return '';
+  }
+
+  function buildMonth(tab, y, m) {
+    const monthDiv = document.createElement('div');
+    monthDiv.className = 'month-block';
+
+    const header = document.createElement('div');
+    header.className = 'month-header';
+    const name = document.createElement('div');
+    name.className = 'month-name';
+    name.innerHTML = `${monthNames[m]}<span class="year">${y}</span>`;
+    const stat = document.createElement('div');
+    stat.className = 'month-stat';
+    header.appendChild(name); header.appendChild(stat);
+    monthDiv.appendChild(header);
+
+    const wk = document.createElement('div');
+    wk.className = 'weekday-row';
+    weekdayShort.forEach(d => { const s = document.createElement('span'); s.textContent = d; wk.appendChild(s); });
+    monthDiv.appendChild(wk);
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    const startWeekday = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    for (let i=0; i<startWeekday; i++) {
+      const e = document.createElement('div'); e.className = 'day empty'; grid.appendChild(e);
+    }
+
+    let monthCount = 0;
+    let monthExtra = '';
+    if (tab === 'cardio' || tab === 'intervals') {
+      let mins = 0;
+      for (let d=1; d<=daysInMonth; d++) {
+        const dateObj = new Date(y, m, d);
+        const key = fmtKey(dateObj);
+        const isFuture = dateObj > today, isToday = dateObj.getTime() === today.getTime();
+        const cell = buildDayCell(tab, dateObj, isFuture, isToday);
+        const entry = store[tab][key];
+        if (entry) { monthCount++; if (entry.mins) mins += entry.mins; }
+        grid.appendChild(cell);
+      }
+      if (mins > 0) monthExtra = ` · ${(mins/60).toFixed(1)}h`;
+    } else if (tab === 'weight') {
+      let weighIns = 0;
+      for (let d=1; d<=daysInMonth; d++) {
+        const dateObj = new Date(y, m, d);
+        const key = fmtKey(dateObj);
+        const isFuture = dateObj > today, isToday = dateObj.getTime() === today.getTime();
+        const cell = buildDayCell(tab, dateObj, isFuture, isToday);
+        const entry = store.weight[key];
+        if (entry) {
+          if (entry.am != null) weighIns++;
+          if (entry.pm != null) weighIns++;
+          if (entry.am != null || entry.pm != null) monthCount++;
+        }
+        grid.appendChild(cell);
+      }
+      if (weighIns > monthCount) monthExtra = ` · ${weighIns} weigh-ins`;
+    } else {
+      // lifting
+      for (let d=1; d<=daysInMonth; d++) {
+        const dateObj = new Date(y, m, d);
+        const key = fmtKey(dateObj);
+        const isFuture = dateObj > today, isToday = dateObj.getTime() === today.getTime();
+        const cell = buildDayCell(tab, dateObj, isFuture, isToday);
+        const entry = store.lifting[key];
+        if (entry && entry.tags && entry.tags.length) monthCount++;
+        grid.appendChild(cell);
+      }
+    }
+
+    if (monthCount === 0) {
+      stat.classList.add('empty');
+      stat.innerHTML = `<span class="dot"></span>${tab === 'weight' ? 'No weigh-ins' : 'No sessions'}`;
+    } else {
+      const noun = tab === 'weight' ? `day${monthCount===1?'':'s'}` : `session${monthCount===1?'':'s'}`;
+      stat.innerHTML = `<span class="dot"></span>${monthCount} ${noun}${monthExtra}`;
+    }
+    monthDiv.appendChild(grid);
+    return monthDiv;
+  }
+
+  // ===== INTERACTIONS =====
+  function attachDayInteractions(cell, tab, key) {
+    let pressTimer = null, longFired = false, startX = 0, startY = 0, pointerDown = false;
+
+    const start = (x, y) => {
+      pointerDown = true; longFired = false; startX = x; startY = y;
+      cell.classList.add('long-pressing');
+      pressTimer = setTimeout(() => {
+        if (!pointerDown) return;
+        longFired = true;
+        haptic(15);
+        cell.classList.remove('long-pressing');
+        openEditor(tab, key);
+      }, LONG_PRESS_MS);
+    };
+    const move = (x, y) => {
+      if (!pointerDown) return;
+      if (Math.abs(x - startX) > 10 || Math.abs(y - startY) > 10) {
+        clearTimeout(pressTimer); pointerDown = false;
+        cell.classList.remove('long-pressing');
+      }
+    };
+    const end = () => {
+      cell.classList.remove('long-pressing');
+      if (!pointerDown) return;
+      pointerDown = false;
+      clearTimeout(pressTimer);
+      if (longFired) return;
+      handleShortTap(tab, key);
+    };
+    const cancel = () => {
+      pointerDown = false; clearTimeout(pressTimer);
+      cell.classList.remove('long-pressing');
+    };
+
+    cell.addEventListener('touchstart', (e) => { const t = e.touches[0]; start(t.clientX, t.clientY); }, { passive: true });
+    cell.addEventListener('touchmove', (e) => { const t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: true });
+    cell.addEventListener('touchend', (e) => { e.preventDefault(); end(); });
+    cell.addEventListener('touchcancel', cancel);
+    cell.addEventListener('mousedown', (e) => start(e.clientX, e.clientY));
+    cell.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
+    cell.addEventListener('mouseup', end);
+    cell.addEventListener('mouseleave', cancel);
+    cell.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  function handleShortTap(tab, key) {
+    if (tab === 'cardio' || tab === 'intervals') {
+      // Tap toggles. If already done, confirm.
+      if (store[tab][key]) openConfirm(tab, key);
+      else {
+        store[tab][key] = { mins: null };
+        touchMeta(tab, key);
+        save(); haptic(10); render();
+        flashCell(key);
+      }
+    } else if (tab === 'weight') {
+      // Always open editor — no meaningful "just mark"
+      openEditor(tab, key);
+    } else if (tab === 'lifting') {
+      // Always open editor — multi-select
+      openEditor(tab, key);
+    }
+  }
+
+  function flashCell(key) {
+    const cell = document.querySelector(`.view.active .day[data-key="${key}"]`);
+    if (cell) {
+      cell.classList.add('just-done');
+      setTimeout(() => cell.classList.remove('just-done'), 320);
+    }
+  }
+
+  // ===== EDITOR DISPATCH =====
+  function openEditor(tab, key) {
+    if (tab === 'cardio') openCardioEditor(key);
+    else if (tab === 'weight') openWeightEditor(key);
+    else if (tab === 'lifting') openLiftingEditor(key);
+    else if (tab === 'intervals') openIntervalsEditor(key);
+  }
+
+  function openConfirm(tab, key) {
+    currentEditTab = tab;
+    currentEditKey = key;
+    const [y,m,d] = key.split('-').map(Number);
+    const dateObj = new Date(y, m-1, d);
+    const dateStr = dateObj.toLocaleDateString(undefined, { weekday:'short', month:'long', day:'numeric' });
+    let detail = '';
+    if ((tab === 'cardio' || tab === 'intervals') && store[tab][key]?.mins) detail = ` (${store[tab][key].mins} min)`;
+    document.getElementById('confirmTitle').textContent = 'Remove this session?';
+    document.getElementById('confirmText').innerHTML = `<strong>${dateStr}</strong>${detail} will be unmarked.`;
+    document.getElementById('backdrop').classList.add('open');
+    document.getElementById('confirmSheet').classList.add('open');
+  }
+
+  // ===== CARDIO EDITOR =====
+  let currentEditTab = null;
+  let currentEditKey = null;
+  let pendingMins = 50;
+
+  const cardioWheel = document.getElementById('cardioWheel');
+  const CARDIO_MIN = 5, CARDIO_MAX = 180, ITEM_H = 56;
+  function buildCardioWheel() {
+    cardioWheel.innerHTML = '';
+    for (let v = CARDIO_MIN; v <= CARDIO_MAX; v++) {
+      const item = document.createElement('div');
+      item.className = 'wheel-item';
+      item.dataset.val = v;
+      item.innerHTML = `${v}<span class="unit">min</span>`;
+      cardioWheel.appendChild(item);
+    }
+  }
+  buildCardioWheel();
+
+  function setCardioWheel(val, smooth) {
+    val = Math.max(CARDIO_MIN, Math.min(CARDIO_MAX, Math.round(val)));
+    pendingMins = val;
+    const idx = val - CARDIO_MIN;
+    if (smooth) cardioWheel.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' });
+    else cardioWheel.scrollTop = idx * ITEM_H;
+    updateCardioWheelHighlight();
+  }
+  function updateCardioWheelHighlight() {
+    const idx = Math.round(cardioWheel.scrollTop / ITEM_H);
+    pendingMins = Math.max(CARDIO_MIN, Math.min(CARDIO_MAX, CARDIO_MIN + idx));
+    cardioWheel.querySelectorAll('.wheel-item').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+    document.querySelectorAll('#cardioSheet .wheel-quick-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.mins) === pendingMins);
+    });
+  }
+  let cardioScrollTimer = null, lastCardioIdx = -1;
+  cardioWheel.addEventListener('scroll', () => {
+    const idx = Math.round(cardioWheel.scrollTop / ITEM_H);
+    if (idx !== lastCardioIdx) { lastCardioIdx = idx; haptic(3); updateCardioWheelHighlight(); }
+    clearTimeout(cardioScrollTimer);
+    cardioScrollTimer = setTimeout(updateCardioWheelHighlight, 80);
+  });
+  document.querySelectorAll('#cardioSheet .wheel-quick-btn').forEach(btn => {
+    btn.addEventListener('click', () => { haptic(8); setCardioWheel(parseInt(btn.dataset.mins), true); });
+  });
+
+  function openCardioEditor(key) {
+    currentEditTab = 'cardio';
+    currentEditKey = key;
+    const entry = store.cardio[key];
+    pendingMins = entry?.mins || 50;
+    const [y,m,d] = key.split('-').map(Number);
+    const dateObj = new Date(y, m-1, d);
+    document.getElementById('cardioSheetDate').textContent =
+      dateObj.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    document.getElementById('backdrop').classList.add('open');
+    document.getElementById('cardioSheet').classList.add('open');
+    requestAnimationFrame(() => requestAnimationFrame(() => setCardioWheel(pendingMins, false)));
+  }
+
+  document.getElementById('cardioSaveBtn').addEventListener('click', () => {
+    if (!currentEditKey) return;
+    const wasNew = !store.cardio[currentEditKey];
+    store.cardio[currentEditKey] = { mins: pendingMins };
+    touchMeta('cardio', currentEditKey);
+    save(); haptic(10);
+    const k = currentEditKey;
+    closeAllSheets(); render();
+    if (wasNew) flashCell(k);
+  });
+  document.getElementById('cardioCancelBtn').addEventListener('click', closeAllSheets);
+
+  // ===== INTERVALS EDITOR (cardio clone, shorter default duration) =====
+  let intervalsPendingMins = 30;
+  const intervalsWheel = document.getElementById('intervalsWheel');
+  const INT_MIN = 5, INT_MAX = 120;
+
+  function buildIntervalsWheel() {
+    intervalsWheel.innerHTML = '';
+    for (let v = INT_MIN; v <= INT_MAX; v++) {
+      const item = document.createElement('div');
+      item.className = 'wheel-item';
+      item.dataset.val = v;
+      item.innerHTML = `${v}<span class="unit">min</span>`;
+      intervalsWheel.appendChild(item);
+    }
+  }
+  buildIntervalsWheel();
+
+  function setIntervalsWheel(val, smooth) {
+    val = Math.max(INT_MIN, Math.min(INT_MAX, Math.round(val)));
+    intervalsPendingMins = val;
+    const idx = val - INT_MIN;
+    if (smooth) intervalsWheel.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' });
+    else intervalsWheel.scrollTop = idx * ITEM_H;
+    updateIntervalsWheelHighlight();
+  }
+  function updateIntervalsWheelHighlight() {
+    const idx = Math.round(intervalsWheel.scrollTop / ITEM_H);
+    intervalsPendingMins = Math.max(INT_MIN, Math.min(INT_MAX, INT_MIN + idx));
+    intervalsWheel.querySelectorAll('.wheel-item').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+    document.querySelectorAll('#intervalsSheet .wheel-quick-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.mins) === intervalsPendingMins);
+    });
+  }
+  let intervalsScrollTimer = null, lastIntervalsIdx = -1;
+  intervalsWheel.addEventListener('scroll', () => {
+    const idx = Math.round(intervalsWheel.scrollTop / ITEM_H);
+    if (idx !== lastIntervalsIdx) { lastIntervalsIdx = idx; haptic(3); updateIntervalsWheelHighlight(); }
+    clearTimeout(intervalsScrollTimer);
+    intervalsScrollTimer = setTimeout(updateIntervalsWheelHighlight, 80);
+  });
+  document.querySelectorAll('#intervalsSheet .wheel-quick-btn').forEach(btn => {
+    btn.addEventListener('click', () => { haptic(8); setIntervalsWheel(parseInt(btn.dataset.mins), true); });
+  });
+
+  function openIntervalsEditor(key) {
+    currentEditTab = 'intervals';
+    currentEditKey = key;
+    const entry = store.intervals[key];
+    intervalsPendingMins = entry?.mins || 30;
+    const [y,m,d] = key.split('-').map(Number);
+    const dateObj = new Date(y, m-1, d);
+    document.getElementById('intervalsSheetDate').textContent =
+      dateObj.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    document.getElementById('backdrop').classList.add('open');
+    document.getElementById('intervalsSheet').classList.add('open');
+    requestAnimationFrame(() => requestAnimationFrame(() => setIntervalsWheel(intervalsPendingMins, false)));
+  }
+
+  document.getElementById('intervalsSaveBtn').addEventListener('click', () => {
+    if (!currentEditKey) return;
+    const wasNew = !store.intervals[currentEditKey];
+    store.intervals[currentEditKey] = { mins: intervalsPendingMins };
+    touchMeta('intervals', currentEditKey);
+    save(); haptic(10);
+    const k = currentEditKey;
+    closeAllSheets(); render();
+    if (wasNew) flashCell(k);
+  });
+  document.getElementById('intervalsCancelBtn').addEventListener('click', closeAllSheets);
+
+  // ===== WEIGHT EDITOR =====
+  // The weight editor shows two slot cards (AM/PM). User taps one to "edit" it,
+  // then scrolls the wheel to set the value. Tap again to deselect.
+  const weightWheel = document.getElementById('weightWheel');
+  const WEIGHT_MIN = 80, WEIGHT_MAX = 400; // lbs, 0.1 increments
+  const WEIGHT_STEP = 0.1;
+  function buildWeightWheel() {
+    weightWheel.innerHTML = '';
+    for (let v = WEIGHT_MIN; v <= WEIGHT_MAX + 0.001; v += WEIGHT_STEP) {
+      const val = Math.round(v * 10) / 10;
+      const item = document.createElement('div');
+      item.className = 'wheel-item';
+      item.dataset.val = val.toFixed(1);
+      item.innerHTML = `${val.toFixed(1)}<span class="unit">lb</span>`;
+      weightWheel.appendChild(item);
+    }
+  }
+  buildWeightWheel();
+
+  let activeSlot = null; // 'am' | 'pm' | null
+  let weightDraft = { am: null, pm: null };
+
+  function weightValueAt(idx) {
+    return Math.round((WEIGHT_MIN + idx * WEIGHT_STEP) * 10) / 10;
+  }
+  function indexFromWeight(val) {
+    return Math.round((val - WEIGHT_MIN) / WEIGHT_STEP);
+  }
+  function setWeightWheel(val, smooth) {
+    if (val == null) val = 175;
+    val = Math.max(WEIGHT_MIN, Math.min(WEIGHT_MAX, val));
+    const idx = indexFromWeight(val);
+    if (smooth) weightWheel.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' });
+    else weightWheel.scrollTop = idx * ITEM_H;
+    updateWeightWheelHighlight(false);
+  }
+  function updateWeightWheelHighlight(commitToSlot = true) {
+    const idx = Math.round(weightWheel.scrollTop / ITEM_H);
+    const v = weightValueAt(idx);
+    weightWheel.querySelectorAll('.wheel-item').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+    if (commitToSlot && activeSlot) {
+      weightDraft[activeSlot] = v;
+      paintWeightSlots();
+      // Persist as user scrolls — no separate Save button per slot
+      writeWeightDraft();
+    }
+  }
+  let weightScrollTimer = null, lastWeightIdx = -1;
+  weightWheel.addEventListener('scroll', () => {
+    const idx = Math.round(weightWheel.scrollTop / ITEM_H);
+    if (idx !== lastWeightIdx) { lastWeightIdx = idx; haptic(2); updateWeightWheelHighlight(true); }
+    clearTimeout(weightScrollTimer);
+    weightScrollTimer = setTimeout(() => updateWeightWheelHighlight(true), 80);
+  });
+
+  function paintWeightSlots() {
+    const amEl = document.getElementById('slotAM');
+    const pmEl = document.getElementById('slotPM');
+    const amVal = document.getElementById('slotAMValue');
+    const pmVal = document.getElementById('slotPMValue');
+
+    if (weightDraft.am != null) {
+      amVal.innerHTML = `<span>${weightDraft.am.toFixed(1)}<span class="small">lb</span></span>`;
+      amEl.classList.add('filled');
+    } else {
+      amVal.innerHTML = `<span class="slot-empty">tap to set</span>`;
+      amEl.classList.remove('filled');
+    }
+    if (weightDraft.pm != null) {
+      pmVal.innerHTML = `<span>${weightDraft.pm.toFixed(1)}<span class="small">lb</span></span>`;
+      pmEl.classList.add('filled');
+    } else {
+      pmVal.innerHTML = `<span class="slot-empty">tap to set</span>`;
+      pmEl.classList.remove('filled');
+    }
+    amEl.classList.toggle('editing', activeSlot === 'am');
+    pmEl.classList.toggle('editing', activeSlot === 'pm');
+
+    // Show clear buttons only on filled slots
+    [['am', amEl], ['pm', pmEl]].forEach(([s, el]) => {
+      let clear = el.querySelector('.slot-clear');
+      if (weightDraft[s] != null) {
+        if (!clear) {
+          clear = document.createElement('button');
+          clear.className = 'slot-clear';
+          clear.textContent = '×';
+          clear.addEventListener('click', (e) => {
+            e.stopPropagation();
+            weightDraft[s] = null;
+            if (activeSlot === s) activeSlot = null;
+            paintWeightSlots();
+            writeWeightDraft();
+            haptic(8);
+          });
+          el.appendChild(clear);
+        }
+      } else if (clear) clear.remove();
+    });
+
+    // Show remove-all if there's anything to remove (saved on disk)
+    const saved = store.weight[currentEditKey];
+    document.getElementById('weightRemoveBtn').style.display =
+      (saved && (saved.am != null || saved.pm != null)) ? 'block' : 'none';
+  }
+
+  function writeWeightDraft() {
+    if (!currentEditKey) return;
+    const hasAny = weightDraft.am != null || weightDraft.pm != null;
+    if (hasAny) {
+      store.weight[currentEditKey] = { am: weightDraft.am, pm: weightDraft.pm };
+      touchMeta('weight', currentEditKey);
+    } else {
+      if (store.weight[currentEditKey]) {
+        delete store.weight[currentEditKey];
+        deleteMeta('weight', currentEditKey);
+      }
+    }
+    save();
+    // Re-render the calendar in the background so the day cell updates
+    if (currentTab === 'weight') render();
+  }
+
+  function selectWeightSlot(slot) {
+    activeSlot = slot;
+    paintWeightSlots();
+    // Set wheel to current value or sensible default
+    const v = weightDraft[slot] != null ? weightDraft[slot] : (weightDraft[slot === 'am' ? 'pm' : 'am'] || 175);
+    if (weightDraft[slot] == null) {
+      // First commit so this slot has a value when wheel touches
+      weightDraft[slot] = v;
+      paintWeightSlots();
+      writeWeightDraft();
+    }
+    setWeightWheel(v, true);
+    haptic(8);
+  }
+
+  document.getElementById('slotAM').addEventListener('click', () => selectWeightSlot('am'));
+  document.getElementById('slotPM').addEventListener('click', () => selectWeightSlot('pm'));
+
+  function openWeightEditor(key) {
+    currentEditTab = 'weight';
+    currentEditKey = key;
+    const entry = store.weight[key];
+    weightDraft = { am: entry?.am ?? null, pm: entry?.pm ?? null };
+    // If neither is set, default to selecting AM
+    activeSlot = (entry == null || (entry.am == null && entry.pm == null)) ? 'am' : (entry.am != null ? 'am' : 'pm');
+    const [y,m,d] = key.split('-').map(Number);
+    const dateObj = new Date(y, m-1, d);
+    document.getElementById('weightSheetDate').textContent =
+      dateObj.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    document.getElementById('backdrop').classList.add('open');
+    document.getElementById('weightSheet').classList.add('open');
+    paintWeightSlots();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const v = weightDraft[activeSlot] ?? weightDraft[activeSlot === 'am' ? 'pm' : 'am'] ?? 175;
+      // Set wheel without committing (since the slot may not be filled yet)
+      const idx = indexFromWeight(v);
+      weightWheel.scrollTop = idx * ITEM_H;
+      lastWeightIdx = idx;
+      updateWeightWheelHighlight(false);
+      // If the active slot is empty, prime it once user actually scrolls
+      // (handled by scroll listener committing weightDraft)
+    }));
+  }
+
+  document.getElementById('weightCancelBtn').addEventListener('click', closeAllSheets);
+
+  document.getElementById('weightRemoveBtn').addEventListener('click', () => {
+    if (!currentEditKey) return;
+    if (!confirm('Remove both weigh-ins for this day?')) return;
+    delete store.weight[currentEditKey];
+    deleteMeta('weight', currentEditKey);
+    save(); haptic(15);
+    closeAllSheets(); render();
+  });
+
+  // ===== LIFTING EDITOR =====
+  let liftingDraft = new Set();
+
+  function paintLiftingChips() {
+    document.querySelectorAll('#liftingChips .chip').forEach(chip => {
+      chip.classList.toggle('active', liftingDraft.has(chip.dataset.tag));
+    });
+  }
+
+  document.querySelectorAll('#liftingChips .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const tag = chip.dataset.tag;
+      if (liftingDraft.has(tag)) liftingDraft.delete(tag);
+      else liftingDraft.add(tag);
+      haptic(6);
+      paintLiftingChips();
+    });
+  });
+
+  function openLiftingEditor(key) {
+    currentEditTab = 'lifting';
+    currentEditKey = key;
+    const entry = store.lifting[key];
+    liftingDraft = new Set(entry?.tags || []);
+    const [y,m,d] = key.split('-').map(Number);
+    const dateObj = new Date(y, m-1, d);
+    document.getElementById('liftingSheetDate').textContent =
+      dateObj.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    document.getElementById('liftingRemoveBtn').style.display =
+      (entry && entry.tags && entry.tags.length) ? 'block' : 'none';
+    paintLiftingChips();
+    document.getElementById('backdrop').classList.add('open');
+    document.getElementById('liftingSheet').classList.add('open');
+  }
+
+  document.getElementById('liftingSaveBtn').addEventListener('click', () => {
+    if (!currentEditKey) return;
+    const tags = [...liftingDraft];
+    if (tags.length === 0) {
+      // Empty save = remove
+      if (store.lifting[currentEditKey]) {
+        delete store.lifting[currentEditKey];
+        deleteMeta('lifting', currentEditKey);
+      }
+    } else {
+      const wasNew = !store.lifting[currentEditKey] || (store.lifting[currentEditKey].tags || []).length === 0;
+      store.lifting[currentEditKey] = { tags };
+      touchMeta('lifting', currentEditKey);
+      if (wasNew) setTimeout(() => flashCell(currentEditKey), 50);
+    }
+    save(); haptic(10);
+    closeAllSheets(); render();
+  });
+
+  document.getElementById('liftingRemoveBtn').addEventListener('click', () => {
+    if (!currentEditKey) return;
+    delete store.lifting[currentEditKey];
+    deleteMeta('lifting', currentEditKey);
+    save(); haptic(15);
+    closeAllSheets(); render();
+  });
+
+  // ===== CONFIRM (cardio remove) =====
+  document.getElementById('confirmRemoveBtn').addEventListener('click', () => {
+    if (!currentEditKey || !currentEditTab) return;
+    if (currentEditTab === 'cardio' || currentEditTab === 'intervals') {
+      delete store[currentEditTab][currentEditKey];
+      deleteMeta(currentEditTab, currentEditKey);
+    }
+    save(); haptic(15);
+    closeAllSheets(); render();
+  });
+  document.getElementById('confirmCancelBtn').addEventListener('click', closeAllSheets);
+
+  // ===== SHEETS =====
+  const backdrop = document.getElementById('backdrop');
+  const allSheets = ['cardioSheet','intervalsSheet','weightSheet','liftingSheet','confirmSheet','menuSheet','deadlineSheet','syncSheet']
+    .map(id => document.getElementById(id));
+
+  function closeAllSheets() {
+    backdrop.classList.remove('open');
+    allSheets.forEach(s => s.classList.remove('open'));
+    activeSlot = null;
+    currentEditKey = null;
+    currentEditTab = null;
+  }
+  backdrop.addEventListener('click', closeAllSheets);
+
+  // Swipe down to dismiss (skip when scrolling a wheel or focusing input)
+  let touchStartY = null;
+  allSheets.forEach(s => {
+    s.addEventListener('touchstart', (e) => {
+      if (e.target.closest('.wheel') || e.target.tagName === 'INPUT') return;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    s.addEventListener('touchmove', (e) => {
+      if (touchStartY === null) return;
+      if (e.touches[0].clientY - touchStartY > 80) { closeAllSheets(); touchStartY = null; }
+    }, { passive: true });
+    s.addEventListener('touchend', () => { touchStartY = null; });
+  });
+
+  // ===== TODAY BUTTONS (long-press = editor, short-tap = primary action) =====
+  function attachTodayBtn(btn, tab) {
+    let pressTimer = null, longFired = false, pointerDown = false;
+    const start = () => {
+      pointerDown = true; longFired = false;
+      pressTimer = setTimeout(() => {
+        if (!pointerDown) return;
+        longFired = true; haptic(15);
+        openEditor(tab, fmtKey(today));
+      }, LONG_PRESS_MS);
+    };
+    const end = () => {
+      if (!pointerDown) return;
+      pointerDown = false; clearTimeout(pressTimer);
+      if (longFired) return;
+      // Short-tap: cardio/intervals toggles, others open editor
+      if (tab === 'cardio' || tab === 'intervals') handleShortTap(tab, fmtKey(today));
+      else openEditor(tab, fmtKey(today));
+    };
+    const cancel = () => { pointerDown = false; clearTimeout(pressTimer); };
+    btn.addEventListener('touchstart', start, { passive: true });
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); end(); });
+    btn.addEventListener('touchcancel', cancel);
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', end);
+    btn.addEventListener('mouseleave', cancel);
+    btn.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+  attachTodayBtn(document.getElementById('cardioTodayBtn'), 'cardio');
+  attachTodayBtn(document.getElementById('weightTodayBtn'), 'weight');
+  attachTodayBtn(document.getElementById('liftingTodayBtn'), 'lifting');
+  attachTodayBtn(document.getElementById('intervalsTodayBtn'), 'intervals');
+
+  // ===== MENU =====
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    backdrop.classList.add('open');
+    document.getElementById('menuSheet').classList.add('open');
+  });
+  document.getElementById('closeMenuBtn').addEventListener('click', closeAllSheets);
+
+  // Deadline
+  const deadlineInput = document.getElementById('deadlineInput');
+  document.getElementById('editDeadlineBtn').addEventListener('click', () => {
+    const minDate = new Date(today); minDate.setDate(minDate.getDate() + 1);
+    deadlineInput.min = fmtKey(minDate);
+    deadlineInput.value = fmtKey(deadline);
+    document.getElementById('menuSheet').classList.remove('open');
+    document.getElementById('deadlineSheet').classList.add('open');
+  });
+  document.getElementById('deadlineCancelBtn').addEventListener('click', closeAllSheets);
+  document.getElementById('deadlineSaveBtn').addEventListener('click', () => {
+    const v = deadlineInput.value;
+    if (!v) { closeAllSheets(); return; }
+    const [y,m,d] = v.split('-').map(Number);
+    const newDate = new Date(y, m-1, d); newDate.setHours(0,0,0,0);
+    if (newDate <= today) { alert('Deadline must be in the future.'); return; }
+    deadline = newDate;
+    saveDeadline(); updateDeadlineLabels();
+    haptic(10);
+    closeAllSheets(); render();
+    schedulePush();
+  });
+
+  function updateDeadlineLabels() {
+    const short = `${monthShort[deadline.getMonth()]} ${deadline.getDate()}`;
+    document.getElementById('cardioDeadline').textContent = short;
+    document.getElementById('menuDeadline').textContent =
+      `${short}, ${deadline.getFullYear()} ›`;
+  }
+  updateDeadlineLabels();
+
+  // Reset
+  document.getElementById('resetAllBtn').addEventListener('click', () => {
+    if (!confirm('Delete ALL logged data across all tabs? This cannot be undone.')) return;
+    const now = Date.now();
+    for (const tab of ['cardio','weight','lifting','intervals']) {
+      Object.keys(store[tab]).forEach(k => { meta[tab][k] = { deleted: now }; });
+      store[tab] = {};
+    }
+    save(); closeAllSheets(); render();
+  });
+
+  // Export
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const payload = { store, meta, deadline: fmtKey(deadline), exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `track-export-${fmtKey(today)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // ===== SYNC SETUP =====
+  const tokenInput = document.getElementById('tokenInput');
+  const gistIdInput = document.getElementById('gistIdInput');
+  const syncStatusText = document.getElementById('syncStatusText');
+  const syncDisconnectBtn = document.getElementById('syncDisconnectBtn');
+  const menuSync = document.getElementById('menuSync');
+
+  function updateMenuSync() {
+    if (syncConfig) {
+      menuSync.textContent = `${syncConfig.gistId.slice(0, 7)}… ›`;
+    } else {
+      menuSync.textContent = 'Not connected ›';
+    }
+  }
+  updateMenuSync();
+
+  function setSyncStatus(msg, kind = 'info') {
+    syncStatusText.textContent = msg;
+    syncStatusText.className = 'sync-status ' + kind;
+  }
+
+  document.getElementById('syncSetupBtn').addEventListener('click', () => {
+    tokenInput.value = syncConfig?.token || '';
+    gistIdInput.value = syncConfig?.gistId || '';
+    syncDisconnectBtn.style.display = syncConfig ? 'block' : 'none';
+    setSyncStatus('');
+    document.getElementById('syncHelpDetail').hidden = true;
+    document.getElementById('menuSheet').classList.remove('open');
+    document.getElementById('syncSheet').classList.add('open');
+  });
+
+  document.getElementById('syncHelpToggle').addEventListener('click', (e) => {
+    e.preventDefault();
+    const d = document.getElementById('syncHelpDetail');
+    d.hidden = !d.hidden;
+  });
+
+  document.getElementById('syncCancelBtn').addEventListener('click', closeAllSheets);
+
+  document.getElementById('syncConnectBtn').addEventListener('click', async () => {
+    const token = tokenInput.value.trim();
+    const gistId = gistIdInput.value.trim();
+    if (!token || !gistId) { setSyncStatus('Both fields are required.', 'err'); return; }
+    setSyncStatus('Testing…', 'info');
+    try {
+      const r = await fetch(`https://api.github.com/gists/${gistId}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+      });
+      if (!r.ok) {
+        if (r.status === 401) setSyncStatus('Token rejected. Check Gist read+write permission.', 'err');
+        else if (r.status === 404) setSyncStatus('Gist not found. Check the Gist ID.', 'err');
+        else setSyncStatus(`GitHub returned ${r.status}.`, 'err');
+        return;
+      }
+      syncConfig = { token, gistId };
+      try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncConfig)); } catch(e) {}
+      setSyncStatus('Connected — syncing…', 'ok');
+      updateMenuSync();
+      setSyncState('syncing', 'Syncing…');
+      await gistPull();
+      await gistPush();
+      setSyncStatus('Connected.', 'ok');
+      setTimeout(closeAllSheets, 600);
+    } catch (e) {
+      setSyncStatus('Network error: ' + e.message, 'err');
+    }
+  });
+
+  document.getElementById('syncDisconnectBtn').addEventListener('click', () => {
+    if (!confirm('Stop syncing? Local data stays on this device.')) return;
+    syncConfig = null;
+    try { localStorage.removeItem(SYNC_KEY); } catch(e) {}
+    setSyncState();
+    updateMenuSync();
+    closeAllSheets();
+  });
+
+  // ===== RENDER =====
+  function render() {
+    if (currentTab === 'cardio') renderCardio();
+    else if (currentTab === 'weight') renderWeight();
+    else if (currentTab === 'lifting') renderLifting();
+    else if (currentTab === 'intervals') renderIntervals();
+  }
+
+  function renderCardio() {
+    const monthsContainer = document.getElementById('cardioMonths');
+    monthsContainer.innerHTML = '';
+    // Start from the earliest logged session's month, or current month if none
+    let startMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const keys = Object.keys(store.cardio);
+    if (keys.length) {
+      const earliest = keys.sort()[0];
+      const [ey, em] = earliest.split('-').map(Number);
+      const earliestMonth = new Date(ey, em - 1, 1);
+      if (earliestMonth < startMonth) startMonth = earliestMonth;
+    }
+    let y = startMonth.getFullYear(), m = startMonth.getMonth();
+    const endY = deadline.getFullYear(), endM = deadline.getMonth();
+    while (y < endY || (y === endY && m <= endM)) {
+      monthsContainer.appendChild(buildMonth('cardio', y, m));
+      m++; if (m > 11) { m = 0; y++; }
+    }
+    const total = Object.keys(store.cardio).length;
+    const totalMins = Object.values(store.cardio).reduce((s,e) => s + (e.mins || 0), 0);
+    document.getElementById('cardioCount').textContent = total;
+    document.getElementById('cardioRemaining').textContent = Math.max(0, TARGET - total);
+    document.getElementById('cardioHours').textContent = totalMins === 0 ? '0h' : (totalMins/60).toFixed(1) + 'h';
+    document.getElementById('cardioProgress').style.width = Math.min(100, (total/TARGET)*100) + '%';
+    const daysLeft = Math.max(0, Math.ceil((deadline - today) / 86400000) + 1);
+    document.getElementById('cardioDaysLeft').textContent = daysLeft;
+    const remaining = Math.max(0, TARGET - total);
+    let pace;
+    if (total >= TARGET) pace = '✓';
+    else if (daysLeft === 0) pace = '—';
+    else pace = (remaining / daysLeft * 7).toFixed(1);
+    document.getElementById('cardioPace').textContent = pace;
+
+    // Today card
+    const todayKey = fmtKey(today);
+    const todayCard = document.getElementById('cardioTodayCard');
+    const todayText = document.getElementById('cardioTodayText');
+    const btnText = document.getElementById('cardioTodayBtnText');
+    const btnSvg = document.getElementById('cardioTodayBtn').querySelector('svg');
+    if (store.cardio[todayKey]) {
+      todayCard.classList.add('completed');
+      const mins = store.cardio[todayKey].mins;
+      todayText.textContent = mins ? `Done · ${mins} min logged` : 'Marked complete';
+      btnText.textContent = 'Add time';
+      btnSvg.style.display = 'none';
+    } else {
+      todayCard.classList.remove('completed');
+      todayText.textContent = 'Mark today complete';
+      btnText.textContent = 'Mark done';
+      btnSvg.style.display = 'block';
+    }
+  }
+
+  function renderWeight() {
+    const monthsContainer = document.getElementById('weightMonths');
+    monthsContainer.innerHTML = '';
+    // From earliest logged month (or 2 months back), through next month
+    let startMonth = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    const keys = Object.keys(store.weight);
+    if (keys.length) {
+      const earliest = keys.sort()[0];
+      const [ey, em] = earliest.split('-').map(Number);
+      const earliestMonth = new Date(ey, em - 1, 1);
+      if (earliestMonth < startMonth) startMonth = earliestMonth;
+    }
+    const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    let y = startMonth.getFullYear(), m = startMonth.getMonth();
+    while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
+      monthsContainer.appendChild(buildMonth('weight', y, m));
+      m++; if (m > 11) { m = 0; y++; }
+    }
+
+    // Compute stats
+    const allEntries = Object.entries(store.weight)
+      .map(([k,v]) => {
+        const vals = [v.am, v.pm].filter(x => x != null);
+        const avg = vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : null;
+        return { key: k, avg, am: v.am, pm: v.pm };
+      })
+      .filter(e => e.avg != null)
+      .sort((a,b) => a.key.localeCompare(b.key));
+
+    const latest = allEntries[allEntries.length - 1];
+    document.getElementById('weightLatest').textContent = latest ? latest.avg.toFixed(1) : '—';
+    if (latest) {
+      const [y,m,d] = latest.key.split('-').map(Number);
+      const dateObj = new Date(y, m-1, d);
+      const dayDiff = Math.round((today - dateObj) / 86400000);
+      const ago = dayDiff === 0 ? 'today' : dayDiff === 1 ? 'yesterday' : `${dayDiff} days ago`;
+      const detail = (latest.am != null && latest.pm != null)
+        ? `AM ${latest.am.toFixed(1)} · PM ${latest.pm.toFixed(1)}`
+        : (latest.am != null ? `AM ${latest.am.toFixed(1)}` : `PM ${latest.pm.toFixed(1)}`);
+      document.getElementById('weightSubtitle').innerHTML = `<strong>${detail}</strong> · ${ago}`;
+    } else {
+      document.getElementById('weightSubtitle').textContent = 'No weigh-ins logged yet';
+    }
+
+    // 7-day avg = mean of daily averages over the last 7 entries (not days)
+    const last7 = allEntries.slice(-7);
+    if (last7.length > 0) {
+      const avg = last7.reduce((s,e) => s + e.avg, 0) / last7.length;
+      document.getElementById('weight7d').textContent = avg.toFixed(1);
+    } else {
+      document.getElementById('weight7d').textContent = '—';
+    }
+
+    // 7d trend = latest vs earliest in last 7 logged entries
+    if (last7.length >= 2) {
+      const delta = last7[last7.length - 1].avg - last7[0].avg;
+      const sign = delta > 0 ? '+' : '';
+      document.getElementById('weightTrend').textContent = `${sign}${delta.toFixed(1)}`;
+    } else {
+      document.getElementById('weightTrend').textContent = '—';
+    }
+
+    // Total logged days
+    document.getElementById('weightCount').textContent = allEntries.length;
+
+    // Today card
+    const todayKey = fmtKey(today);
+    const e = store.weight[todayKey];
+    const todayCard = document.getElementById('weightTodayCard');
+    const todayText = document.getElementById('weightTodayText');
+    if (e && (e.am != null || e.pm != null)) {
+      todayCard.classList.add('completed');
+      const parts = [];
+      if (e.am != null) parts.push(`AM ${e.am.toFixed(1)}`);
+      if (e.pm != null) parts.push(`PM ${e.pm.toFixed(1)}`);
+      todayText.textContent = parts.join(' · ');
+    } else {
+      todayCard.classList.remove('completed');
+      todayText.textContent = 'Log a weigh-in';
+    }
+  }
+
+  function renderLifting() {
+    const monthsContainer = document.getElementById('liftingMonths');
+    monthsContainer.innerHTML = '';
+    let startMonth = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    const keys = Object.keys(store.lifting);
+    if (keys.length) {
+      const earliest = keys.sort()[0];
+      const [ey, em] = earliest.split('-').map(Number);
+      const earliestMonth = new Date(ey, em - 1, 1);
+      if (earliestMonth < startMonth) startMonth = earliestMonth;
+    }
+    const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    let y = startMonth.getFullYear(), m = startMonth.getMonth();
+    while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
+      monthsContainer.appendChild(buildMonth('lifting', y, m));
+      m++; if (m > 11) { m = 0; y++; }
+    }
+
+    // Total
+    const liftedDays = Object.values(store.lifting).filter(e => (e.tags || []).length > 0);
+    document.getElementById('liftingCount').textContent = liftedDays.length;
+
+    // This week (Sun→Sat)
+    const dow = today.getDay();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - dow);
+    let weekCount = 0;
+    for (let i=0; i<7; i++) {
+      const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+      if (d > today) break;
+      const k = fmtKey(d);
+      if (store.lifting[k] && (store.lifting[k].tags||[]).length) weekCount++;
+    }
+    document.getElementById('liftingWeek').textContent = weekCount;
+
+    // Streak (consecutive days back from today)
+    let streak = 0;
+    let cur = new Date(today);
+    while (true) {
+      const k = fmtKey(cur);
+      if (store.lifting[k] && (store.lifting[k].tags||[]).length) {
+        streak++;
+        cur.setDate(cur.getDate() - 1);
+      } else break;
+    }
+    document.getElementById('liftingStreak').textContent = streak;
+
+    // Most-used tag
+    const tagCount = {};
+    Object.values(store.lifting).forEach(e => {
+      (e.tags || []).forEach(t => { tagCount[t] = (tagCount[t]||0) + 1; });
+    });
+    let topTag = '—';
+    let topN = 0;
+    for (const [t,n] of Object.entries(tagCount)) {
+      if (n > topN) { topN = n; topTag = t; }
+    }
+    const labelMap = { upper:'Upper', lower:'Lower', core:'Core', pullups:'Pull', stretch:'Strch' };
+    document.getElementById('liftingTopTag').textContent = labelMap[topTag] || '—';
+
+    // Subtitle
+    const sub = document.getElementById('liftingSubtitle');
+    if (liftedDays.length === 0) sub.textContent = 'No sessions yet';
+    else {
+      const totalTags = Object.values(tagCount).reduce((a,b)=>a+b,0);
+      sub.innerHTML = `<strong>${liftedDays.length}</strong> day${liftedDays.length===1?'':'s'} · <strong>${totalTags}</strong> tags total`;
+    }
+
+    // Today card
+    const todayKey = fmtKey(today);
+    const e = store.lifting[todayKey];
+    const todayCard = document.getElementById('liftingTodayCard');
+    const todayText = document.getElementById('liftingTodayText');
+    if (e && (e.tags||[]).length) {
+      todayCard.classList.add('completed');
+      const labels = e.tags.map(t => labelMap[t] || t).join(', ');
+      todayText.textContent = labels;
+    } else {
+      todayCard.classList.remove('completed');
+      todayText.textContent = "Log today's lift";
+    }
+  }
+
+  function renderIntervals() {
+    const monthsContainer = document.getElementById('intervalsMonths');
+    monthsContainer.innerHTML = '';
+    let startMonth = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    const keys = Object.keys(store.intervals);
+    if (keys.length) {
+      const earliest = keys.sort()[0];
+      const [ey, em] = earliest.split('-').map(Number);
+      const earliestMonth = new Date(ey, em - 1, 1);
+      if (earliestMonth < startMonth) startMonth = earliestMonth;
+    }
+    const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    let y = startMonth.getFullYear(), m = startMonth.getMonth();
+    while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
+      monthsContainer.appendChild(buildMonth('intervals', y, m));
+      m++; if (m > 11) { m = 0; y++; }
+    }
+
+    // Stats
+    const allKeys = Object.keys(store.intervals).sort();
+    const total = allKeys.length;
+    document.getElementById('intervalsTotal').textContent = total;
+
+    // Compute "this week" using Sunday as start
+    function weekStartFor(date) {
+      const d = new Date(date);
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() - d.getDay());
+      return d;
+    }
+    function weekKeyFor(date) {
+      return fmtKey(weekStartFor(date));
+    }
+
+    const thisWeekStart = weekStartFor(today);
+    let thisWeekCount = 0;
+    for (let i=0; i<7; i++) {
+      const d = new Date(thisWeekStart); d.setDate(thisWeekStart.getDate() + i);
+      if (d > today) break;
+      if (store.intervals[fmtKey(d)]) thisWeekCount++;
+    }
+    document.getElementById('intervalsWeek').textContent = thisWeekCount;
+    document.getElementById('intervalsProgress').style.width = Math.min(100, thisWeekCount * 100) + '%';
+
+    // Streak: consecutive prior weeks (ending with this week if hit, otherwise last week back)
+    // Group sessions by week-start key
+    const weeksHit = new Set();
+    allKeys.forEach(k => {
+      const [y,m,d] = k.split('-').map(Number);
+      weeksHit.add(weekKeyFor(new Date(y, m-1, d)));
+    });
+
+    // Walk back from this week (or last full week if this week not hit yet)
+    let streak = 0;
+    let cursor = new Date(thisWeekStart);
+    if (!weeksHit.has(fmtKey(cursor))) {
+      // This week not hit yet — start counting from last week
+      cursor.setDate(cursor.getDate() - 7);
+    }
+    while (weeksHit.has(fmtKey(cursor))) {
+      streak++;
+      cursor.setDate(cursor.getDate() - 7);
+    }
+    document.getElementById('intervalsStreak').textContent = streak;
+
+    // Hit rate: % of weeks since first session that had ≥1
+    if (allKeys.length === 0) {
+      document.getElementById('intervalsHitRate').textContent = '—';
+    } else {
+      const firstKey = allKeys[0];
+      const [fy,fm,fd] = firstKey.split('-').map(Number);
+      const firstWeekStart = weekStartFor(new Date(fy, fm-1, fd));
+      const weeksElapsed = Math.floor((thisWeekStart - firstWeekStart) / (7 * 86400000)) + 1;
+      const rate = Math.round((weeksHit.size / Math.max(1, weeksElapsed)) * 100);
+      document.getElementById('intervalsHitRate').textContent = rate + '%';
+    }
+
+    // Subtitle
+    const sub = document.getElementById('intervalsSubtitle');
+    if (thisWeekCount === 0) {
+      const dow = today.getDay();
+      const daysLeft = 6 - dow; // through Saturday
+      sub.innerHTML = daysLeft === 0
+        ? `<strong>Last day</strong> to hit this week`
+        : `<strong>${daysLeft + 1} day${daysLeft+1===1?'':'s'}</strong> left this week`;
+    } else if (thisWeekCount >= 1) {
+      sub.innerHTML = `<strong>Goal hit</strong> for the week ✓`;
+    }
+
+    // Today card
+    const todayKey = fmtKey(today);
+    const todayCard = document.getElementById('intervalsTodayCard');
+    const todayText = document.getElementById('intervalsTodayText');
+    const btnText = document.getElementById('intervalsTodayBtnText');
+    const btnSvg = document.getElementById('intervalsTodayBtn').querySelector('svg');
+    if (store.intervals[todayKey]) {
+      todayCard.classList.add('completed');
+      const mins = store.intervals[todayKey].mins;
+      todayText.textContent = mins ? `Done · ${mins} min` : 'Marked complete';
+      btnText.textContent = 'Add time';
+      btnSvg.style.display = 'none';
+    } else {
+      todayCard.classList.remove('completed');
+      todayText.textContent = 'Mark today complete';
+      btnText.textContent = 'Mark done';
+      btnSvg.style.display = 'block';
+    }
+  }
+
+  // ===== INIT =====
+  setTab(currentTab);
+
+  if (syncConfig) {
+    setSyncState('syncing', 'Loading…');
+    gistPull().then(() => {
+      // After pulling, if backfill added data, push it up
+      if (backfillTouched) schedulePush();
+    });
+  }
+  window.addEventListener('focus', () => {
+    if (syncConfig && document.visibilityState === 'visible') gistPull();
+  });
+})();
+</script>
+</body>
+</html>
