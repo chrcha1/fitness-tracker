@@ -397,6 +397,38 @@
   }
   .day.just-done { animation: pop 280ms cubic-bezier(0.4, 0, 0.2, 1); }
 
+  /* ===== WEEKLY WEIGHT GOALS (Saturday cells in weight tab) ===== */
+  /* Pin a small target weight chip to every Saturday in the goal trajectory. */
+  .day.goal-sat::before {
+    content: attr(data-goal);
+    position: absolute; top: 2px; right: 3px;
+    font-size: 9px; font-weight: 700; line-height: 1;
+    padding: 2px 4px; border-radius: 6px;
+    background: var(--c-lifting-soft); color: var(--c-lifting-deep);
+    font-feature-settings: "tnum"; letter-spacing: -0.02em;
+  }
+  /* Past goal that was hit → green chip + tinted cell. */
+  .day.goal-sat.goal-hit {
+    background: var(--c-cardio-tint);
+    border-color: var(--c-cardio-soft);
+  }
+  .day.goal-sat.goal-hit::before {
+    background: var(--c-cardio-soft); color: var(--c-cardio-deep);
+  }
+  /* Past goal missed → orange chip + tinted cell. */
+  .day.goal-sat.goal-miss {
+    background: var(--c-lifting-tint);
+    border-color: var(--c-lifting-soft);
+  }
+  /* Future Saturdays use a softer outline so they read as "upcoming". */
+  .day.goal-sat.future {
+    border: 1px dashed var(--c-lifting-soft);
+  }
+  /* When the cell is also "done" (logged), keep the chip readable on dark fill. */
+  .day.goal-sat.done::before {
+    background: rgba(255,255,255,0.92); color: var(--c-lifting-deep);
+  }
+
   /* ===== TAB BAR ===== */
   .tabbar {
     position: fixed; left: 0; right: 0; bottom: 0;
@@ -1505,6 +1537,22 @@
       }
     }
 
+    // Weight tab: tag every Saturday in the goal trajectory with its target weight
+    // and (if past) whether it was hit.
+    if (tab === 'weight' && dateObj.getDay() === 6) {
+      const startSat = TrackCore.parseDate(WEIGHT_GOAL_START_KEY);
+      const goal = TrackCore.weeklyWeightGoal(dateObj, startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+      if (goal != null) {
+        cell.classList.add('goal-sat');
+        cell.dataset.goal = goal;
+        if (!isFuture && entry && hasContent('weight', entry)) {
+          const vals = [entry.am, entry.pm].filter(v => typeof v === 'number');
+          const avg = vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+          if (avg != null) cell.classList.add(avg <= goal ? 'goal-hit' : 'goal-miss');
+        }
+      }
+    }
+
     if (!isFuture) attachDayInteractions(cell, tab, key);
     return cell;
   }
@@ -2383,7 +2431,8 @@
   function renderWeight() {
     const monthsContainer = document.getElementById('weightMonths');
     monthsContainer.innerHTML = '';
-    // From earliest logged month (or 2 months back), through next month
+    // From earliest logged month (or 2 months back), through the last
+    // goal-trajectory Saturday so every weekly target is visible.
     let startMonth = new Date(today.getFullYear(), today.getMonth() - 2, 1);
     const keys = Object.keys(store.weight);
     if (keys.length) {
@@ -2392,7 +2441,14 @@
       const earliestMonth = new Date(ey, em - 1, 1);
       if (earliestMonth < startMonth) startMonth = earliestMonth;
     }
-    const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const goalSched = TrackCore.weightGoalSchedule(
+      TrackCore.parseDate(WEIGHT_GOAL_START_KEY),
+      WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB,
+    );
+    const lastGoalDate = goalSched[goalSched.length - 1].date;
+    const monthOfLastGoal = new Date(lastGoalDate.getFullYear(), lastGoalDate.getMonth(), 1);
+    let endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    if (monthOfLastGoal > endMonth) endMonth = monthOfLastGoal;
     let y = startMonth.getFullYear(), m = startMonth.getMonth();
     while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
       monthsContainer.appendChild(buildMonth('weight', y, m));
