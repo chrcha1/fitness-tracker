@@ -1954,33 +1954,10 @@
   if (needsRepairPush) schedulePush();
 
   function mergeOneTab(tab, remoteStore, remoteMeta) {
-    let changed = false;
-    const allKeys = new Set([
-      ...Object.keys(remoteStore || {}), ...Object.keys(store[tab] || {}),
-      ...Object.keys(remoteMeta || {}), ...Object.keys(meta[tab] || {})
-    ]);
-    for (const key of allKeys) {
-      const localTs = typeof meta[tab][key] === 'number' ? meta[tab][key] : (meta[tab][key]?.deleted || 0);
-      const remoteTs = typeof remoteMeta[key] === 'number' ? remoteMeta[key] : (remoteMeta[key]?.deleted || 0);
-      const remoteDeleted = remoteMeta[key]?.deleted;
-      if (remoteTs > localTs) {
-        if (remoteDeleted) {
-          if (store[tab][key]) { delete store[tab][key]; changed = true; }
-          meta[tab][key] = { deleted: remoteDeleted };
-        } else if (remoteStore[key]) {
-          if (JSON.stringify(store[tab][key]) !== JSON.stringify(remoteStore[key])) {
-            store[tab][key] = remoteStore[key];
-            changed = true;
-          }
-          meta[tab][key] = remoteTs;
-        }
-      } else if (localTs === 0 && remoteTs === 0 && remoteStore[key] && !store[tab][key]) {
-        store[tab][key] = remoteStore[key];
-        meta[tab][key] = Date.now();
-        changed = true;
-      }
-    }
-    return changed;
+    const r = TrackCore.mergeTabKeys(store[tab], meta[tab], remoteStore, remoteMeta);
+    store[tab] = r.store;
+    meta[tab] = r.meta;
+    return r.changed;
   }
 
   function mergeRemote(remote) {

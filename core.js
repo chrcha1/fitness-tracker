@@ -353,6 +353,64 @@
     return { values, min, max };
   }
 
+  // Merge one tab's local + remote data with last-write-wins semantics.
+  // Pure function: takes local store map, local meta map, remote store map,
+  // remote meta map. Returns { store, meta, changed }.
+  //
+  // Conflict resolution:
+  // - If remoteTs > localTs and remote has the entry: take remote's data and
+  //   timestamp into local.
+  // - If remoteTs > localTs and remote is a tombstone ({deleted: ts}): apply
+  //   the delete locally.
+  // - If both timestamps are 0 (never seen) and remote has the entry but
+  //   local doesn't: take remote's entry, mark local with current time.
+  // - Otherwise (local newer or equal, or local-only data): keep local.
+  //
+  // Phantom keys (non-date strings) are filtered out so a corrupted remote
+  // can't infect local data.
+  function mergeTabKeys(localStore, localMeta, remoteStore, remoteMeta, nowFn) {
+    const now = nowFn || (() => Date.now());
+    const outStore = sanitizeTabMap(localStore);
+    const outMeta = sanitizeTabMap(localMeta);
+    let changed = false;
+
+    const allKeys = new Set([
+      ...Object.keys(remoteStore || {}),
+      ...Object.keys(localStore || {}),
+      ...Object.keys(remoteMeta || {}),
+      ...Object.keys(localMeta || {}),
+    ]);
+
+    for (const key of allKeys) {
+      if (!isDateKey(key)) continue;
+
+      const localRaw = localMeta && localMeta[key];
+      const remoteRaw = remoteMeta && remoteMeta[key];
+      const localTs = typeof localRaw === 'number' ? localRaw : (localRaw && localRaw.deleted) || 0;
+      const remoteTs = typeof remoteRaw === 'number' ? remoteRaw : (remoteRaw && remoteRaw.deleted) || 0;
+      const remoteDeleted = remoteRaw && remoteRaw.deleted;
+
+      if (remoteTs > localTs) {
+        if (remoteDeleted) {
+          if (outStore[key]) { delete outStore[key]; changed = true; }
+          outMeta[key] = { deleted: remoteDeleted };
+        } else if (remoteStore && remoteStore[key]) {
+          if (JSON.stringify(outStore[key]) !== JSON.stringify(remoteStore[key])) {
+            outStore[key] = remoteStore[key];
+            changed = true;
+          }
+          outMeta[key] = remoteTs;
+        }
+      } else if (localTs === 0 && remoteTs === 0 && remoteStore && remoteStore[key] && !outStore[key]) {
+        outStore[key] = remoteStore[key];
+        outMeta[key] = now();
+        changed = true;
+      }
+    }
+
+    return { store: outStore, meta: outMeta, changed };
+  }
+
   // Decide what tapping a calendar/today cell should do.
   // Returns one of: 'mark-empty' (write {mins:null} for today),
   //                 'open-editor' (open the per-tab editor),
@@ -397,6 +455,7 @@
     decideTapAction,
     nutritionDayTotals,
     newNutritionEntryId,
+    mergeTabKeys,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = TrackCore;
