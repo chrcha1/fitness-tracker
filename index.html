@@ -451,6 +451,15 @@
   .chat-send:active { transform: scale(0.92); }
   .chat-send svg { width: 18px; height: 18px; }
   .chat-send:disabled { background: var(--ink-4); cursor: wait; }
+  .chat-plus {
+    flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
+    background: var(--surface-2); color: var(--ink-2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 120ms;
+  }
+  .chat-plus:active { transform: scale(0.92); }
+  .chat-plus svg { width: 18px; height: 18px; }
   .chat-status {
     font-size: 11px; color: var(--ink-3); margin-top: 6px; padding: 0 4px;
   }
@@ -1358,6 +1367,9 @@
 
   <div class="chat-dock" id="nutritionChatDock">
     <div class="chat-row">
+      <button class="chat-plus" id="nutritionAddBtn" aria-label="Add manually">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
       <input type="text" class="chat-input" id="nutritionChatInput" placeholder="What did you eat?" autocomplete="off" autocorrect="off" autocapitalize="sentences">
       <button class="chat-send" id="nutritionChatSend" aria-label="Send">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -3768,7 +3780,8 @@
     if (entries.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'nutrition-empty';
-      empty.textContent = isToday ? 'Nothing logged yet today.' : 'Nothing logged this day.';
+      empty.textContent = (isToday ? 'Nothing logged yet today.' : 'Nothing logged this day.')
+        + ' Tap + to add manually, or talk to Claude.';
       list.appendChild(empty);
     } else {
       for (const e of entries) {
@@ -4067,6 +4080,12 @@ Rules:
   chatSend.addEventListener('click', handleChatSubmit);
   chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); handleChatSubmit(); }
+  });
+  // "+" button: open the manual entry editor for the currently-viewed day.
+  // Always works, with or without an Anthropic API key.
+  document.getElementById('nutritionAddBtn').addEventListener('click', () => {
+    haptic(8);
+    openNutritionEditor(nutritionViewKey, null);
   });
 
   // ===== INIT =====
