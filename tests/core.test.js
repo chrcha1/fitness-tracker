@@ -103,7 +103,7 @@ test('parseGistContent : pristine empty seed must NOT be misread as cardio data'
   const r = T.parseGistContent(JSON.stringify({
     cardio: {}, weight: {}, lifting: {}, intervals: {},
   }));
-  assert.deepEqual(r.store, { cardio: {}, weight: {}, lifting: {}, intervals: {} });
+  assert.deepEqual(r.store, { cardio: {}, weight: {}, lifting: {}, intervals: {}, nutrition: {} });
   assert.equal(T.countSessions(r.store.cardio), 0);
 });
 

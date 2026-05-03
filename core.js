@@ -57,8 +57,8 @@
   // Handles every legacy shape we've ever written, never throws.
   function parseGistContent(content) {
     const empty = {
-      store: { cardio: {}, weight: {}, lifting: {}, intervals: {} },
-      meta:  { cardio: {}, weight: {}, lifting: {}, intervals: {} },
+      store: { cardio: {}, weight: {}, lifting: {}, intervals: {}, nutrition: {} },
+      meta:  { cardio: {}, weight: {}, lifting: {}, intervals: {}, nutrition: {} },
       deadline: null,
     };
     let parsed;
