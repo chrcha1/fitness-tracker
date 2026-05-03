@@ -233,22 +233,31 @@
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
   /* ===== HERO CARD ===== */
-  /* The hero card is the first thing in every modal tab's view. We make it
-     position:sticky so it pins to the top of the viewport once the user
-     scrolls past the topbar. That way the count + progress bar + pace
-     stats stay visible while the user explores the calendar below.
-     position:sticky needs a positioned ancestor and a `top` value; the
-     ancestor here is the page body itself (no positioning), so the
-     element stays in normal flow until its sticky-trigger top edge
-     intersects the viewport top, at which point it locks. */
+  /* Hero card: scrolls normally with the page (NOT sticky). When the user
+     scrolls past it, a compact summary appears in the topbar instead --
+     iOS Large Title pattern. This keeps the hero out of the way once the
+     user is scrolling the calendar, while still giving them an at-a-glance
+     summary anywhere on the tab. */
   .hero {
     background: linear-gradient(160deg, #ffffff 0%, var(--accent-tint) 100%);
     border: 1px solid var(--border); border-radius: var(--radius-xl);
     padding: 24px 22px 22px; box-shadow: var(--shadow-md);
-    margin-bottom: 22px; position: sticky; top: 8px; z-index: 5;
+    margin-bottom: 22px; position: relative; z-index: 1;
     overflow: hidden;
     transition: background 320ms ease;
   }
+  /* Compact summary line that lives in the topbar. Hidden by default,
+     fades in when the hero scrolls off-screen. JS toggles `data-shrunk`
+     on the body to drive this. */
+  .topbar-summary {
+    font-size: 12px; font-weight: 600; color: var(--ink-3);
+    margin-top: 2px; letter-spacing: -0.01em;
+    opacity: 0; transition: opacity 200ms ease;
+    font-feature-settings: "tnum"; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  body[data-shrunk="true"] .topbar-summary { opacity: 1; }
+  .topbar-summary strong { color: var(--accent-deep); font-weight: 700; }
   .hero::before {
     content: ''; position: absolute; top: -40px; right: -40px;
     width: 160px; height: 160px;
@@ -1155,7 +1164,10 @@
 
 <header class="topbar">
   <div class="topbar-title" id="appTitle">
-    <span class="title-dot"></span><span id="appTitleText">Today</span>
+    <div>
+      <div><span class="title-dot"></span><span id="appTitleText">Today</span></div>
+      <div class="topbar-summary" id="topbarSummary"></div>
+    </div>
   </div>
   <div style="display:flex; gap:8px; align-items:center;">
     <div class="sync-pill" id="syncPill" hidden>
@@ -3214,6 +3226,11 @@
     else if (currentTab === 'lifting') renderLifting();
     else if (currentTab === 'intervals') renderIntervals();
     else if (currentTab === 'nutrition') renderNutrition();
+    // After any render, recompute whether the topbar should be in compact
+    // form. Switching tabs resets scroll to 0, but on the same tab a
+    // re-render might have changed hero contents (count etc.) so the
+    // summary text needs to refresh.
+    if (typeof updateTopbarSummary === 'function') updateTopbarSummary();
   }
 
   // ===== TODAY TAB =====
@@ -4396,6 +4413,82 @@ Rules:
   }
   document.getElementById('nutritionAddBtn').addEventListener('click', openManualNutritionEntry);
   document.getElementById('nutritionAddBtnTop').addEventListener('click', openManualNutritionEntry);
+
+  // ===== TOPBAR SHRINK ON SCROLL =====
+  // iOS Large Title pattern: when the user scrolls past the hero on a tab,
+  // a compact one-line summary appears under the title. This means the user
+  // never has to scroll back up to see their key numbers, but the hero
+  // itself doesn't waste vertical space while they explore the calendar.
+  const topbarSummary = document.getElementById('topbarSummary');
+  function summaryForCurrentTab() {
+    const todayKey = fmtKey(today);
+    if (currentTab === 'cardio') {
+      const total = TrackCore.countSessions(store.cardio);
+      const earliest = Object.keys(store.cardio).filter(TrackCore.isDateKey).sort()[0];
+      const pace = TrackCore.actualWeeklyPace(total, earliest, today);
+      return `<strong>${total}</strong> / ${TARGET} · ${pace ? pace.toFixed(1) : '-'}/wk`;
+    }
+    if (currentTab === 'intervals') {
+      const total = TrackCore.countSessions(store.intervals);
+      // Compute this-week's count for a quick at-a-glance.
+      const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+      let wk = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
+        if (TrackCore.dayHasContent('intervals', store.intervals[fmtKey(d)])) wk++;
+      }
+      return `<strong>${wk}</strong>/wk · ${total} total`;
+    }
+    if (currentTab === 'lifting') {
+      const total = TrackCore.countSessions(store.lifting);
+      return `<strong>${total}</strong> days logged`;
+    }
+    if (currentTab === 'weight') {
+      const series = TrackCore.weightSeries(store.weight);
+      if (!series.length) return 'No weigh-ins yet';
+      const latest = series[series.length - 1].weight;
+      const goalToday = TrackCore.weeklyWeightGoal(today, weightGoalStartDate(), WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+      if (goalToday != null) {
+        const delta = latest - goalToday;
+        const sign = delta > 0 ? '+' : '';
+        return `<strong>${latest.toFixed(1)}</strong> lb · ${sign}${delta.toFixed(1)} vs goal`;
+      }
+      return `<strong>${latest.toFixed(1)}</strong> lb`;
+    }
+    if (currentTab === 'nutrition') {
+      const t = TrackCore.nutritionDayTotals(store.nutrition[todayKey]);
+      const goal = currentKcalGoal();
+      return `<strong>${Math.round(t.calories)}</strong>/${goal} kcal · ${Math.round(t.protein_g)}g P`;
+    }
+    return '';
+  }
+  function updateTopbarSummary() {
+    if (currentTab === 'today') {
+      // Today tab already has its own greeting; don't double up.
+      document.body.dataset.shrunk = 'false';
+      return;
+    }
+    // The hero of the active view: it's the FIRST .hero descendant of the
+    // active view container. When the user scrolls past its bottom edge,
+    // we shrink the topbar.
+    const active = document.querySelector('.view.active');
+    if (!active) return;
+    const hero = active.querySelector('.hero');
+    if (!hero) {
+      document.body.dataset.shrunk = 'false';
+      return;
+    }
+    const rect = hero.getBoundingClientRect();
+    // Hero is "off-screen" once its bottom edge crosses the topbar's bottom.
+    // Topbar is roughly the first 60px of the viewport. We check 80 to give
+    // a small buffer so the toggle doesn't flicker right at the boundary.
+    const shrunk = rect.bottom < 80;
+    document.body.dataset.shrunk = shrunk ? 'true' : 'false';
+    if (shrunk) topbarSummary.innerHTML = summaryForCurrentTab();
+  }
+  // Listen to scroll. updateTopbarSummary is also called from setTab + after
+  // every render so a tab switch immediately recomputes.
+  window.addEventListener('scroll', updateTopbarSummary, { passive: true });
 
   // ===== INIT =====
   setTab(currentTab);
