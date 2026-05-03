@@ -787,25 +787,20 @@
   }
   .chip.active .chip-check { opacity: 1; }
 
-  /* Weight type-to-set row above the wheel */
-  .weight-type-row {
-    display: flex; align-items: center; gap: 8px;
-    margin: 0 0 14px; padding: 0 6px;
+  /* Weight slot inputs: typed directly where the number lives. The input
+     looks like the big bold number it shows when filled — tap to type, or
+     scroll the wheel below to set/fine-tune. */
+  .slot-input {
+    width: 100%; padding: 0; margin: 0;
+    border: none; outline: none; background: transparent;
+    font-family: inherit; font-size: 24px; font-weight: 700;
+    letter-spacing: -0.02em; color: var(--ink);
+    font-feature-settings: "tnum"; line-height: 1.1;
+    text-align: center;
+    -webkit-appearance: none; appearance: none;
   }
-  .weight-type-input {
-    flex: 1; height: 44px; padding: 0 14px;
-    border: 1px solid var(--border); border-radius: 12px;
-    background: var(--surface-2); color: var(--ink);
-    font-family: inherit; font-size: 18px; font-weight: 600;
-    font-feature-settings: "tnum"; letter-spacing: -0.01em;
-    outline: none; text-align: right;
-  }
-  .weight-type-input:focus { border-color: var(--accent); }
-  .weight-type-input::placeholder { color: var(--ink-4); font-weight: 500; }
-  .weight-type-unit {
-    font-size: 14px; font-weight: 600; color: var(--ink-3);
-    flex-shrink: 0; min-width: 22px;
-  }
+  .slot-input::placeholder { color: var(--ink-4); font-weight: 500; }
+  .slot.filled .slot-input { color: var(--accent-deep); }
 
   /* Weight slot (AM/PM cards) */
   .weight-slots {
@@ -1499,16 +1494,12 @@
   <div class="weight-slots">
     <div class="slot" data-slot="am" id="slotAM">
       <div class="slot-label">AM</div>
-      <div class="slot-value" id="slotAMValue"><span class="slot-empty">tap to set</span></div>
+      <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" class="slot-input" id="slotAMInput" placeholder="-" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="slot" data-slot="pm" id="slotPM">
       <div class="slot-label">PM</div>
-      <div class="slot-value" id="slotPMValue"><span class="slot-empty">tap to set</span></div>
+      <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" class="slot-input" id="slotPMInput" placeholder="-" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
-  </div>
-  <div class="weight-type-row">
-    <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" class="weight-type-input" id="weightTypeInput" placeholder="type to set" autocomplete="off" autocorrect="off" spellcheck="false">
-    <span class="weight-type-unit">lb</span>
   </div>
   <div class="wheel-container">
     <div class="wheel-selection"></div>
@@ -2540,57 +2531,85 @@
     const idx = Math.round(weightWheel.scrollTop / ITEM_H);
     if (idx !== lastWeightIdx) {
       lastWeightIdx = idx; haptic(2); updateWeightWheelHighlight(true);
-      // Mirror the wheel value back into the type input so the user can see
-      // either control as the source of truth.
-      const ti = document.getElementById('weightTypeInput');
-      if (ti && document.activeElement !== ti) {
-        ti.value = weightValueAt(idx).toFixed(1);
+      // Mirror the wheel value into the active slot's inline input so the
+      // user sees what they're scrolling to.
+      if (activeSlot) {
+        const input = document.getElementById('slot' + activeSlot.toUpperCase() + 'Input');
+        if (input && document.activeElement !== input) {
+          input.value = weightValueAt(idx).toFixed(1);
+        }
       }
     }
     clearTimeout(weightScrollTimer);
     weightScrollTimer = setTimeout(() => updateWeightWheelHighlight(true), 80);
   });
 
-  // Type-to-set: number input drives the wheel + commits to the active slot.
-  const weightTypeInput = document.getElementById('weightTypeInput');
-  weightTypeInput.addEventListener('input', () => {
-    const raw = weightTypeInput.value.replace(/[^0-9.]/g, '');
-    const v = parseFloat(raw);
-    if (!isFinite(v)) return;
-    if (v < WEIGHT_MIN || v > WEIGHT_MAX) return;
-    if (!activeSlot) {
-      // No slot selected; auto-select AM if both empty, else PM.
-      activeSlot = weightDraft.am == null ? 'am' : 'pm';
-    }
-    weightDraft[activeSlot] = Math.round(v * 10) / 10;
-    paintWeightSlots();
-    writeWeightDraft();
-    setWeightWheel(weightDraft[activeSlot], false);
-  });
-  weightTypeInput.addEventListener('focus', () => {
-    // Help iOS users by auto-selecting the value so they can immediately
-    // overwrite it instead of appending.
-    setTimeout(() => weightTypeInput.select(), 50);
-  });
+  // Per-slot inline inputs: tap the AM/PM number, type directly. Wheel and
+  // input mirror each other.
+  function wireSlotInput(slot) {
+    const input = document.getElementById('slot' + slot.toUpperCase() + 'Input');
+    if (!input) return;
+    input.addEventListener('focus', () => {
+      activeSlot = slot;
+      // If the slot is empty, prefill with last recorded weight so the user
+      // can adjust instead of typing from scratch.
+      if (weightDraft[slot] == null) {
+        const fallback = weightDraft[slot === 'am' ? 'pm' : 'am'] != null
+          ? weightDraft[slot === 'am' ? 'pm' : 'am']
+          : (lastRecordedWeight() || 175);
+        // Don't commit yet — leave the input for the user to overwrite, but
+        // position the wheel so it's a sensible reference.
+        setWeightWheel(fallback, true);
+      } else {
+        setWeightWheel(weightDraft[slot], true);
+      }
+      paintWeightSlots();
+      // Auto-select existing text so typing replaces it.
+      setTimeout(() => input.select(), 30);
+    });
+    input.addEventListener('input', () => {
+      const raw = input.value.replace(/[^0-9.]/g, '');
+      const v = parseFloat(raw);
+      if (!isFinite(v) || v < WEIGHT_MIN || v > WEIGHT_MAX) return;
+      const rounded = Math.round(v * 10) / 10;
+      weightDraft[slot] = rounded;
+      writeWeightDraft();
+      setWeightWheel(rounded, false);
+      // Repaint the OTHER slot (this one is being typed) and the filled state.
+      const el = document.getElementById('slot' + slot.toUpperCase());
+      el.classList.add('filled');
+    });
+    input.addEventListener('blur', () => {
+      // If the user blanked the input, treat as removed.
+      if (!input.value.trim()) {
+        weightDraft[slot] = null;
+        writeWeightDraft();
+        paintWeightSlots();
+      }
+    });
+  }
+  wireSlotInput('am');
+  wireSlotInput('pm');
 
   function paintWeightSlots() {
     const amEl = document.getElementById('slotAM');
     const pmEl = document.getElementById('slotPM');
-    const amVal = document.getElementById('slotAMValue');
-    const pmVal = document.getElementById('slotPMValue');
+    const amInput = document.getElementById('slotAMInput');
+    const pmInput = document.getElementById('slotPMInput');
 
     if (weightDraft.am != null) {
-      amVal.innerHTML = `<span>${weightDraft.am.toFixed(1)}<span class="small">lb</span></span>`;
+      // Don't clobber what the user is actively typing.
+      if (document.activeElement !== amInput) amInput.value = weightDraft.am.toFixed(1);
       amEl.classList.add('filled');
     } else {
-      amVal.innerHTML = `<span class="slot-empty">tap to set</span>`;
+      if (document.activeElement !== amInput) amInput.value = '';
       amEl.classList.remove('filled');
     }
     if (weightDraft.pm != null) {
-      pmVal.innerHTML = `<span>${weightDraft.pm.toFixed(1)}<span class="small">lb</span></span>`;
+      if (document.activeElement !== pmInput) pmInput.value = weightDraft.pm.toFixed(1);
       pmEl.classList.add('filled');
     } else {
-      pmVal.innerHTML = `<span class="slot-empty">tap to set</span>`;
+      if (document.activeElement !== pmInput) pmInput.value = '';
       pmEl.classList.remove('filled');
     }
     amEl.classList.toggle('editing', activeSlot === 'am');
