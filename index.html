@@ -787,6 +787,26 @@
   }
   .chip.active .chip-check { opacity: 1; }
 
+  /* Weight type-to-set row above the wheel */
+  .weight-type-row {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 0 14px; padding: 0 6px;
+  }
+  .weight-type-input {
+    flex: 1; height: 44px; padding: 0 14px;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--surface-2); color: var(--ink);
+    font-family: inherit; font-size: 18px; font-weight: 600;
+    font-feature-settings: "tnum"; letter-spacing: -0.01em;
+    outline: none; text-align: right;
+  }
+  .weight-type-input:focus { border-color: var(--accent); }
+  .weight-type-input::placeholder { color: var(--ink-4); font-weight: 500; }
+  .weight-type-unit {
+    font-size: 14px; font-weight: 600; color: var(--ink-3);
+    flex-shrink: 0; min-width: 22px;
+  }
+
   /* Weight slot (AM/PM cards) */
   .weight-slots {
     display: grid; grid-template-columns: 1fr 1fr;
@@ -1486,6 +1506,10 @@
       <div class="slot-value" id="slotPMValue"><span class="slot-empty">tap to set</span></div>
     </div>
   </div>
+  <div class="weight-type-row">
+    <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" class="weight-type-input" id="weightTypeInput" placeholder="type to set" autocomplete="off" autocorrect="off" spellcheck="false">
+    <span class="weight-type-unit">lb</span>
+  </div>
   <div class="wheel-container">
     <div class="wheel-selection"></div>
     <div class="wheel" id="weightWheel"></div>
@@ -1689,6 +1713,12 @@
   // Nutrition daily goals (hardcoded; matches the cal-macro-track profile).
   const NUTRITION_KCAL_GOAL = 1650;
   const NUTRITION_PROTEIN_GOAL = 130;
+
+  // Hard floor for calendar grids: every tab can always scroll back to here.
+  // Set to April 2026 because that's when the tracker started getting used.
+  const CALENDAR_FLOOR = new Date(2026, 3, 1);
+  // Look-ahead horizon for tabs without an explicit deadline.
+  const CALENDAR_FORWARD_MONTHS = 8;
 
   // Anthropic API config keys
   const ANTHROPIC_KEY = 'track-anthropic-v1';
@@ -2507,9 +2537,39 @@
   let weightScrollTimer = null, lastWeightIdx = -1;
   weightWheel.addEventListener('scroll', () => {
     const idx = Math.round(weightWheel.scrollTop / ITEM_H);
-    if (idx !== lastWeightIdx) { lastWeightIdx = idx; haptic(2); updateWeightWheelHighlight(true); }
+    if (idx !== lastWeightIdx) {
+      lastWeightIdx = idx; haptic(2); updateWeightWheelHighlight(true);
+      // Mirror the wheel value back into the type input so the user can see
+      // either control as the source of truth.
+      const ti = document.getElementById('weightTypeInput');
+      if (ti && document.activeElement !== ti) {
+        ti.value = weightValueAt(idx).toFixed(1);
+      }
+    }
     clearTimeout(weightScrollTimer);
     weightScrollTimer = setTimeout(() => updateWeightWheelHighlight(true), 80);
+  });
+
+  // Type-to-set: number input drives the wheel + commits to the active slot.
+  const weightTypeInput = document.getElementById('weightTypeInput');
+  weightTypeInput.addEventListener('input', () => {
+    const raw = weightTypeInput.value.replace(/[^0-9.]/g, '');
+    const v = parseFloat(raw);
+    if (!isFinite(v)) return;
+    if (v < WEIGHT_MIN || v > WEIGHT_MAX) return;
+    if (!activeSlot) {
+      // No slot selected; auto-select AM if both empty, else PM.
+      activeSlot = weightDraft.am == null ? 'am' : 'pm';
+    }
+    weightDraft[activeSlot] = Math.round(v * 10) / 10;
+    paintWeightSlots();
+    writeWeightDraft();
+    setWeightWheel(weightDraft[activeSlot], false);
+  });
+  weightTypeInput.addEventListener('focus', () => {
+    // Help iOS users by auto-selecting the value so they can immediately
+    // overwrite it instead of appending.
+    setTimeout(() => weightTypeInput.select(), 50);
   });
 
   function paintWeightSlots() {
@@ -2584,11 +2644,29 @@
     }
   }
 
+  // Most recent recorded weight across all days (excluding the day being
+  // edited). Used as the default when opening a fresh weigh-in slot.
+  function lastRecordedWeight() {
+    const series = TrackCore.weightSeries(store.weight);
+    // Drop the current edit day from the series so opening today's slot
+    // defaults to yesterday's weight, not today's draft.
+    const filtered = series.filter(e => e.key !== currentEditKey);
+    if (!filtered.length) return null;
+    return filtered[filtered.length - 1].weight;
+  }
+
   function selectWeightSlot(slot) {
     activeSlot = slot;
     paintWeightSlots();
-    // Set wheel to current value or sensible default
-    const v = weightDraft[slot] != null ? weightDraft[slot] : (weightDraft[slot === 'am' ? 'pm' : 'am'] || 175);
+    // Default order:
+    //   1. existing draft for this slot (if any)
+    //   2. the other slot's draft (am↔pm)
+    //   3. last recorded weight from history
+    //   4. fallback 175
+    const other = weightDraft[slot === 'am' ? 'pm' : 'am'];
+    const v = weightDraft[slot] != null
+      ? weightDraft[slot]
+      : (other != null ? other : (lastRecordedWeight() || 175));
     if (weightDraft[slot] == null) {
       // First commit so this slot has a value when wheel touches
       weightDraft[slot] = v;
@@ -2596,6 +2674,9 @@
       writeWeightDraft();
     }
     setWeightWheel(v, true);
+    // Sync the type input with the current value too.
+    const typeInput = document.getElementById('weightTypeInput');
+    if (typeInput) typeInput.value = (typeof v === 'number') ? v.toFixed(1) : '';
     haptic(8);
   }
 
@@ -3236,7 +3317,9 @@
   function renderCardio() {
     const monthsContainer = document.getElementById('cardioMonths');
     monthsContainer.innerHTML = '';
-    // Start from the earliest logged session's month, or current month if none
+    // Start from the earliest logged session's month, the calendar floor, or
+    // current month, whichever is earliest. This guarantees the user can
+    // always scroll back to April 2026 even when local data hasn't synced.
     let startMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const keys = Object.keys(store.cardio);
     if (keys.length) {
@@ -3245,6 +3328,7 @@
       const earliestMonth = new Date(ey, em - 1, 1);
       if (earliestMonth < startMonth) startMonth = earliestMonth;
     }
+    if (CALENDAR_FLOOR < startMonth) startMonth = new Date(CALENDAR_FLOOR);
     let y = startMonth.getFullYear(), m = startMonth.getMonth();
     const endY = deadline.getFullYear(), endM = deadline.getMonth();
     while (y < endY || (y === endY && m <= endM)) {
@@ -3291,7 +3375,7 @@
   function renderWeight() {
     const monthsContainer = document.getElementById('weightMonths');
     monthsContainer.innerHTML = '';
-    // From earliest logged month (or 2 months back), through the last
+    // From earliest logged month (or April floor), through the last
     // goal-trajectory Saturday so every weekly target is visible.
     let startMonth = new Date(today.getFullYear(), today.getMonth() - 2, 1);
     const keys = Object.keys(store.weight);
@@ -3301,6 +3385,7 @@
       const earliestMonth = new Date(ey, em - 1, 1);
       if (earliestMonth < startMonth) startMonth = earliestMonth;
     }
+    if (CALENDAR_FLOOR < startMonth) startMonth = new Date(CALENDAR_FLOOR);
     const goalSched = TrackCore.weightGoalSchedule(
       TrackCore.parseDate(WEIGHT_GOAL_START_KEY),
       WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB,
@@ -3543,7 +3628,8 @@
       const earliestMonth = new Date(ey, em - 1, 1);
       if (earliestMonth < startMonth) startMonth = earliestMonth;
     }
-    const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    if (CALENDAR_FLOOR < startMonth) startMonth = new Date(CALENDAR_FLOOR);
+    const endMonth = new Date(today.getFullYear(), today.getMonth() + CALENDAR_FORWARD_MONTHS, 1);
     let y = startMonth.getFullYear(), m = startMonth.getMonth();
     while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
       monthsContainer.appendChild(buildMonth('lifting', y, m));
@@ -3628,7 +3714,8 @@
       const earliestMonth = new Date(ey, em - 1, 1);
       if (earliestMonth < startMonth) startMonth = earliestMonth;
     }
-    const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    if (CALENDAR_FLOOR < startMonth) startMonth = new Date(CALENDAR_FLOOR);
+    const endMonth = new Date(today.getFullYear(), today.getMonth() + CALENDAR_FORWARD_MONTHS, 1);
     let y = startMonth.getFullYear(), m = startMonth.getMonth();
     while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
       monthsContainer.appendChild(buildMonth('intervals', y, m));
