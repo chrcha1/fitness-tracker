@@ -267,6 +267,39 @@ test('today: weekly summary container exists (toggled visible on Sun/Mon)', () =
 });
 
 // ============================================================
+// Cross-device sync freshness. The user expects edits on their laptop to
+// reach their phone (and vice-versa) without manual refresh. We verify
+// that the page registers all the right pull triggers.
+// ============================================================
+
+test('sync: pulls from gist on initial load', () => {
+  // The boot sequence kicks off a gistPull() once at startup if syncConfig
+  // exists. Find that pattern.
+  assert.ok(/gistPull\(\)\.then/.test(html), 'expected initial gistPull on boot');
+});
+
+test('sync: pulls when window gains focus', () => {
+  // Switching tabs back to the app, or returning to it from another window,
+  // should trigger a fresh pull.
+  assert.ok(/window\.addEventListener\('focus'[\s\S]*?gistPull\(\)/.test(html),
+    'expected window focus listener to call gistPull');
+});
+
+test('sync: pulls on visibilitychange (iOS PWA returning from background)', () => {
+  // iOS PWAs don't always fire 'focus' when returning from backgrounded
+  // state. visibilitychange covers that case.
+  assert.ok(/visibilitychange[\s\S]*?gistPull\(\)/.test(html),
+    'expected visibilitychange listener to call gistPull');
+});
+
+test('sync: background polling interval is set (so updates appear within ~30s)', () => {
+  // setInterval that calls gistPull periodically. We check for the
+  // setInterval call near a gistPull reference and a 30000ms timeout.
+  assert.ok(/setInterval\([\s\S]*?gistPull[\s\S]*?\d{4,5}\)/.test(html),
+    'expected setInterval polling that calls gistPull every ~30s');
+});
+
+// ============================================================
 // Tab → view → render dispatch must be coherent end-to-end.
 // ============================================================
 

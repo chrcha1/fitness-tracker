@@ -154,6 +154,8 @@
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
     overflow-x: hidden; /* iOS: never let any inner element scroll the page sideways */
+    overflow-y: auto;   /* Explicit so trackpad/wheel always scrolls vertically */
+    -webkit-overflow-scrolling: touch; /* iOS momentum scroll */
     width: 100%;
   }
 
@@ -4272,6 +4274,19 @@ Rules:
   window.addEventListener('focus', () => {
     if (syncConfig && document.visibilityState === 'visible') gistPull();
   });
+  // Also pull when the tab becomes visible (covers iOS PWA returning from
+  // backgrounded state, which doesn't always fire 'focus').
+  document.addEventListener('visibilitychange', () => {
+    if (syncConfig && document.visibilityState === 'visible') gistPull();
+  });
+  // Background polling: every 30 seconds when the page is foregrounded and
+  // synced, fetch the gist. This is what makes a change on your laptop show
+  // up on your phone within ~30s without you having to switch tabs.
+  setInterval(() => {
+    if (syncConfig && document.visibilityState === 'visible' && !document.hidden) {
+      gistPull().catch(() => {});
+    }
+  }, 30000);
 })();
 </script>
 </body>
