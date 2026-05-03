@@ -1664,6 +1664,7 @@
     <button class="sheet-btn ghost" id="syncCancelBtn">Cancel</button>
     <button class="sheet-btn primary" id="syncConnectBtn">Connect</button>
   </div>
+  <button class="sheet-btn secondary" id="syncPullBtn" style="width:100%; margin-top:10px; display:none;">Pull latest from gist</button>
   <button class="sheet-btn danger" id="syncDisconnectBtn" style="width:100%; margin-top:10px; display:none;">Disconnect</button>
 </div>
 
@@ -2990,10 +2991,26 @@
     tokenInput.value = syncConfig?.token || '';
     gistIdInput.value = syncConfig?.gistId || '';
     syncDisconnectBtn.style.display = syncConfig ? 'block' : 'none';
+    document.getElementById('syncPullBtn').style.display = syncConfig ? 'block' : 'none';
     setSyncStatus('');
     document.getElementById('syncHelpDetail').hidden = true;
     document.getElementById('menuSheet').classList.remove('open');
     document.getElementById('syncSheet').classList.add('open');
+  });
+
+  document.getElementById('syncPullBtn').addEventListener('click', async () => {
+    if (!syncConfig) return;
+    setSyncStatus('Pulling from gist...', 'info');
+    try {
+      const remote = await gistFetch();
+      const changed = mergeRemote(remote);
+      if (changed) saveLocal();
+      render();
+      setSyncStatus('Pull complete. Calendars refreshed.', 'ok');
+      haptic(15);
+    } catch (e) {
+      setSyncStatus('Pull failed: ' + (e.message || e), 'err');
+    }
   });
 
   document.getElementById('syncHelpToggle').addEventListener('click', (e) => {
