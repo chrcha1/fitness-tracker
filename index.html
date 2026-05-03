@@ -153,6 +153,8 @@
     background: var(--bg); color: var(--ink); font-family: var(--font);
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
+    overflow-x: hidden; /* iOS: never let any inner element scroll the page sideways */
+    width: 100%;
   }
 
   body {
@@ -160,12 +162,14 @@
     padding: max(env(safe-area-inset-top), 16px) 18px calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 16px) + 16px);
     display: flex; flex-direction: column;
     user-select: none; -webkit-user-select: none;
+    box-sizing: border-box;
   }
 
-  /* Desktop: keep the phone-shaped column, just centered. Fixed elements use
-     left:50% + margin-left so we don't disturb their existing transform-based
-     slide animations (sheets) or vertical translations (overlays). */
-  @media (min-width: 700px) {
+  /* Desktop only: bigger breakpoint so iPhones in landscape never trigger
+     this layout. iPhone 15 Pro Max landscape is 932px; iPhone 14 Pro Max is
+     926px; iPad mini landscape is 1024px. We only kick in at >=1024px so the
+     phone layout owns every iPhone and small iPad in either orientation. */
+  @media (min-width: 1024px) {
     body {
       max-width: 540px;
       margin: 0 auto;
@@ -633,14 +637,19 @@
     background: var(--surface);
     border-top: 1px solid var(--border);
     display: flex; z-index: 50;
+    overflow: hidden; /* never let a tab spill beyond the bar */
   }
   .tab {
-    flex: 1; display: flex; flex-direction: column;
+    /* Equal-width tabs, allowed to shrink to zero so 6 always fit. The 1 1 0
+       triple is explicit: grow:1 shrink:1 basis:0. flex:1 alone is ambiguous
+       enough to behave differently on iOS Safari at small widths. */
+    flex: 1 1 0; min-width: 0; max-width: 100%;
+    display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     gap: 3px; cursor: pointer; padding: 8px 2px;
     background: none; border: none; font-family: inherit;
     color: var(--ink-3); transition: color 200ms ease;
-    position: relative; min-width: 0;
+    position: relative;
   }
   .tab svg { width: 22px; height: 22px; }
   .tab-label {
