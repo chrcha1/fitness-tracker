@@ -18,7 +18,7 @@ test('html: tabbar contains exactly 6 tab buttons', () => {
 });
 
 test('html: tab buttons appear in the canonical order', () => {
-  const expected = ['today', 'cardio', 'intervals', 'lifting', 'nutrition', 'weight'];
+  const expected = ['today', 'cardio', 'intervals', 'lifting', 'weight', 'nutrition'];
   const found = [];
   const re = /<button class="tab"\s+data-tab="([^"]+)"/g;
   let m;
