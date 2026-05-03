@@ -211,6 +211,38 @@
     return `n_${dateKey}_${r}`;
   }
 
+  // Mifflin-St Jeor BMR (kcal/day). The most accurate of the common formulas
+  // for normal-bodyweight adults.
+  //   Male:    10 * kg + 6.25 * cm - 5 * age + 5
+  //   Female:  10 * kg + 6.25 * cm - 5 * age - 161
+  // Inputs are in metric. Use lbsToKg / inchesToCm if your data is imperial.
+  function mifflinStJeor(opts) {
+    if (!opts) return null;
+    const { weightKg, heightCm, age, sex } = opts;
+    if (typeof weightKg !== 'number' || typeof heightCm !== 'number' || typeof age !== 'number') return null;
+    const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
+    if (sex === 'M' || sex === 'male') return base + 5;
+    if (sex === 'F' || sex === 'female') return base - 161;
+    return null;
+  }
+  const lbsToKg = (lb) => lb / 2.2046226218;
+  const inchesToCm = (inches) => inches * 2.54;
+
+  // Calorie goal from latest weight + profile, using BMR as the target intake
+  // (the user wants to eat at BMR so workouts create the deficit). Returns
+  // a rounded integer; null if inputs are missing.
+  function nutritionKcalGoal(latestWeightLb, profile) {
+    if (typeof latestWeightLb !== 'number' || !profile) return null;
+    const bmr = mifflinStJeor({
+      weightKg: lbsToKg(latestWeightLb),
+      heightCm: inchesToCm(profile.heightIn),
+      age: profile.age,
+      sex: profile.sex,
+    });
+    if (bmr == null || !isFinite(bmr)) return null;
+    return Math.round(bmr / 5) * 5; // round to nearest 5 kcal
+  }
+
   // Iterate dates from `today` backwards; useful for streak math.
   function* daysBackFrom(today) {
     const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -456,6 +488,10 @@
     nutritionDayTotals,
     newNutritionEntryId,
     mergeTabKeys,
+    mifflinStJeor,
+    lbsToKg,
+    inchesToCm,
+    nutritionKcalGoal,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = TrackCore;

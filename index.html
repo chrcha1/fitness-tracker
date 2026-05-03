@@ -230,11 +230,20 @@
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
   /* ===== HERO CARD ===== */
+  /* The hero card is the first thing in every modal tab's view. We make it
+     position:sticky so it pins to the top of the viewport once the user
+     scrolls past the topbar. That way the count + progress bar + pace
+     stats stay visible while the user explores the calendar below.
+     position:sticky needs a positioned ancestor and a `top` value; the
+     ancestor here is the page body itself (no positioning), so the
+     element stays in normal flow until its sticky-trigger top edge
+     intersects the viewport top, at which point it locks. */
   .hero {
     background: linear-gradient(160deg, #ffffff 0%, var(--accent-tint) 100%);
     border: 1px solid var(--border); border-radius: var(--radius-xl);
     padding: 24px 22px 22px; box-shadow: var(--shadow-md);
-    margin-bottom: 22px; position: relative; overflow: hidden;
+    margin-bottom: 22px; position: sticky; top: 8px; z-index: 5;
+    overflow: hidden;
     transition: background 320ms ease;
   }
   .hero::before {
@@ -788,7 +797,7 @@
   .chip.active .chip-check { opacity: 1; }
 
   /* Weight slot inputs: typed directly where the number lives. The input
-     looks like the big bold number it shows when filled — tap to type, or
+     looks like the big bold number it shows when filled. Tap to type, or
      scroll the wheel below to set/fine-tune. */
   .slot-input {
     width: 100%; padding: 0; margin: 0;
@@ -1702,9 +1711,41 @@
   const WEIGHT_GOAL_START_LB = 156;
   const WEIGHT_GOAL_TARGET_LB = 140;
 
-  // Nutrition daily goals (hardcoded; matches the cal-macro-track profile).
-  const NUTRITION_KCAL_GOAL = 1650;
+  // ===== USER PROFILE (your bio + goals) =====
+  // These values feed the BMR calculation. Mifflin-St Jeor only needs
+  // height, weight, age, and sex. We pull weight live from the latest
+  // weigh-in below; the rest is hardcoded here. To update height/age,
+  // just change these constants. Sex is 'F' or 'M' (used by the formula
+  // to apply the right offset constant: -161 for F, +5 for M).
+  const USER_PROFILE = {
+    heightIn: 65.5, // 5'5.5"
+    age: 22,
+    sex: 'F',
+  };
+
+  // Nutrition daily goals.
+  // - Calories: dynamically computed from BMR (Mifflin-St Jeor) using the
+  //   most recent weigh-in. Why BMR instead of TDEE? You eat at BMR, your
+  //   workouts (which the formula doesn't include) create the calorie
+  //   deficit. Roughly 1 lb/wk loss when you exercise moderately.
+  // - Protein: 130g target. Body-recomposition rule of thumb is roughly
+  //   ~0.8-1.0g per pound of bodyweight; 130g sits in that range without
+  //   being annoying to hit.
+  // The fallback (1650) is what we use if no weigh-in has been logged yet.
+  const NUTRITION_KCAL_GOAL_FALLBACK = 1650;
   const NUTRITION_PROTEIN_GOAL = 130;
+
+  // Helper: returns the kcal goal for *today*, recomputed from the most
+  // recent weight in the store. We do this on every render so the goal
+  // tracks the user's weight as they progress. Falls back to a constant
+  // if there's no weigh-in to read.
+  function currentKcalGoal() {
+    const series = TrackCore.weightSeries(store.weight);
+    if (!series.length) return NUTRITION_KCAL_GOAL_FALLBACK;
+    const latestLb = series[series.length - 1].weight;
+    const goal = TrackCore.nutritionKcalGoal(latestLb, USER_PROFILE);
+    return goal != null ? goal : NUTRITION_KCAL_GOAL_FALLBACK;
+  }
 
   // Hard floor for calendar grids: every tab can always scroll back to here.
   // Set to April 2026 because that's when the tracker started getting used.
@@ -2557,7 +2598,7 @@
         const fallback = weightDraft[slot === 'am' ? 'pm' : 'am'] != null
           ? weightDraft[slot === 'am' ? 'pm' : 'am']
           : (lastRecordedWeight() || 175);
-        // Don't commit yet — leave the input for the user to overwrite, but
+        // Don't commit yet. Leave the input for the user to overwrite, but
         // position the wheel so it's a sensible reference.
         setWeightWheel(fallback, true);
       } else {
@@ -3855,23 +3896,36 @@
   let nutritionViewKey = fmtKey(today); // which day the user is looking at (default: today)
 
   function renderNutrition() {
+    // Pull this day's nutrition entries from the store. Default to an empty
+    // array so the rest of the function never has to guard against undefined.
     const day = store.nutrition[nutritionViewKey] || { entries: [] };
+    // Sum up macros across every entry on this day. nutritionDayTotals is a
+    // pure function in core.js so we can test it in isolation; here we just
+    // call it and read the result.
     const totals = TrackCore.nutritionDayTotals(day);
+    // Recompute the calorie goal every render so it tracks the user's
+    // current weight. As weight drops, BMR drops, and the goal drops with it.
+    const kcalGoal = currentKcalGoal();
 
     document.getElementById('nutritionCalories').textContent = Math.round(totals.calories);
-    document.getElementById('nutritionCalorieTarget').textContent = `/ ${NUTRITION_KCAL_GOAL} kcal`;
+    document.getElementById('nutritionCalorieTarget').textContent = `/ ${kcalGoal} kcal`;
     document.getElementById('nutritionProtein').textContent = Math.round(totals.protein_g);
     document.getElementById('nutritionCarbs').textContent = Math.round(totals.carbs_g);
     document.getElementById('nutritionFat').textContent = Math.round(totals.fat_g);
 
-    const pct = Math.min(100, (totals.calories / NUTRITION_KCAL_GOAL) * 100);
+    // Progress bar fill = calories-eaten / calories-goal, capped at 100%.
+    // Math.min protects the visual when the user goes over goal.
+    const pct = Math.min(100, (totals.calories / kcalGoal) * 100);
     document.getElementById('nutritionCalorieBar').style.width = pct + '%';
 
-    const proteinPct = Math.min(100, (totals.protein_g / NUTRITION_PROTEIN_GOAL) * 100);
+    // Subtitle copy, three states based on what's still left to hit:
+    //   - nothing logged yet today: prompt to start
+    //   - protein already hit: just show kcal remaining
+    //   - both pending: show both
     let sub;
     if (totals.calories === 0) sub = 'Talk to log a meal.';
-    else if (totals.protein_g >= NUTRITION_PROTEIN_GOAL) sub = `Protein hit. ${Math.round(NUTRITION_KCAL_GOAL - totals.calories)} kcal to go.`;
-    else sub = `${Math.round(NUTRITION_PROTEIN_GOAL - totals.protein_g)}g protein left, ${Math.round(NUTRITION_KCAL_GOAL - totals.calories)} kcal left.`;
+    else if (totals.protein_g >= NUTRITION_PROTEIN_GOAL) sub = `Protein hit. ${Math.round(kcalGoal - totals.calories)} kcal to go.`;
+    else sub = `${Math.round(NUTRITION_PROTEIN_GOAL - totals.protein_g)}g protein left, ${Math.round(kcalGoal - totals.calories)} kcal left.`;
     document.getElementById('nutritionHeroSub').textContent = sub;
 
     // Date label
@@ -4035,14 +4089,20 @@
     if (raw) anthropicConfig = JSON.parse(raw);
   } catch(e) {}
 
-  const NUTRITION_SYSTEM_PROMPT = `You are a nutrition logging assistant for a personal tracker.
+  // The system prompt is wrapped in a function so the kcal goal it includes
+  // is recomputed at send time (not at script load), based on the latest
+  // weigh-in. Note: prompt caching still works because the function returns
+  // the same string for the same weight, and the weight only changes when
+  // the user logs a new weigh-in.
+  function nutritionSystemPrompt() {
+    return `You are a nutrition logging assistant for a personal tracker.
 
 Your only job: convert the user's freeform description of food into one or more
 structured entries by calling the log_food tool. Never reply with text. Always
 use the tool.
 
 User profile:
-- Goal: ${NUTRITION_KCAL_GOAL} kcal/day, at least ${NUTRITION_PROTEIN_GOAL}g protein/day
+- Goal: ${currentKcalGoal()} kcal/day (eat at BMR, exercise creates the deficit), at least ${NUTRITION_PROTEIN_GOAL}g protein/day
 - Currently 156 lb, target 140 lb at 1 lb/wk
 - Diet: omnivore, no allergies
 
@@ -4053,6 +4113,7 @@ Rules:
 4. Round calories to nearest 5, protein/carbs/fat to nearest 0.5g.
 5. If the user describes multiple foods, emit one entry per food in a single tool call.
 6. Use HH:MM 24-hour local time for the time field. The current time is provided in the user message.`;
+  }
 
   const LOG_FOOD_TOOL = {
     name: 'log_food',
@@ -4101,7 +4162,7 @@ Rules:
     const body = {
       model: anthropicConfig.model || 'claude-haiku-4-5',
       max_tokens: 1024,
-      system: [{ type: 'text', text: NUTRITION_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      system: [{ type: 'text', text: nutritionSystemPrompt(), cache_control: { type: 'ephemeral' } }],
       tools: [LOG_FOOD_TOOL],
       tool_choice: { type: 'tool', name: 'log_food' },
       messages: [{ role: 'user', content: userInput + footer }],
