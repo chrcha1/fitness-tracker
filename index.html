@@ -389,6 +389,39 @@
   .chart-wrap { width: 100%; height: 200px; }
   .chart-wrap svg { width: 100%; height: 100%; display: block; }
 
+  /* ===== INTERVAL / TEMPO TYPE TOGGLE =====
+     Two buttons act as a radio group. The active button paints in the type's
+     color (interval=purple, tempo=orange). The inactive one is muted. */
+  .type-toggle {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin: 0 6px 14px;
+  }
+  .type-btn {
+    height: 42px; border-radius: 100px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--ink-3); font-family: inherit;
+    font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
+    cursor: pointer; transition: all 150ms;
+  }
+  .type-btn:active { transform: scale(0.97); }
+  .type-btn.type-interval[data-active="true"] {
+    background: var(--c-intervals); color: white; border-color: var(--c-intervals);
+    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
+  }
+  .type-btn.type-tempo[data-active="true"] {
+    background: var(--c-lifting); color: white; border-color: var(--c-lifting);
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  }
+
+  /* Calendar cell coloring: tempo sessions paint orange instead of the
+     default intervals-tab purple. The .cell-tempo class is added by
+     buildDayCell when the entry's type is 'tempo'. */
+  .day.done.cell-tempo {
+    background: var(--c-lifting);
+    border-color: var(--c-lifting);
+    box-shadow: 0 2px 6px rgba(234, 88, 12, 0.18);
+  }
+
   /* ===== NUTRITION TAB ===== */
   .nutrition-day-nav {
     display: flex; align-items: center; justify-content: space-between;
@@ -1559,11 +1592,21 @@
   </div>
 </div>
 
-<!-- Intervals duration sheet -->
+<!-- Intervals / Tempo session sheet -->
 <div class="sheet" id="intervalsSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-date" id="intervalsSheetDate">-</div>
-  <div class="sheet-title">Interval session</div>
+  <div class="sheet-title">Session</div>
+  <!--
+    Type toggle: pick whether this session was an interval workout (faster
+    pace, structured rest periods, purple) or a tempo run (sustained
+    threshold pace, orange). The two buttons act as a radio group; only
+    one can be selected at a time.
+  -->
+  <div class="type-toggle" id="intervalsTypeToggle">
+    <button class="type-btn type-interval" data-type="interval" data-active="true">Interval</button>
+    <button class="type-btn type-tempo" data-type="tempo" data-active="false">Tempo</button>
+  </div>
   <div class="wheel-container">
     <div class="wheel-selection"></div>
     <div class="wheel" id="intervalsWheel"></div>
@@ -2090,7 +2133,7 @@
     document.querySelectorAll('.view').forEach(v => {
       v.classList.toggle('active', v.id === `view-${tab}`);
     });
-    const titles = { today: 'Today', cardio: 'Zone 2', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals', nutrition: 'Nutrition' };
+    const titles = { today: 'Today', cardio: 'Zone 2', weight: 'Weight', lifting: 'Lifting', intervals: 'Intervals / Tempo', nutrition: 'Nutrition' };
     document.getElementById('appTitleText').textContent = titles[tab];
     haptic(5);
     // Render the new tab, then scroll so the current month is just below the today card
@@ -2134,6 +2177,12 @@
     const entry = store[tab][key];
     if (entry && hasContent(tab, entry)) {
       cell.classList.add('done');
+      // Intervals tab: tempo sessions paint orange (lifting accent) instead
+      // of the default purple, so the user can tell the two workout types
+      // apart at a glance on the calendar.
+      if (tab === 'intervals' && entry.type === 'tempo') {
+        cell.classList.add('cell-tempo');
+      }
       // sub label
       const sub = renderDaySub(tab, entry);
       if (sub) {
@@ -2494,11 +2543,35 @@
     btn.addEventListener('click', () => { haptic(8); setIntervalsWheel(parseInt(btn.dataset.mins), true); });
   });
 
+  // Type for the current editor session. 'interval' (default) or 'tempo'.
+  // Toggled by the Interval/Tempo buttons in the editor sheet.
+  let intervalsPendingType = 'interval';
+
+  function setIntervalsPendingType(type) {
+    intervalsPendingType = type === 'tempo' ? 'tempo' : 'interval';
+    // Update the toggle buttons' active state.
+    const toggle = document.getElementById('intervalsTypeToggle');
+    toggle.querySelectorAll('.type-btn').forEach(btn => {
+      btn.dataset.active = (btn.dataset.type === intervalsPendingType) ? 'true' : 'false';
+    });
+  }
+
+  // Wire the toggle buttons once at startup.
+  document.querySelectorAll('#intervalsTypeToggle .type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setIntervalsPendingType(btn.dataset.type);
+      haptic(5);
+    });
+  });
+
   function openIntervalsEditor(key) {
     currentEditTab = 'intervals';
     currentEditKey = key;
     const entry = store.intervals[key];
     intervalsPendingMins = entry?.mins || 30;
+    // If editing an existing entry, pre-fill the type from the saved data.
+    // Default to 'interval' for new entries (the more common case).
+    setIntervalsPendingType(entry?.type || 'interval');
     const [y,m,d] = key.split('-').map(Number);
     const dateObj = new Date(y, m-1, d);
     document.getElementById('intervalsSheetDate').textContent =
@@ -2520,7 +2593,8 @@
   document.getElementById('intervalsSaveBtn').addEventListener('click', () => {
     if (!currentEditKey) return;
     const wasNew = !store.intervals[currentEditKey];
-    store.intervals[currentEditKey] = { mins: intervalsPendingMins };
+    // Save both the duration AND the session type.
+    store.intervals[currentEditKey] = { mins: intervalsPendingMins, type: intervalsPendingType };
     touchMeta('intervals', currentEditKey);
     save(); haptic(10);
     const k = currentEditKey;
