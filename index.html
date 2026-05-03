@@ -402,7 +402,15 @@
   .nutrition-day-nav .nav-btn:active { background: var(--surface-2); }
   .nutrition-day-nav .nav-date {
     font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: -0.01em;
+    flex: 1; text-align: center;
   }
+  .nutrition-day-nav .nav-add-btn {
+    background: var(--accent); color: white; border: none;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 6px 14px; border-radius: 100px; cursor: pointer;
+    transition: transform 120ms;
+  }
+  .nutrition-day-nav .nav-add-btn:active { transform: scale(0.94); }
   .nutrition-entry {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px;
@@ -1396,6 +1404,7 @@
     <button class="nav-btn" id="nutritionPrevDay" aria-label="Previous day">‹</button>
     <div class="nav-date" id="nutritionDateLabel">Today</div>
     <button class="nav-btn" id="nutritionNextDay" aria-label="Next day">›</button>
+    <button class="nav-add-btn" id="nutritionAddBtnTop" aria-label="Add entry">+ Add</button>
   </div>
 
   <main id="nutritionEntries"></main>
@@ -4254,12 +4263,15 @@ Rules:
   chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); handleChatSubmit(); }
   });
-  // "+" button: open the manual entry editor for the currently-viewed day.
+  // "+" buttons: both the prominent one in the day nav and the small one
+  // in the chat dock open the manual entry editor for the current day.
   // Always works, with or without an Anthropic API key.
-  document.getElementById('nutritionAddBtn').addEventListener('click', () => {
+  function openManualNutritionEntry() {
     haptic(8);
     openNutritionEditor(nutritionViewKey, null);
-  });
+  }
+  document.getElementById('nutritionAddBtn').addEventListener('click', openManualNutritionEntry);
+  document.getElementById('nutritionAddBtnTop').addEventListener('click', openManualNutritionEntry);
 
   // ===== INIT =====
   setTab(currentTab);
