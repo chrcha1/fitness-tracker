@@ -3506,11 +3506,23 @@
     document.getElementById('cardioProgress').style.width = Math.min(100, (total/TARGET)*100) + '%';
     const daysLeft = Math.max(0, Math.ceil((deadline - today) / 86400000) + 1);
     document.getElementById('cardioDaysLeft').textContent = daysLeft;
-    const remaining = Math.max(0, TARGET - total);
+
+    // Pace per week = actual sessions you've been doing per week since you
+    // started logging. Reflects your *current* pace, not "what you'd need to
+    // do to hit the goal from here". The user's framing: started Apr 22,
+    // logged 7 sessions in the first ~10 days = ~4.9/wk pace.
+    //
+    // weeksElapsed = (today - first_entry_date) / 7, with a minimum so we
+    // don't divide by something tiny on the first day. Add a buffer of 1
+    // day to count the first day itself rather than starting from zero.
     let pace;
-    if (total >= TARGET) pace = '✓';
-    else if (daysLeft === 0) pace = '-';
-    else pace = (remaining / daysLeft * 7).toFixed(1);
+    if (total >= TARGET) {
+      pace = '✓';
+    } else {
+      const earliest = Object.keys(store.cardio).filter(TrackCore.isDateKey).sort()[0];
+      const p = TrackCore.actualWeeklyPace(total, earliest, today);
+      pace = (p == null) ? '-' : p.toFixed(1);
+    }
     document.getElementById('cardioPace').textContent = pace;
 
     // Today card

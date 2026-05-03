@@ -231,6 +231,24 @@
   // Calorie goal from latest weight + profile, using BMR as the target intake
   // (the user wants to eat at BMR so workouts create the deficit). Returns
   // a rounded integer; null if inputs are missing.
+  // Actual weekly pace: how many sessions per week the user has been doing
+  // since they first started logging. NOT "how many they need to do to hit
+  // goal" -- that's a different metric (required pace). Reflects the user's
+  // recent reality.
+  //
+  //   pace = totalSessions / weeksElapsed
+  //   weeksElapsed = (today - firstEntry + 1 day) / 7
+  //
+  // We floor weeksElapsed at 1 (i.e. require at least 7 days of data) so a
+  // single recent entry doesn't show "7 sessions/week" because someone
+  // logged once on day 1.
+  function actualWeeklyPace(totalSessions, earliestDateKey, today) {
+    if (totalSessions === 0 || !earliestDateKey) return null;
+    const start = parseDate(earliestDateKey);
+    const daysElapsed = Math.max(7, ((today - start) / 86400000) + 1);
+    return totalSessions / (daysElapsed / 7);
+  }
+
   function nutritionKcalGoal(latestWeightLb, profile) {
     if (typeof latestWeightLb !== 'number' || !profile) return null;
     const bmr = mifflinStJeor({
@@ -492,6 +510,7 @@
     lbsToKg,
     inchesToCm,
     nutritionKcalGoal,
+    actualWeeklyPace,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = TrackCore;
