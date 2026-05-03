@@ -191,6 +191,24 @@ test('weightSeries: dates parse to local midnight Date objects', () => {
   assert.equal(series[0].date.getDate(), 1);
 });
 
+test('weightSeries: dates encode the real time gap (chart x-axis is time-aware)', () => {
+  // The chart renders entries at xOf(entry.date), where xOf is proportional
+  // to (date - xMin) / (xMax - xMin) -- a real Date subtraction. So a
+  // 14-day gap between two entries gets exactly 2x the pixel distance of a
+  // 7-day gap. This test locks the underlying invariant: the .date property
+  // carries the real date.
+  const series = T.weightSeries({
+    '2026-05-01': { am: null, pm: 157 }, // entry 0
+    '2026-05-08': { am: null, pm: 156 }, // entry 1, 1 week later
+    '2026-05-22': { am: null, pm: 155 }, // entry 2, 2 weeks after entry 1
+  });
+  assert.equal(series.length, 3);
+  const g1 = series[1].date - series[0].date; // 7 days in ms
+  const g2 = series[2].date - series[1].date; // 14 days in ms
+  assert.equal(g2 / g1, 2,
+    `2-week gap should be exactly 2x the 1-week gap (got ratio ${g2 / g1})`);
+});
+
 // ============================================================
 // nutritionDayTotals — extra cases.
 // ============================================================

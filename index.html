@@ -3703,18 +3703,53 @@
     const startSat = weightGoalStartDate();
     const schedule = TrackCore.weightGoalSchedule(startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
 
-    // X domain: from earliest of (first weight entry, plan start) to plan end.
-    const xMinDate = entries.length
-      ? new Date(Math.min(entries[0].date.getTime(), startSat.getTime() - 7 * 86400000))
-      : new Date(startSat.getTime() - 7 * 86400000);
-    const xMaxDate = schedule[schedule.length - 1].date;
+    // X domain: zoom to the actual data range, not the entire 4-month plan.
+    // If we used the full plan range (Apr 24 -> Aug 29), 3 points clustered
+    // in 2 weeks at the start would crunch into the leftmost ~10% of the
+    // chart and look like dots-on-top-of-each-other. Instead:
+    //   xMinDate = earliest data point - 1 week buffer (or plan start if no
+    //              data)
+    //   xMaxDate = max of (latest data + 1 week, today + 1 week)
+    // This keeps the data front-and-center while still showing room for new
+    // entries to the right.
+    //
+    // The dashed orange goal trajectory still draws all 17 Saturday points,
+    // but only the ones within the visible x-range render. The user sees
+    // the part of the trajectory that intersects their current data window.
+    //
+    // X positions stay TIME-AWARE: a point logged 2 weeks after another is
+    // exactly twice as far away on the x-axis as a point logged 1 week
+    // later. We never use evenly-spaced indices.
+    const ONE_WEEK = 7 * 86400000;
+    const earliestData = entries.length ? entries[0].date.getTime() : null;
+    const latestData = entries.length ? entries[entries.length - 1].date.getTime() : null;
+    const xMinDate = new Date(
+      earliestData != null
+        ? earliestData - ONE_WEEK
+        : startSat.getTime() - ONE_WEEK,
+    );
+    const xMaxDate = new Date(
+      latestData != null
+        ? Math.max(latestData + ONE_WEEK, today.getTime() + ONE_WEEK)
+        : today.getTime() + ONE_WEEK,
+    );
     const xRange = Math.max(1, xMaxDate - xMinDate);
     const xOf = (d) => padL + ((d - xMinDate) / xRange) * innerW;
 
-    // Y domain: pad around min/max of {actuals, plan goals}, clamp to nice range.
-    const allWeights = entries.map(e => e.avg).concat(schedule.map(s => s.weight));
-    const yMin = Math.floor(Math.min(...allWeights, WEIGHT_GOAL_TARGET_LB) - 1);
-    const yMax = Math.ceil(Math.max(...allWeights, WEIGHT_GOAL_START_LB + 1) + 1);
+    // Y domain: pad around min/max of visible data only. We don't include
+    // every plan goal here -- if the plan goes 156 to 140 but our data is
+    // 156-157, we want the y-range tight around 155-158 so the line is
+    // readable, not flattened into a sliver at the top. Goal trajectory
+    // still draws over this range; off-screen segments just don't appear.
+    const visibleWeights = entries.map(e => e.avg);
+    // Include the goal points whose dates fall in our x-window so the
+    // dashed line is also visible in y.
+    for (const s of schedule) {
+      if (s.date >= xMinDate && s.date <= xMaxDate) visibleWeights.push(s.weight);
+    }
+    if (!visibleWeights.length) visibleWeights.push(WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
+    const yMin = Math.floor(Math.min(...visibleWeights) - 1);
+    const yMax = Math.ceil(Math.max(...visibleWeights) + 1);
     const yRange = Math.max(1, yMax - yMin);
     const yOf = (w) => padT + (1 - (w - yMin) / yRange) * innerH;
 
