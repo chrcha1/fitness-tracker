@@ -184,6 +184,156 @@ test('html: every modality-card has a status element', () => {
 // Em-dash ban (catches any new ones that slip in).
 // ============================================================
 
+// ============================================================
+// Today tab is the default landing surface and must give the user a path
+// to every other tab. The next block of tests asserts that everything is
+// accessible from Today: each modality has a card, each card has wired
+// handlers (click/tap routes), and there's no orphan modality whose only
+// access path is the bottom tabbar.
+// ============================================================
+
+test('today: every modal tab has a corresponding modality-card on Today', () => {
+  // Five modal tabs (everything except Today itself) each get a card.
+  for (const tab of ['cardio','intervals','lifting','nutrition','weight']) {
+    const re = new RegExp(`<div class="modality-card"\\s+data-modality="${tab}"\\s+id="todayCard${tab.charAt(0).toUpperCase()}${tab.slice(1)}"`);
+    assert.ok(re.test(html), `Today tab missing modality-card for ${tab}`);
+  }
+});
+
+test('today: every modality-card has a status text element with a stable id', () => {
+  // The id pattern `todayStatus<Tab>` is what render code targets to
+  // update the live status copy ("Done · 50 min", "Mark today complete").
+  for (const tab of ['cardio','intervals','lifting','nutrition','weight']) {
+    const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+    assert.ok(new RegExp(`id="todayStatus${cap}"`).test(html), `missing #todayStatus${cap}`);
+  }
+});
+
+test('today: every modality-card has a closure ring (svg + ring-bg + ring-fg)', () => {
+  // The ring is what tells the user at a glance whether they did the thing.
+  // Each card needs the SVG with both background circle and foreground
+  // (animated) circle.
+  const cards = html.match(/<div class="modality-card"[\s\S]*?<\/div>/g) || [];
+  assert.ok(cards.length >= 5, `expected 5+ modality cards, got ${cards.length}`);
+  for (const card of cards) {
+    assert.ok(/<svg[\s\S]*?<\/svg>/.test(card), `card missing SVG: ${card.slice(0, 60)}`);
+    assert.ok(/class="ring-bg"/.test(card), 'card missing ring-bg');
+    assert.ok(/class="ring-fg"/.test(card), 'card missing ring-fg');
+    assert.ok(/class="ring-check"/.test(card), 'card missing ring-check (checkmark icon shown when done)');
+  }
+});
+
+test('today: tap-handler loop iterates every modal tab (so no card is dead)', () => {
+  // The render code attaches tap+long-press handlers in a `for (const tab
+  // of [...]) { ... }` loop. The loop list must include all modal tabs.
+  const m = html.match(/for \(const tab of \[([^\]]+)\]\) \{[\s\S]*?todayCard/);
+  assert.ok(m, 'expected the modality-card handler loop');
+  const list = m[1].split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+  for (const tab of ['cardio','intervals','lifting','weight','nutrition']) {
+    assert.ok(list.includes(tab), `card handler loop missing ${tab}`);
+  }
+});
+
+test('today: 7-day completion strip iterates every modal tab for dots', () => {
+  // The dot-coloring loop on the today week-strip must also hit every tab,
+  // otherwise certain modalities would never get their colored dot on that
+  // mini-grid.
+  const m = html.match(/for \(const tab of \[([^\]]+)\]\)[\s\S]*?week-cell-dot/);
+  assert.ok(m, 'expected week-cell dots iteration');
+  const list = m[1].split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+  for (const tab of ['cardio','intervals','lifting','weight','nutrition']) {
+    assert.ok(list.includes(tab), `week-cell dots loop missing ${tab}`);
+  }
+});
+
+test('today: each modality dot color rule exists in CSS', () => {
+  // If we add a tab to the dot loop but forget the .week-cell-dot.X rule,
+  // the dot renders invisible. Lock that here too.
+  for (const tab of ['cardio','intervals','lifting','weight','nutrition']) {
+    assert.ok(new RegExp(`\\.week-cell-dot\\.${tab}`).test(html),
+      `missing CSS for .week-cell-dot.${tab}`);
+  }
+});
+
+test('today: greeting greet/sub elements both exist for time-of-day copy', () => {
+  // The render reads these by id and they need to be present.
+  assert.ok(/id="todayGreetDate"/.test(html));
+  assert.ok(/id="todayGreetText"/.test(html));
+  assert.ok(/id="todayGreetSub"/.test(html));
+});
+
+test('today: weekly summary container exists (toggled visible on Sun/Mon)', () => {
+  assert.ok(/id="todayWeeklySummary"/.test(html));
+});
+
+// ============================================================
+// Tab → view → render dispatch must be coherent end-to-end.
+// ============================================================
+
+test('coherence: every tab id has a matching view-id, render branch, and title entry', () => {
+  // This catches the common mistake of adding a tab in one place and
+  // forgetting to wire any of the other three.
+  const tabs = ['today','cardio','intervals','lifting','nutrition','weight'];
+  for (const tab of tabs) {
+    // 1. tab button
+    assert.ok(new RegExp(`<button class="tab"\\s+data-tab="${tab}"`).test(html),
+      `tab button missing for ${tab}`);
+    // 2. view-<tab> div
+    assert.ok(new RegExp(`<div class="view[^"]*"\\s+id="view-${tab}"`).test(html),
+      `view-${tab} div missing`);
+    // 3. render dispatcher branch
+    assert.ok(new RegExp(`currentTab === '${tab}'`).test(html),
+      `render dispatcher missing branch for ${tab}`);
+    // 4. titles map entry
+    assert.ok(new RegExp(`${tab}:\\s*['"]`).test(html),
+      `titles map missing entry for ${tab}`);
+  }
+});
+
+// ============================================================
+// Touch and mouse interaction parity. The app must work on iOS Safari
+// (touch) AND on a laptop browser (mouse). Most interactive elements
+// should accept both kinds of events.
+// ============================================================
+
+test('touch: primary interactive surfaces wire both touch and mouse', () => {
+  // The three primary interactive surfaces (modality cards, day cells, today
+  // buttons) must work on both iPhone (touch) and laptop (mouse). We find
+  // each function declaration and grab a generous slab of source after it
+  // to confirm both event families are wired.
+  const requiredFunctions = ['attachDayInteractions', 'attachTodayBtn'];
+  for (const fn of requiredFunctions) {
+    const idx = html.indexOf(`function ${fn}`);
+    assert.ok(idx >= 0, `couldn't find function ${fn}`);
+    // Grab the next ~3000 chars: enough to fit the whole function body.
+    const slab = html.slice(idx, idx + 3000);
+    assert.ok(/addEventListener\('touchstart'/.test(slab), `${fn} missing touchstart`);
+    assert.ok(/addEventListener\('mousedown'/.test(slab), `${fn} missing mousedown (laptop)`);
+    assert.ok(/addEventListener\('touchend'/.test(slab), `${fn} missing touchend`);
+    assert.ok(/addEventListener\('mouseup'/.test(slab), `${fn} missing mouseup (laptop)`);
+  }
+});
+
+test('touch: every touchend surface attaches a touchcancel cleanup too', () => {
+  // touchcancel fires when iOS interrupts a touch (e.g. system gesture or
+  // call). Without a touchcancel handler, state can get stuck (long-press
+  // timer never clears). Scan the source for parity.
+  const blocks = html.split(/\n/);
+  const touchendLines = [];
+  for (let i = 0; i < blocks.length; i++) {
+    if (/addEventListener\('touchend'/.test(blocks[i])) touchendLines.push(i);
+  }
+  for (const i of touchendLines) {
+    const window = blocks.slice(i, Math.min(blocks.length, i + 5)).join('\n');
+    assert.ok(/addEventListener\('touchcancel'/.test(window),
+      `touchend at line ${i + 1} has no nearby touchcancel (state can stick on iOS interruption)`);
+  }
+});
+
+// ============================================================
+// Em dash ban (still active).
+// ============================================================
+
 test('source files contain zero em dashes', () => {
   const files = ['index.html', 'core.js', 'sw.js'];
   for (const f of files) {

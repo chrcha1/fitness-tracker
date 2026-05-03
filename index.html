@@ -2881,6 +2881,7 @@
       if (e.touches[0].clientY - touchStartY > 80) { closeAllSheets(); touchStartY = null; }
     }, { passive: true });
     s.addEventListener('touchend', () => { touchStartY = null; });
+    s.addEventListener('touchcancel', () => { touchStartY = null; });
   });
 
   // ===== TODAY BUTTONS (long-press = editor, short-tap = primary action) =====
