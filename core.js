@@ -60,6 +60,7 @@
       store: { cardio: {}, weight: {}, lifting: {}, intervals: {}, nutrition: {} },
       meta:  { cardio: {}, weight: {}, lifting: {}, intervals: {}, nutrition: {} },
       deadline: null,
+      deadlineUpdatedAt: 0,
     };
     let parsed;
     try {
@@ -73,6 +74,7 @@
         store: sanitizeStore(parsed.store),
         meta: sanitizeMeta(parsed.meta),
         deadline: parsed.deadline || null,
+        deadlineUpdatedAt: typeof parsed.deadlineUpdatedAt === 'number' ? parsed.deadlineUpdatedAt : 0,
       };
     }
 
@@ -481,6 +483,97 @@
     return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
   }
 
+  // ===== APPLE WATCH INGESTION =====
+  // The Shortcuts automation writes workout records to watch-inbox.json in
+  // the sync gist. These helpers are pure so the pipeline is testable.
+
+  // Local-time day key for a workout, honoring the same cutoff hour as the
+  // rest of the app (a 1 AM workout belongs to the previous day).
+  function logicalDayKey(date, cutoffHour) {
+    return fmtKey(logicalToday(date, cutoffHour));
+  }
+
+  // Normalize whatever the shortcut produced into a clean record array.
+  // Accepts: a single object, an array, or { workouts: [...] } - as a JSON
+  // string or already-parsed. Tolerates several field spellings. Records
+  // that can't be understood are dropped, never thrown on.
+  // Returns [{ id, start: Date, durationMin, avgHr, type }].
+  function normalizeWatchInbox(content) {
+    let parsed = content;
+    if (typeof content === 'string') {
+      try { parsed = JSON.parse(content); } catch (_) { return []; }
+    }
+    if (!parsed) return [];
+    let list = Array.isArray(parsed) ? parsed
+      : (Array.isArray(parsed.workouts) ? parsed.workouts : [parsed]);
+    const out = [];
+    for (const r of list) {
+      if (!r || typeof r !== 'object') continue;
+      const startRaw = r.start || r.startDate || r.start_time || r.startTime;
+      if (!startRaw) continue;
+      const start = new Date(startRaw);
+      if (isNaN(start.getTime())) continue;
+      let durationMin = null;
+      if (typeof r.duration_min === 'number') durationMin = r.duration_min;
+      else if (typeof r.durationMin === 'number') durationMin = r.durationMin;
+      else if (typeof r.duration_sec === 'number') durationMin = r.duration_sec / 60;
+      else if (typeof r.durationSec === 'number') durationMin = r.durationSec / 60;
+      else if (typeof r.duration === 'number') durationMin = r.duration; // documented as minutes
+      else if (typeof r.duration_min === 'string' && isFinite(parseFloat(r.duration_min))) durationMin = parseFloat(r.duration_min);
+      else if (typeof r.duration === 'string' && isFinite(parseFloat(r.duration))) durationMin = parseFloat(r.duration);
+      if (durationMin == null || !isFinite(durationMin) || durationMin <= 0) continue;
+      let avgHr = r.avg_hr != null ? r.avg_hr : (r.avgHr != null ? r.avgHr : (r.averageHeartRate != null ? r.averageHeartRate : r.heart_rate_avg));
+      if (typeof avgHr === 'string') avgHr = parseFloat(avgHr);
+      if (typeof avgHr !== 'number' || !isFinite(avgHr) || avgHr <= 0) continue;
+      const id = (typeof r.id === 'string' && r.id) || (typeof r.uuid === 'string' && r.uuid)
+        || `${start.toISOString()}|${Math.round(durationMin)}`;
+      out.push({ id, start, durationMin, avgHr, type: typeof r.type === 'string' ? r.type : '' });
+    }
+    return out;
+  }
+
+  // Does a normalized workout qualify as an auto-logged Zone 2 session?
+  // Boundaries are inclusive and unrounded: avg 139.96 is out, 140.0 is in.
+  function qualifiesAsZone2(w, cfg) {
+    cfg = cfg || {};
+    const hrMin = typeof cfg.hrMin === 'number' ? cfg.hrMin : 140;
+    const hrMax = typeof cfg.hrMax === 'number' ? cfg.hrMax : 155;
+    const minMins = typeof cfg.minMins === 'number' ? cfg.minMins : 20;
+    if (!w) return false;
+    return w.avgHr >= hrMin && w.avgHr <= hrMax && w.durationMin >= minMins;
+  }
+
+  // Apply one qualifying watch workout to a day's existing cardio entry
+  // (or null/undefined for an empty day). Pure: never mutates the input.
+  // Returns { entry, changed }:
+  //  - empty day: new auto entry.
+  //  - duplicate workoutId: unchanged.
+  //  - auto day: minutes summed, avg HR duration-weighted. Still one session.
+  //  - manual day: preserved; only fills in a missing avgHr (enrich, don't
+  //    double-log).
+  function applyWatchWorkout(existing, mins, hr, id) {
+    if (!existing) {
+      return { entry: { mins, avgHr: hr, auto: true, source: 'watch', workoutIds: [id] }, changed: true };
+    }
+    const ids = existing.workoutIds || [];
+    if (ids.includes(id)) return { entry: existing, changed: false };
+    const entry = { ...existing };
+    if (entry.auto) {
+      const prevMins = entry.mins || 0;
+      entry.mins = prevMins + mins;
+      if (typeof entry.avgHr === 'number' && prevMins > 0) {
+        entry.avgHr = Math.round((entry.avgHr * prevMins + hr * mins) / (prevMins + mins));
+      } else {
+        entry.avgHr = hr;
+      }
+    } else {
+      if (entry.avgHr == null) entry.avgHr = hr;
+    }
+    entry.workoutIds = [...ids, id];
+    entry.source = entry.source || 'watch';
+    return { entry, changed: true };
+  }
+
   const TrackCore = {
     TABS,
     isDateKey,
@@ -503,6 +596,10 @@
     sparklineSeries,
     weightAvg,
     decideTapAction,
+    logicalDayKey,
+    normalizeWatchInbox,
+    qualifiesAsZone2,
+    applyWatchWorkout,
     nutritionDayTotals,
     newNutritionEntryId,
     mergeTabKeys,

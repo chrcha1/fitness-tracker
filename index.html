@@ -6,11 +6,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Track">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
-<link rel="manifest" href='data:application/manifest+json,{"name":"Track","short_name":"Track","start_url":".","display":"standalone","background_color":"%23ffd4ba","theme_color":"%23f78e72","icons":[{"src":"icon.png","sizes":"192x192","type":"image/png"}]}'>
+<meta name="theme-color" content="#f3f5fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101422" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Track","short_name":"Track","start_url":".","display":"standalone","background_color":"%23101422","theme_color":"%233ddc97","icons":[{"src":"icon.png","sizes":"192x192","type":"image/png"}]}'>
 <!-- iOS apple-touch-icon must be a real PNG (not SVG) for reliable rendering. -->
 <link rel="apple-touch-icon" sizes="192x192" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&display=swap" rel="stylesheet">
 <title>Track</title>
 <script src="core.js"></script>
 <script>
@@ -21,1142 +24,836 @@
   }
 </script>
 <style>
+  /* ============================================================
+     NIGHT TRACK - design system
+     Dark instrument-panel training log. Signature: the HR zone
+     band; echoed by intensity-filled circular day cells.
+     ============================================================ */
   :root {
-    --bg: #ffffff;
-    --surface: #ffffff;
-    --surface-2: #fafaf9;
-    --border: #ececec;
-    --border-strong: #e0e0e0;
-    --ink: #0a0a0a;
-    --ink-2: #404040;
-    --ink-3: #737373;
-    --ink-4: #a3a3a3;
+    --bg: #101422;
+    --surface: #171d2e;
+    --surface-2: #1f2639;
+    --border: #262d44;
+    --border-strong: #323a57;
+    --ink: #eef1f8;
+    --ink-2: #c4cbdc;
+    --ink-3: #7e88a0;
+    --ink-4: #566080;
 
-    /* Cardio (green) */
-    --c-cardio: #16a34a;
-    --c-cardio-deep: #15803d;
-    --c-cardio-bright: #22c55e;
-    --c-cardio-soft: #dcfce7;
-    --c-cardio-tint: #f0fdf4;
+    /* Modality accents */
+    --c-cardio: #3ddc97;   --c-cardio-deep: #2bb87c;  --c-cardio-soft: rgba(61,220,151,.16); --c-cardio-tint: rgba(61,220,151,.08);
+    --c-weight: #6fa9ff;   --c-weight-deep: #4f8df0;  --c-weight-soft: rgba(111,169,255,.16); --c-weight-tint: rgba(111,169,255,.08);
+    --c-lifting: #ffb454;  --c-lifting-deep: #f09a2e; --c-lifting-soft: rgba(255,180,84,.16); --c-lifting-tint: rgba(255,180,84,.08);
+    --c-intervals:#b48cff; --c-intervals-deep:#9a6ef7;--c-intervals-soft: rgba(180,140,255,.16); --c-intervals-tint: rgba(180,140,255,.08);
+    --c-nutrition:#ff8b7b; --c-nutrition-deep:#f0705e;--c-nutrition-soft: rgba(255,139,123,.16); --c-nutrition-tint: rgba(255,139,123,.08);
 
-    /* Weight (blue) */
-    --c-weight: #2563eb;
-    --c-weight-deep: #1d4ed8;
-    --c-weight-bright: #3b82f6;
-    --c-weight-soft: #dbeafe;
-    --c-weight-tint: #eff6ff;
-
-    /* Lifting (orange) */
-    --c-lifting: #ea580c;
-    --c-lifting-deep: #c2410c;
-    --c-lifting-bright: #f97316;
-    --c-lifting-soft: #ffedd5;
-    --c-lifting-tint: #fff7ed;
-
-    /* Intervals (purple) */
-    --c-intervals: #9333ea;
-    --c-intervals-deep: #7e22ce;
-    --c-intervals-bright: #a855f7;
-    --c-intervals-soft: #ede9fe;
-    --c-intervals-tint: #faf5ff;
-
-    /* Active accent: set per tab via [data-tab] */
     --accent: var(--c-cardio);
     --accent-deep: var(--c-cardio-deep);
-    --accent-bright: var(--c-cardio-bright);
+    --accent-bright: var(--c-cardio);
     --accent-soft: var(--c-cardio-soft);
     --accent-tint: var(--c-cardio-tint);
+    --on-accent: #0c1020;
 
-    --radius-md: 14px;
+    /* HR zone gradient (Z1→Z5) */
+    --zone-grad: linear-gradient(90deg, #6fa9ff 0%, #3ddc97 30%, #ffd166 55%, #ff9f43 76%, #ff5c5c 100%);
+
+    --radius-sm: 10px;
+    --radius-md: 16px;
     --radius-lg: 22px;
     --radius-xl: 28px;
 
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-    --shadow-accent: 0 4px 14px rgba(0,0,0,0.15);
+    --shadow-dock: 0 10px 30px rgba(0,0,0,.45);
+    --edge: inset 0 1px 0 rgba(255,255,255,.04);
 
-    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+    --font-display: "Archivo", -apple-system, system-ui, sans-serif;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
 
-    --tabbar-h: 64px;
-  }
-
-  body[data-tab="cardio"] {
-    --accent: var(--c-cardio); --accent-deep: var(--c-cardio-deep);
-    --accent-bright: var(--c-cardio-bright); --accent-soft: var(--c-cardio-soft);
-    --accent-tint: var(--c-cardio-tint);
-    --shadow-accent: 0 4px 14px rgba(22, 163, 74, 0.25);
-  }
-  body[data-tab="weight"] {
-    --accent: var(--c-weight); --accent-deep: var(--c-weight-deep);
-    --accent-bright: var(--c-weight-bright); --accent-soft: var(--c-weight-soft);
-    --accent-tint: var(--c-weight-tint);
-    --shadow-accent: 0 4px 14px rgba(37, 99, 235, 0.25);
-  }
-  body[data-tab="lifting"] {
-    --accent: var(--c-lifting); --accent-deep: var(--c-lifting-deep);
-    --accent-bright: var(--c-lifting-bright); --accent-soft: var(--c-lifting-soft);
-    --accent-tint: var(--c-lifting-tint);
-    --shadow-accent: 0 4px 14px rgba(234, 88, 12, 0.25);
-  }
-  body[data-tab="intervals"] {
-    --accent: var(--c-intervals); --accent-deep: var(--c-intervals-deep);
-    --accent-bright: var(--c-intervals-bright); --accent-soft: var(--c-intervals-soft);
-    --accent-tint: var(--c-intervals-tint);
-    --shadow-accent: 0 4px 14px rgba(147, 51, 234, 0.25);
+    --tabbar-h: 76px;
   }
 
-  /* Nutrition: warm paper accent. */
-  body[data-tab="nutrition"] {
-    --accent: #c06651; --accent-deep: #a04a3a;
-    --accent-bright: #d77d68; --accent-soft: #f6dfd6;
-    --accent-tint: #fdf6f1;
-    --shadow-accent: 0 4px 14px rgba(192, 102, 81, 0.25);
-  }
+  body[data-tab="cardio"]    { --accent: var(--c-cardio);    --accent-deep: var(--c-cardio-deep);    --accent-soft: var(--c-cardio-soft);    --accent-tint: var(--c-cardio-tint); }
+  body[data-tab="weight"]    { --accent: var(--c-weight);    --accent-deep: var(--c-weight-deep);    --accent-soft: var(--c-weight-soft);    --accent-tint: var(--c-weight-tint); }
+  body[data-tab="lifting"]   { --accent: var(--c-lifting);   --accent-deep: var(--c-lifting-deep);   --accent-soft: var(--c-lifting-soft);   --accent-tint: var(--c-lifting-tint); }
+  body[data-tab="intervals"] { --accent: var(--c-intervals); --accent-deep: var(--c-intervals-deep); --accent-soft: var(--c-intervals-soft); --accent-tint: var(--c-intervals-tint); }
+  body[data-tab="nutrition"] { --accent: var(--c-nutrition); --accent-deep: var(--c-nutrition-deep); --accent-soft: var(--c-nutrition-soft); --accent-tint: var(--c-nutrition-tint); }
 
-  /* Dark mode: auto from system. Same hierarchy, dark surfaces, brighter accents. */
-  @media (prefers-color-scheme: dark) {
+  /* Light scheme: "paper track". Same identity, daylight surfaces. */
+  @media (prefers-color-scheme: light) {
     :root {
-      --bg: #0a0a0a;
-      --surface: #161616;
-      --surface-2: #1f1f1f;
-      --border: #2a2a2a;
-      --border-strong: #353535;
-      --ink: #f5f5f5;
-      --ink-2: #c8c8c8;
-      --ink-3: #8e8e8e;
-      --ink-4: #5e5e5e;
-
-      --c-cardio-tint: rgba(34,197,94,0.10);
-      --c-cardio-soft: rgba(34,197,94,0.22);
-      --c-weight-tint: rgba(59,130,246,0.10);
-      --c-weight-soft: rgba(59,130,246,0.22);
-      --c-lifting-tint: rgba(249,115,22,0.10);
-      --c-lifting-soft: rgba(249,115,22,0.22);
-      --c-intervals-tint: rgba(168,85,247,0.10);
-      --c-intervals-soft: rgba(168,85,247,0.22);
-
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
-      --shadow-md: 0 4px 16px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.5);
+      --bg: #f3f5fa;
+      --surface: #ffffff;
+      --surface-2: #eef1f8;
+      --border: #e2e6f0;
+      --border-strong: #cfd6e6;
+      --ink: #10151f;
+      --ink-2: #3c4356;
+      --ink-3: #6a7288;
+      --ink-4: #9aa2b6;
+      --c-cardio: #0e9f66;   --c-cardio-deep: #0b8555;  --c-cardio-soft: rgba(14,159,102,.14);  --c-cardio-tint: rgba(14,159,102,.07);
+      --c-weight: #2f6fe4;   --c-weight-deep: #2258bd;  --c-weight-soft: rgba(47,111,228,.13);  --c-weight-tint: rgba(47,111,228,.06);
+      --c-lifting: #d97a06;  --c-lifting-deep: #b56404; --c-lifting-soft: rgba(217,122,6,.14);  --c-lifting-tint: rgba(217,122,6,.07);
+      --c-intervals:#7a4ce0; --c-intervals-deep:#6238bf;--c-intervals-soft: rgba(122,76,224,.13);--c-intervals-tint: rgba(122,76,224,.06);
+      --c-nutrition:#d9564a; --c-nutrition-deep:#b84437;--c-nutrition-soft: rgba(217,86,74,.13); --c-nutrition-tint: rgba(217,86,74,.06);
+      --on-accent: #ffffff;
+      --shadow-dock: 0 10px 28px rgba(23,32,63,.16);
+      --edge: none;
     }
-    /* Tabbar already uses --surface; no override needed in dark mode. */
-    /* Per-tab summary tint backgrounds need re-tuning for dark. */
-    .summary-card {
-      background: linear-gradient(135deg, rgba(34,197,94,0.10), rgba(59,130,246,0.10)) !important;
-    }
-    /* SVG chart gridlines should be more visible on dark. */
-    .chart-wrap svg line[stroke="#f0f0f0"] { stroke: #2a2a2a !important; }
-    .chart-wrap svg text[fill="#a3a3a3"] { fill: #707070 !important; }
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  html, body {
-    background: var(--bg); color: var(--ink); font-family: var(--font);
-    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
-    overscroll-behavior-y: none;
-    overflow-x: hidden; /* iOS: never let any inner element scroll the page sideways */
-    overflow-y: auto;   /* Explicit so trackpad/wheel always scrolls vertically */
-    -webkit-overflow-scrolling: touch; /* iOS momentum scroll */
-    width: 100%;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { width: 100%; background: var(--bg); }
 
   body {
     min-height: 100vh; min-height: 100dvh;
-    padding: max(env(safe-area-inset-top), 16px) 18px calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 16px) + 16px);
+    padding: max(env(safe-area-inset-top), 14px) 16px calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 14px) + 18px);
     display: flex; flex-direction: column;
     user-select: none; -webkit-user-select: none;
-    box-sizing: border-box;
+    -webkit-touch-callout: none;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-variant-numeric: tabular-nums;
   }
 
-  /* Desktop only: bigger breakpoint so iPhones in landscape never trigger
-     this layout. iPhone 15 Pro Max landscape is 932px; iPhone 14 Pro Max is
-     926px; iPad mini landscape is 1024px. We only kick in at >=1024px so the
-     phone layout owns every iPhone and small iPad in either orientation. */
   @media (min-width: 1024px) {
-    body {
-      max-width: 540px;
-      margin: 0 auto;
-    }
-    .tabbar {
-      width: 540px; left: 50%; right: auto; margin-left: -270px;
-      border-left: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-    }
-    .chat-dock {
-      width: 540px; left: 50%; right: auto; margin-left: -270px;
-      border-left: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-    }
-    .sheet {
-      width: 540px; left: 50%; right: auto; margin-left: -270px;
-    }
-    .sheet-backdrop, .celebrate-overlay {
-      /* Backdrop and overlays should still cover the entire viewport. */
-      left: 0; right: 0;
-    }
+    body { max-width: 460px; margin: 0 auto; }
   }
 
-  /* ===== TOP BAR ===== */
+  button { font-family: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  input, select { font-family: inherit; }
+  svg { display: block; }
+
+  /* ---------- Topbar ---------- */
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 22px; padding-top: 4px;
+    padding: 6px 2px 14px;
+    position: sticky; top: 0; z-index: 30;
+    background: linear-gradient(var(--bg) 78%, transparent);
   }
-  .topbar-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); display: flex; align-items: center; gap: 10px; }
+  .topbar-title { min-width: 0; }
+  .topbar-title > div > div:first-child { display: flex; align-items: center; gap: 9px; }
+  #appTitleText {
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 21px; letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
   .title-dot {
-    width: 10px; height: 10px; border-radius: 50%;
+    width: 9px; height: 9px; border-radius: 50%;
     background: var(--accent);
-    transition: background 240ms ease;
-    flex-shrink: 0;
+    box-shadow: 0 0 10px var(--accent);
+    flex: none;
   }
+  .topbar-summary {
+    font-size: 12px; color: var(--ink-3); margin-top: 2px; margin-left: 18px;
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 180ms ease, opacity 180ms ease;
+  }
+  .topbar-summary strong { color: var(--ink); font-weight: 700; }
+  body[data-shrunk="true"] .topbar-summary { max-height: 20px; opacity: 1; }
+
   .topbar-action {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: var(--surface-2); border: 1px solid var(--border);
+    width: 38px; height: 38px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    color: var(--ink-2); cursor: pointer; transition: all 150ms ease;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--ink-3);
   }
-  .topbar-action:active { background: var(--border); transform: scale(0.94); }
+  .topbar-action:active { background: var(--surface-2); }
   .topbar-action svg { width: 18px; height: 18px; }
 
   .sync-pill {
     display: flex; align-items: center; gap: 6px;
-    padding: 6px 10px; border-radius: 100px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    font-size: 11px; font-weight: 600; color: var(--ink-3);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    color: var(--ink-3);
+    padding: 6px 10px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border);
   }
-  .sync-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--ink-4); transition: background 200ms ease;
-  }
-  .sync-pill[data-state="ok"] .sync-dot { background: var(--c-cardio); }
-  .sync-pill[data-state="syncing"] .sync-dot { background: #f59e0b; animation: pulse 1s ease-in-out infinite; }
-  .sync-pill[data-state="error"] .sync-dot { background: #dc2626; }
-  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-4); }
+  .sync-pill[data-state="ok"] .sync-dot { background: var(--c-cardio); box-shadow: 0 0 8px var(--c-cardio); }
+  .sync-pill[data-state="syncing"] .sync-dot { background: var(--c-lifting); animation: pulse 1s ease infinite; }
+  .sync-pill[data-state="error"] .sync-dot { background: #ff5c5c; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
 
-  /* ===== HERO CARD ===== */
-  /* Hero card: scrolls normally with the page (NOT sticky). When the user
-     scrolls past it, a compact summary appears in the topbar instead --
-     iOS Large Title pattern. This keeps the hero out of the way once the
-     user is scrolling the calendar, while still giving them an at-a-glance
-     summary anywhere on the tab. */
+  /* ---------- Views ---------- */
+  .view { display: none; flex-direction: column; gap: 14px; }
+  .view.active { display: flex; }
+
+  /* ---------- Hero ---------- */
   .hero {
-    background: linear-gradient(160deg, #ffffff 0%, var(--accent-tint) 100%);
-    border: 1px solid var(--border); border-radius: var(--radius-xl);
-    padding: 24px 22px 22px; box-shadow: var(--shadow-md);
-    margin-bottom: 22px; position: relative; z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 20px 20px 18px;
+    box-shadow: var(--edge);
+    position: relative;
     overflow: hidden;
-    transition: background 320ms ease;
   }
-  /* Compact summary line that lives in the topbar. Hidden by default,
-     fades in when the hero scrolls off-screen. JS toggles `data-shrunk`
-     on the body to drive this. */
-  .topbar-summary {
-    font-size: 12px; font-weight: 600; color: var(--ink-3);
-    margin-top: 2px; letter-spacing: -0.01em;
-    opacity: 0; transition: opacity 200ms ease;
-    font-feature-settings: "tnum"; max-width: 100%;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  body[data-shrunk="true"] .topbar-summary { opacity: 1; }
-  .topbar-summary strong { color: var(--accent-deep); font-weight: 700; }
   .hero::before {
-    content: ''; position: absolute; top: -40px; right: -40px;
-    width: 160px; height: 160px;
-    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
-    pointer-events: none; transition: background 320ms ease;
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent 70%);
+    opacity: .9;
   }
   .hero-label {
-    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--accent-deep);
-    margin-bottom: 10px; position: relative;
-    transition: color 240ms ease;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-3);
+    margin-bottom: 10px;
   }
-  .hero-count {
-    display: flex; align-items: baseline; gap: 6px;
-    margin-bottom: 4px; position: relative;
-  }
+  .hero-count { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   .hero-count .num {
-    font-size: 64px; font-weight: 700; letter-spacing: -0.04em;
-    line-height: 1; color: var(--ink); font-feature-settings: "tnum";
+    font-family: var(--font-display);
+    font-weight: 900; font-size: 58px; line-height: 0.95;
+    letter-spacing: -0.03em; color: var(--ink);
   }
-  .hero-count .target {
-    font-size: 20px; font-weight: 500; color: var(--ink-3); letter-spacing: -0.02em;
+  .hero-count .target, .hero-count .unit {
+    font-size: 15px; font-weight: 600; color: var(--ink-3);
   }
-  .hero-count .unit {
-    font-size: 22px; font-weight: 500; color: var(--ink-3); margin-left: 4px;
+  .hero-sub { font-size: 13px; color: var(--ink-3); margin-top: 8px; }
+  .hero-sub strong { color: var(--ink-2); font-weight: 700; }
+  .hero-eta { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+  .hero-eta strong { color: var(--accent); font-weight: 700; }
+
+  .hero-augment {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 10px; min-height: 22px;
   }
-  .hero-sub { font-size: 14px; color: var(--ink-3); margin-bottom: 18px; position: relative; min-height: 18px;}
-  .hero-sub strong { color: var(--ink); font-weight: 600; }
+  .hero-augment .streak { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+  .hero-augment .delta { font-size: 12px; font-weight: 700; }
+  .hero-augment .delta.up { color: var(--c-cardio); }
+  .hero-augment .delta.down { color: #ff7b6e; }
+  .hero-augment .delta.flat { color: var(--ink-3); }
+  .sparkline { width: 84px; height: 22px; color: var(--accent); margin-left: auto; }
+
   .progress-track {
-    height: 8px; background: rgba(0,0,0,0.05); border-radius: 100px;
-    overflow: hidden; position: relative; margin-bottom: 16px;
+    height: 8px; border-radius: 999px;
+    background: var(--surface-2);
+    margin-top: 14px; overflow: hidden;
   }
   .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent) 0%, var(--accent-bright) 100%);
-    border-radius: 100px;
-    transition: width 500ms cubic-bezier(0.4, 0, 0.2, 1), background 320ms ease;
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-deep), var(--accent));
+    transition: width 400ms cubic-bezier(.2,.7,.3,1);
   }
-  .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; position: relative; }
-  .stat { text-align: center; padding: 0 4px; position: relative; }
-  .stat + .stat::before {
-    content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
-    width: 1px; background: var(--border-strong);
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-top: 16px;
+  }
+  .stat {
+    background: var(--surface-2);
+    border-radius: var(--radius-md);
+    padding: 10px 8px 9px;
+    text-align: center;
   }
   .stat-value {
-    font-size: 18px; font-weight: 700; color: var(--ink);
-    letter-spacing: -0.02em; font-feature-settings: "tnum";
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 19px; letter-spacing: -0.01em;
   }
   .stat-label {
-    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--ink-3); margin-top: 2px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-4); margin-top: 3px;
   }
 
-  /* ===== TODAY CARD ===== */
+  /* ---------- Zone band (signature) ---------- */
+  .zone-band-wrap { margin-top: 16px; }
+  .zone-band-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-4); margin-bottom: 7px;
+  }
+  .zone-band-head strong { color: var(--c-cardio); }
+  .zone-band {
+    position: relative; height: 14px; border-radius: 999px;
+    background: var(--zone-grad);
+    opacity: .95;
+  }
+  .zone-window {
+    position: absolute; top: -4px; bottom: -4px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    box-shadow: 0 0 0 3px rgba(0,0,0,.25);
+    pointer-events: none;
+  }
+  .zone-marker {
+    position: absolute; top: 50%;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--ink); border: 2px solid var(--bg);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 8px rgba(0,0,0,.5);
+  }
+  .zone-scale {
+    display: flex; justify-content: space-between;
+    font-size: 9px; font-weight: 600; color: var(--ink-4);
+    margin-top: 6px; padding: 0 1px;
+  }
+  .zone-band-caption { font-size: 11px; color: var(--ink-3); margin-top: 8px; }
+  .zone-band-caption strong { color: var(--ink-2); }
+
+  /* ---------- Today card ---------- */
   .today-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 26px;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; box-shadow: var(--shadow-sm); transition: all 200ms ease;
-  }
-  .today-card.completed { background: var(--accent-tint); border-color: var(--accent-soft); }
-  .today-info { flex: 1; min-width: 0; }
-  .today-label {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--ink-3); margin-bottom: 3px;
-  }
-  .today-card.completed .today-label { color: var(--accent-deep); }
-  .today-text {
-    font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em;
-  }
-  .today-hint {
-    font-size: 11px; color: var(--ink-4); margin-top: 2px; font-weight: 500;
-  }
-  .today-btn {
-    flex-shrink: 0; height: 44px; padding: 0 18px; border-radius: 100px;
-    background: var(--accent); color: white; border: none;
-    font-family: inherit; font-size: 14px; font-weight: 600;
-    cursor: pointer; box-shadow: var(--shadow-accent);
-    transition: all 150ms ease;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .today-btn:active { transform: scale(0.96); }
-  .today-card.completed .today-btn {
-    background: white; color: var(--accent-deep);
-    border: 1px solid var(--accent-soft); box-shadow: var(--shadow-sm);
-  }
-  .today-btn svg { width: 16px; height: 16px; }
-
-  /* ===== GOAL + CHART CARDS (weight tab) ===== */
-  .goal-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 18px;
-    box-shadow: var(--shadow-sm);
-  }
-  .goal-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  .goal-block { text-align: center; padding: 4px 2px; }
-  .goal-block + .goal-block { border-left: 1px solid var(--border); }
-  .goal-label {
-    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
-  }
-  .goal-value {
-    font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
-    color: var(--ink); font-variant-numeric: tabular-nums;
-  }
-  .goal-value.win { color: var(--c-cardio-deep); }
-  .goal-value.miss { color: var(--c-lifting-deep); }
-  .goal-sub {
-    font-size: 11px; font-weight: 500; color: var(--ink-3); margin-top: 2px;
-  }
-
-  .chart-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 14px 12px 8px; margin-bottom: 26px;
-    box-shadow: var(--shadow-sm);
-  }
-  .chart-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 4px 8px;
-  }
-  .chart-title {
-    font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: -0.01em;
-  }
-  .chart-legend {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 11px; font-weight: 500; color: var(--ink-3);
-  }
-  .legend-dot {
-    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-    margin-right: 4px; vertical-align: middle;
-  }
-  .legend-actual { background: var(--c-weight); }
-  .legend-goal {
-    background: transparent;
-    border: 2px dashed var(--c-lifting); width: 12px; height: 0; border-radius: 0;
-    border-top: 2px dashed var(--c-lifting); border-left: none; border-right: none; border-bottom: none;
-    margin-top: 6px;
-  }
-  .chart-wrap { width: 100%; height: 200px; }
-  .chart-wrap svg { width: 100%; height: 100%; display: block; }
-
-  /* ===== INTERVAL / TEMPO TYPE TOGGLE =====
-     Two buttons act as a radio group. The active button paints in the type's
-     color (interval=purple, tempo=orange). The inactive one is muted. */
-  .type-toggle {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 8px; margin: 0 6px 14px;
-  }
-  .type-btn {
-    height: 42px; border-radius: 100px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    color: var(--ink-3); font-family: inherit;
-    font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
-    cursor: pointer; transition: all 150ms;
-  }
-  .type-btn:active { transform: scale(0.97); }
-  .type-btn.type-interval[data-active="true"] {
-    background: var(--c-intervals); color: white; border-color: var(--c-intervals);
-    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.25);
-  }
-  .type-btn.type-tempo[data-active="true"] {
-    background: var(--c-lifting); color: white; border-color: var(--c-lifting);
-    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
-  }
-
-  /* Calendar cell coloring: tempo sessions paint orange instead of the
-     default intervals-tab purple. The .cell-tempo class is added by
-     buildDayCell when the entry's type is 'tempo'. */
-  .day.done.cell-tempo {
-    background: var(--c-lifting);
-    border-color: var(--c-lifting);
-    box-shadow: 0 2px 6px rgba(234, 88, 12, 0.18);
-  }
-
-  /* ===== NUTRITION TAB ===== */
-  .nutrition-day-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    margin: 6px 0 14px; padding: 8px 4px;
-    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-  }
-  .nutrition-day-nav .nav-btn {
-    background: none; border: none; color: var(--ink-3); cursor: pointer;
-    font-size: 22px; padding: 4px 14px; border-radius: 8px; font-family: inherit;
-  }
-  .nutrition-day-nav .nav-btn:active { background: var(--surface-2); }
-  .nutrition-day-nav .nav-date {
-    font-size: 13px; font-weight: 600; color: var(--ink-2); letter-spacing: -0.01em;
-    flex: 1; text-align: center;
-  }
-  .nutrition-day-nav .nav-add-btn {
-    background: var(--accent); color: white; border: none;
-    font-family: inherit; font-size: 13px; font-weight: 700;
-    padding: 6px 14px; border-radius: 100px; cursor: pointer;
-    transition: transform 120ms;
-  }
-  .nutrition-day-nav .nav-add-btn:active { transform: scale(0.94); }
-  .nutrition-entry {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px;
-    display: flex; align-items: center; gap: 12px;
-    cursor: pointer; transition: transform 120ms ease;
-  }
-  .nutrition-entry:active { transform: scale(0.98); }
-  .nutrition-entry.pending { opacity: 0.55; }
-  .nutrition-entry-time {
-    font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: 0.04em;
-    font-feature-settings: "tnum"; min-width: 38px;
-  }
-  .nutrition-entry-body { flex: 1; min-width: 0; }
-  .nutrition-entry-name {
-    font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .nutrition-entry-meta {
-    font-size: 11px; color: var(--ink-3); margin-top: 2px;
-    font-feature-settings: "tnum";
-  }
-  .nutrition-entry-cals {
-    font-size: 13px; font-weight: 700; color: var(--ink-2);
-    font-feature-settings: "tnum"; flex-shrink: 0;
-  }
-  .nutrition-empty {
-    text-align: center; color: var(--ink-3); padding: 28px 16px;
-    font-size: 13px;
-  }
-
-  /* Chat dock pinned above the tab bar */
-  .chat-dock {
-    position: fixed; left: 0; right: 0;
-    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-    background: var(--surface); border-top: 1px solid var(--border);
-    padding: 10px 14px 12px;
-    z-index: 40;
-    display: none;
-  }
-  body[data-tab="nutrition"] .chat-dock { display: block; }
-  body[data-tab="nutrition"] {
-    /* extra bottom padding so the entries scroll above the chat dock */
-    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 92px);
-  }
-  .chat-row { display: flex; gap: 8px; align-items: center; }
-  .chat-input {
-    flex: 1; height: 42px; padding: 0 14px;
-    border: 1px solid var(--border); border-radius: 100px;
-    background: var(--surface-2); color: var(--ink);
-    font-family: inherit; font-size: 14px;
-    outline: none; transition: border-color 120ms;
-  }
-  .chat-input:focus { border-color: var(--accent); }
-  .chat-input::placeholder { color: var(--ink-4); }
-  .chat-send {
-    flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
-    background: var(--accent); color: white; border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: transform 120ms;
-  }
-  .chat-send:active { transform: scale(0.92); }
-  .chat-send svg { width: 18px; height: 18px; }
-  .chat-send:disabled { background: var(--ink-4); cursor: wait; }
-  .chat-plus {
-    flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
-    background: var(--surface-2); color: var(--ink-2);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--surface);
     border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: transform 120ms;
+    border-radius: var(--radius-lg);
+    padding: 14px 14px 14px 18px;
+    box-shadow: var(--edge);
   }
-  .chat-plus:active { transform: scale(0.92); }
-  .chat-plus svg { width: 18px; height: 18px; }
-  .chat-status {
-    font-size: 11px; color: var(--ink-3); margin-top: 6px; padding: 0 4px;
+  .today-card.completed { border-color: var(--accent); background: var(--accent-tint); }
+  .today-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-4);
   }
-  .chat-status.err { color: #b91c1c; }
-  .chat-status.ok { color: var(--accent-deep); }
+  .today-card.completed .today-label { color: var(--accent); }
+  .today-text { font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .today-hint { font-size: 11px; color: var(--ink-4); margin-top: 3px; }
+  .today-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 11px 16px; border-radius: 14px;
+    background: var(--accent); color: var(--on-accent);
+    font-size: 13px; font-weight: 800; letter-spacing: 0.02em;
+    flex: none;
+  }
+  .today-btn:active { transform: scale(.97); }
+  .today-btn svg { width: 15px; height: 15px; }
+  .today-card.completed .today-btn { background: var(--surface-2); color: var(--ink-2); }
 
-  /* Nutrition edit form */
-  .nutrition-form { padding: 0 6px; display: grid; gap: 10px; }
-  .nfield {
-    display: grid; gap: 4px; font-size: 11px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3);
+  /* ---------- Calendar ---------- */
+  main { display: flex; flex-direction: column; gap: 4px; }
+  .month-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 14px 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--edge);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 330px;
   }
-  .nfield input {
-    height: 38px; padding: 0 12px; border: 1px solid var(--border);
-    border-radius: 10px; background: var(--surface-2); color: var(--ink);
-    font-family: inherit; font-size: 14px; font-weight: 500; letter-spacing: normal;
-    text-transform: none; outline: none;
-  }
-  .nfield input:focus { border-color: var(--accent); }
-  .nutrition-macros {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-  }
-
-  /* Settings: Anthropic API key field */
-  .menu-input {
-    width: 100%; height: 38px; padding: 0 12px;
-    border: 1px solid var(--border); border-radius: 10px;
-    background: var(--surface-2); color: var(--ink);
-    font-family: inherit; font-size: 13px; outline: none;
-  }
-  .menu-input:focus { border-color: var(--accent); }
-
-  /* ===== MILESTONE CELEBRATION ===== */
-  .celebrate-overlay {
-    position: fixed; inset: 0; pointer-events: none; z-index: 1000;
-    display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at center, rgba(255,255,255,0.7), transparent 60%);
-    opacity: 0; transition: opacity 300ms ease;
-  }
-  .celebrate-overlay.show { opacity: 1; pointer-events: auto; }
-  .celebrate-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-xl); padding: 28px 32px; text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-    transform: scale(0.85); transition: transform 400ms cubic-bezier(.2,1.4,.4,1);
-  }
-  .celebrate-overlay.show .celebrate-card { transform: scale(1); }
-  .celebrate-emoji { font-size: 56px; margin-bottom: 8px; }
-  .celebrate-title {
-    font-size: 22px; font-weight: 700; color: var(--ink);
-    letter-spacing: -0.02em; margin-bottom: 4px;
-  }
-  .celebrate-sub { font-size: 14px; color: var(--ink-3); }
-  .confetti {
-    position: absolute; width: 8px; height: 14px; border-radius: 2px;
-    pointer-events: none; will-change: transform;
-  }
-
-  /* ===== MONTHS ===== */
-  .month-block { margin-bottom: 28px; }
   .month-header {
     display: flex; align-items: baseline; justify-content: space-between;
-    margin-bottom: 14px; padding: 0 4px;
+    margin-bottom: 12px; padding: 0 4px;
   }
   .month-name {
-    font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 16px; letter-spacing: 0.01em;
+    text-transform: uppercase;
   }
-  .month-name .year { color: var(--ink-4); font-weight: 500; margin-left: 6px; }
-  .month-stat {
-    font-size: 12px; font-weight: 600; color: var(--ink-3);
-    display: flex; align-items: center; gap: 6px;
-  }
+  .month-name .year { font-size: 11px; color: var(--ink-4); margin-left: 7px; font-weight: 700; }
+  .month-stat { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ink-3); }
   .month-stat .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-  .month-stat.empty .dot { background: var(--ink-4); }
+  .month-stat.empty { color: var(--ink-4); }
+  .month-stat.empty .dot { background: var(--border-strong); }
 
   .weekday-row {
     display: grid; grid-template-columns: repeat(7, 1fr);
-    gap: 6px; margin-bottom: 8px; padding: 0 2px;
+    margin-bottom: 6px;
   }
   .weekday-row span {
-    text-align: center; font-size: 10px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-4);
+    text-align: center; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; color: var(--ink-4);
   }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 
-  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-
+  /* Day cells: circular dots; fill intensity encodes duration via --int. */
   .day {
-    aspect-ratio: 1; border-radius: 12px;
-    background: var(--surface-2); border: 1px solid transparent;
+    aspect-ratio: 1; border-radius: 50%;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    font-family: inherit; cursor: pointer;
-    transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative; padding: 0; overflow: hidden;
-    touch-action: manipulation;
-  }
-  .day-num {
-    font-size: 14px; font-weight: 600; color: var(--ink-2);
-    line-height: 1; font-feature-settings: "tnum";
-  }
-  .day-mins, .day-sub {
-    font-size: 9px; font-weight: 600; color: var(--ink-3);
-    margin-top: 2px; line-height: 1; font-feature-settings: "tnum";
-    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .day.empty { background: transparent; pointer-events: none; }
-  .day.future {
-    background: transparent; border: 1px dashed var(--border);
-  }
-  .day.future .day-num { color: var(--ink-4); font-weight: 500; }
-  .day.today {
-    border: 1.5px solid var(--ink); background: var(--surface);
-  }
-  .day.today .day-num { color: var(--ink); font-weight: 700; }
-  .day.done {
-    background: var(--accent); border-color: var(--accent);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  }
-  .day.done .day-num { color: white; font-weight: 700; }
-  .day.done .day-mins, .day.done .day-sub { color: rgba(255,255,255,0.85); }
-  .day.done.today {
-    border: 1.5px solid var(--accent-deep);
-  }
-  .day:active:not(.future):not(.empty) { transform: scale(0.92); }
-  .day.long-pressing { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.18); z-index: 2; }
-
-  @keyframes pop {
-    0% { transform: scale(0.85); }
-    50% { transform: scale(1.06); }
-    100% { transform: scale(1); }
-  }
-  .day.just-done { animation: pop 280ms cubic-bezier(0.4, 0, 0.2, 1); }
-
-  /* ===== WEEKLY WEIGHT GOALS (Saturday cells in weight tab) ===== */
-  /* Pin a small target weight chip to every Saturday in the goal trajectory. */
-  .day.goal-sat::before {
-    content: attr(data-goal);
-    position: absolute; top: 2px; right: 3px;
-    font-size: 9px; font-weight: 700; line-height: 1;
-    padding: 2px 4px; border-radius: 6px;
-    background: var(--c-lifting-soft); color: var(--c-lifting-deep);
-    font-feature-settings: "tnum"; letter-spacing: -0.02em;
-  }
-  /* Past goal that was hit → green chip + tinted cell. */
-  .day.goal-sat.goal-hit {
-    background: var(--c-cardio-tint);
-    border-color: var(--c-cardio-soft);
-  }
-  .day.goal-sat.goal-hit::before {
-    background: var(--c-cardio-soft); color: var(--c-cardio-deep);
-  }
-  /* Past goal missed → orange chip + tinted cell. */
-  .day.goal-sat.goal-miss {
-    background: var(--c-lifting-tint);
-    border-color: var(--c-lifting-soft);
-  }
-  /* Future Saturdays use a softer outline so they read as "upcoming". */
-  .day.goal-sat.future {
-    border: 1px dashed var(--c-lifting-soft);
-  }
-  /* When the cell is also "done" (logged), keep the chip readable on dark fill. */
-  .day.goal-sat.done::before {
-    background: rgba(255,255,255,0.92); color: var(--c-lifting-deep);
-  }
-
-  /* ===== TAB BAR ===== */
-  .tabbar {
-    position: fixed; left: 0; right: 0; bottom: 0;
-    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    display: flex; z-index: 50;
-    overflow: hidden; /* never let a tab spill beyond the bar */
-  }
-  .tab {
-    /* Equal-width tabs, allowed to shrink to zero so 6 always fit. The 1 1 0
-       triple is explicit: grow:1 shrink:1 basis:0. flex:1 alone is ambiguous
-       enough to behave differently on iOS Safari at small widths. */
-    flex: 1 1 0; min-width: 0; max-width: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 3px; cursor: pointer; padding: 8px 2px;
-    background: none; border: none; font-family: inherit;
-    color: var(--ink-3); transition: color 200ms ease;
     position: relative;
+    background: var(--surface-2);
+    color: var(--ink-3);
+    transition: transform 120ms ease;
   }
-  .tab svg { width: 22px; height: 22px; }
-  .tab-label {
-    font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  .day.empty { background: transparent; }
+  .day-num { font-size: 12px; font-weight: 600; line-height: 1; }
+  .day-mins { font-size: 8px; font-weight: 700; margin-top: 2px; opacity: .85; letter-spacing: 0.02em; }
+  .day.future { background: transparent; border: 1px dashed var(--border); color: var(--ink-4); }
+  .day.today { box-shadow: 0 0 0 2px var(--accent); color: var(--ink); }
+  .day.done {
+    --int: 1;
+    background: var(--accent);
+    background: color-mix(in srgb, var(--accent) calc(var(--int) * 78% + 22%), var(--surface-2));
+    color: var(--on-accent);
   }
-  .tab[data-active="true"] { color: var(--ink); }
-  .tab[data-active="true"][data-tab="cardio"] { color: var(--c-cardio-deep); }
-  .tab[data-active="true"][data-tab="weight"] { color: var(--c-weight-deep); }
-  .tab[data-active="true"][data-tab="lifting"] { color: var(--c-lifting-deep); }
-  .tab[data-active="true"][data-tab="intervals"] { color: var(--c-intervals-deep); }
-  .tab:active { opacity: 0.7; }
+  .day.done .day-num { font-weight: 800; }
+  .day.done.cell-tempo { background: var(--c-lifting); background: color-mix(in srgb, var(--c-lifting) calc(var(--int) * 78% + 22%), var(--surface-2)); }
+  .day.long-pressing { transform: scale(.9); }
+  .day.just-done { animation: pop 320ms cubic-bezier(.2,.9,.3,1.4); }
+  @keyframes pop { 0% { transform: scale(.6); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
 
-  /* ===== SHEETS ===== */
-  .sheet-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-    opacity: 0; pointer-events: none; transition: opacity 250ms ease;
-    z-index: 100; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-  }
-  .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
-
-  .sheet {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--surface); border-radius: 28px 28px 0 0;
-    padding: 12px 22px max(env(safe-area-inset-bottom), 24px);
-    transform: translateY(100%);
-    transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
-    z-index: 101; box-shadow: 0 -8px 40px rgba(0,0,0,0.12);
-    max-height: 88vh; overflow-y: auto;
-  }
-  .sheet.open { transform: translateY(0); }
-
-  .sheet-handle {
-    width: 36px; height: 5px; background: var(--border-strong);
-    border-radius: 100px; margin: 0 auto 18px;
-  }
-
-  .sheet-date {
-    font-size: 13px; font-weight: 600; color: var(--ink-3);
-    text-transform: uppercase; letter-spacing: 0.06em;
-    text-align: center; margin-bottom: 4px;
-  }
-  .sheet-title {
-    font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
-    text-align: center; margin-bottom: 18px;
-  }
-
-  /* Wheel picker (cardio + weight) */
-  .wheel-container {
-    position: relative; height: 220px; margin-bottom: 8px; overflow: hidden;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
-  }
-  .wheel-selection {
-    position: absolute; left: 12px; right: 12px; top: 50%; height: 56px;
-    transform: translateY(-50%);
-    border-top: 1px solid var(--border-strong);
-    border-bottom: 1px solid var(--border-strong);
-    pointer-events: none; z-index: 1;
-  }
-  .wheel {
-    height: 100%; overflow-y: scroll;
-    scroll-snap-type: y mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; padding: 82px 0;
-  }
-  .wheel::-webkit-scrollbar { display: none; }
-  .wheel-item {
-    height: 56px; display: flex; align-items: center; justify-content: center;
-    scroll-snap-align: center;
-    font-size: 28px; font-weight: 600; color: var(--ink-4);
-    font-feature-settings: "tnum"; letter-spacing: -0.02em;
-    transition: color 150ms ease, font-size 150ms ease, font-weight 150ms ease;
-  }
-  .wheel-item.selected {
-    color: var(--ink); font-size: 36px; font-weight: 700;
-  }
-  .wheel-item .unit {
-    font-size: 0.5em; font-weight: 500; color: var(--ink-3); margin-left: 6px;
-  }
-
-  .wheel-quick-row {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 8px; margin-bottom: 18px;
-  }
-  .wheel-quick-btn {
-    height: 38px; border-radius: 10px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    font-family: inherit; font-size: 13px; font-weight: 600;
-    color: var(--ink-2); cursor: pointer; transition: all 150ms ease;
-  }
-  .wheel-quick-btn:active { transform: scale(0.96); background: var(--border); }
-  .wheel-quick-btn.active {
-    background: var(--accent); color: white; border-color: var(--accent);
-  }
-
-  /* AM / PM segmented control */
-  .segment {
-    display: grid; grid-template-columns: 1fr 1fr;
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 4px; margin-bottom: 16px;
-  }
-  .segment-btn {
-    height: 40px; border-radius: 9px; border: none;
-    background: transparent; font-family: inherit;
-    font-size: 14px; font-weight: 600; color: var(--ink-2);
-    cursor: pointer; transition: all 180ms ease;
-  }
-  .segment-btn.active {
-    background: var(--surface); color: var(--ink);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-
-  /* Lifting tag chips */
-  .chips {
-    display: flex; flex-wrap: wrap; gap: 8px;
-    margin-bottom: 18px; justify-content: center;
-  }
-  .chip {
-    padding: 10px 16px; border-radius: 100px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    font-family: inherit; font-size: 14px; font-weight: 600;
-    color: var(--ink-2); cursor: pointer;
-    transition: all 150ms ease;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .chip:active { transform: scale(0.96); }
-  .chip.active {
-    background: var(--accent); color: white; border-color: var(--accent);
-    box-shadow: var(--shadow-accent);
-  }
-  .chip-check {
-    width: 14px; height: 14px; opacity: 0;
-    transition: opacity 150ms ease;
-  }
-  .chip.active .chip-check { opacity: 1; }
-
-  /* Weight slot inputs: typed directly where the number lives. The input
-     looks like the big bold number it shows when filled. Tap to type, or
-     scroll the wheel below to set/fine-tune. */
-  .slot-input {
-    width: 100%; padding: 0; margin: 0;
-    border: none; outline: none; background: transparent;
-    font-family: inherit; font-size: 24px; font-weight: 700;
-    letter-spacing: -0.02em; color: var(--ink);
-    font-feature-settings: "tnum"; line-height: 1.1;
-    text-align: center;
-    -webkit-appearance: none; appearance: none;
-  }
-  .slot-input::placeholder { color: var(--ink-4); font-weight: 500; }
-  .slot.filled .slot-input { color: var(--accent-deep); }
-
-  /* Weight slot (AM/PM cards) */
-  .weight-slots {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 10px; margin-bottom: 18px;
-  }
-  .slot {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 14px; padding: 12px; cursor: pointer;
-    transition: all 150ms ease; position: relative;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-  }
-  .slot:active { transform: scale(0.97); }
-  .slot.filled {
-    background: var(--accent-tint); border-color: var(--accent-soft);
-  }
-  .slot.editing {
-    border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
-  }
-  .slot-label {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
-    color: var(--ink-3); text-transform: uppercase;
-  }
-  .slot.filled .slot-label, .slot.editing .slot-label { color: var(--accent-deep); }
-  .slot-value {
-    font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
-    color: var(--ink); font-feature-settings: "tnum";
-    line-height: 1.1;
-  }
-  .slot-value .small { font-size: 14px; color: var(--ink-3); margin-left: 2px; font-weight: 500; }
-  .slot-empty { color: var(--ink-4); font-style: italic; font-weight: 500; font-size: 16px; }
-  .slot-clear {
-    position: absolute; top: 6px; right: 6px;
-    width: 22px; height: 22px; border-radius: 50%;
-    background: rgba(0,0,0,0.06); color: var(--ink-2);
-    border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700; line-height: 1;
-  }
-  .slot-clear:active { background: rgba(0,0,0,0.12); }
-
-  .sheet-actions { display: flex; gap: 10px; }
-  .sheet-btn {
-    flex: 1; height: 52px; border-radius: 14px; border: none;
-    font-family: inherit; font-size: 16px; font-weight: 600;
-    cursor: pointer; transition: all 150ms ease; letter-spacing: -0.01em;
-  }
-  .sheet-btn:active { transform: scale(0.97); }
-  .sheet-btn.primary {
-    background: var(--accent); color: white; box-shadow: var(--shadow-accent);
-  }
-  .sheet-btn.danger {
-    background: var(--surface-2); color: #b91c1c;
+  /* Weight goal Saturdays */
+  .day.goal-sat::after {
+    content: attr(data-goal);
+    position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%);
+    font-size: 7px; font-weight: 800; letter-spacing: 0.02em;
+    color: var(--c-lifting);
+    background: var(--surface);
     border: 1px solid var(--border);
+    border-radius: 999px; padding: 1px 4px;
   }
-  .sheet-btn.secondary {
-    background: var(--surface-2); color: var(--ink-2);
-    border: 1px solid var(--border);
-  }
-  .sheet-btn.ghost {
-    background: transparent; color: var(--ink-3);
-    border: 1px solid var(--border);
-  }
+  .day.goal-hit { box-shadow: 0 0 0 2px var(--c-cardio); }
+  .day.goal-miss { box-shadow: 0 0 0 2px #ff5c5c66; }
 
-  /* Confirm sheet */
-  .confirm-content { padding: 4px 0 22px; text-align: center; }
-  .confirm-text {
-    font-size: 16px; color: var(--ink-2); line-height: 1.4; margin-bottom: 6px;
-  }
-  .confirm-text strong { color: var(--ink); font-weight: 600; }
-
-  /* Menu */
-  .menu-row {
-    padding: 16px 0; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; cursor: pointer;
-  }
-  .menu-row:last-of-type { border-bottom: none; }
-  .menu-row-label { font-size: 16px; font-weight: 500; color: var(--ink); }
-  .menu-row-value { font-size: 14px; color: var(--ink-3); font-weight: 500; }
-  .menu-row.danger .menu-row-label { color: #b91c1c; }
-  .menu-hint {
-    font-size: 13px; color: var(--ink-3); padding: 12px 0 4px;
-    border-bottom: 1px solid var(--border); line-height: 1.5;
-  }
-  .menu-hint strong { color: var(--ink); font-weight: 600; }
-
-  .menu-section-title {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--ink-3);
-    padding: 16px 0 8px;
-  }
-
-  /* Date input */
-  .deadline-input-wrap { display: flex; justify-content: center; margin-bottom: 22px; }
-  .deadline-input {
-    -webkit-appearance: none; appearance: none;
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 14px; padding: 18px 20px;
-    font-family: inherit; font-size: 20px; font-weight: 600;
-    color: var(--ink); width: 100%; max-width: 280px;
-    text-align: center; outline: none; font-feature-settings: "tnum";
-  }
-  .deadline-input:focus { border-color: var(--accent); }
-
-  /* Sync */
-  .sync-help {
-    font-size: 13px; color: var(--ink-3); line-height: 1.5;
-    margin-bottom: 14px; padding: 0 4px;
-  }
-  .sync-help a {
-    color: var(--accent-deep); text-decoration: underline;
-    font-weight: 600; display: inline-block; margin-top: 4px;
-  }
-  .sync-help-detail {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 12px 16px 12px 28px;
-    font-size: 13px; color: var(--ink-2); line-height: 1.5;
-    margin-bottom: 14px;
-  }
-  .sync-help-detail ol { padding-left: 4px; }
-  .sync-help-detail li { margin-bottom: 8px; }
-  .sync-help-detail li:last-child { margin-bottom: 0; }
-  .sync-help-detail code {
-    background: var(--surface); padding: 1px 6px; border-radius: 4px;
-    font-size: 12px; border: 1px solid var(--border);
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  }
-  .field-group { margin-bottom: 12px; }
-  .field-label {
-    display: block; font-size: 11px; font-weight: 600;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--ink-3); margin-bottom: 6px; padding-left: 4px;
-  }
-  .field-input {
-    width: 100%; -webkit-appearance: none; appearance: none;
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 16px;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: 14px; color: var(--ink); outline: none;
-  }
-  .field-input:focus { border-color: var(--accent); }
-  .sync-status {
-    font-size: 13px; font-weight: 500; padding: 4px 4px;
-    min-height: 20px; text-align: center;
-  }
-  .sync-status.ok { color: var(--accent-deep); }
-  .sync-status.err { color: #b91c1c; }
-  .sync-status.info { color: var(--ink-3); }
-
-  /* View toggle */
-  .view { display: none; }
-  .view.active { display: block; }
-
-  /* ===== TODAY TAB ===== */
-  .today-greet {
-    margin-bottom: 18px;
-  }
+  /* ---------- Modality cards (Today tab) ---------- */
+  .today-greet { padding: 8px 4px 6px; }
   .today-greet-date {
-    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+    color: var(--ink-4);
   }
   .today-greet-text {
-    font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
-    line-height: 1.15;
+    font-family: var(--font-display);
+    font-weight: 900; font-size: 34px; letter-spacing: -0.02em;
+    margin-top: 6px; line-height: 1.02;
   }
-  .today-greet-sub {
-    font-size: 14px; color: var(--ink-3); margin-top: 4px; font-weight: 500;
-  }
+  .today-greet-sub { font-size: 13px; color: var(--ink-3); margin-top: 7px; }
 
   .modality-card {
     display: flex; align-items: center; gap: 14px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 14px 16px;
-    margin-bottom: 12px; box-shadow: var(--shadow-sm);
-    cursor: pointer; transition: transform 150ms ease, box-shadow 150ms ease;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 13px 16px;
+    box-shadow: var(--edge);
+    position: relative; overflow: hidden;
   }
-  .modality-card:active { transform: scale(0.98); }
-  .modality-ring {
-    flex-shrink: 0; width: 44px; height: 44px; position: relative;
+  .modality-card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--m-accent, var(--ink-4)); opacity: .9;
   }
-  /* Only rotate the ring SVG (so the dasharray fill starts from the top).
-     The check SVG inside .ring-check is a separate element that must not rotate. */
-  .modality-ring > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .modality-ring .ring-bg { fill: none; stroke: var(--border); stroke-width: 4; }
-  .modality-ring .ring-fg { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 400ms ease; }
-  .modality-ring .ring-check {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    color: var(--accent-deep); opacity: 0; transition: opacity 200ms ease;
-  }
-  .modality-ring .ring-check svg { width: 20px; height: 20px; transform: none; }
-  .modality-card.done .ring-check { opacity: 1; }
-  .modality-card.done .ring-fg { stroke-dashoffset: 0 !important; }
-  .modality-info { flex: 1; min-width: 0; }
-  .modality-name {
-    font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em;
-  }
-  .modality-status {
-    font-size: 13px; color: var(--ink-3); margin-top: 2px; font-weight: 500;
-  }
-  .modality-card[data-modality="cardio"] .ring-fg { stroke: var(--c-cardio); }
-  .modality-card[data-modality="cardio"] .ring-check { color: var(--c-cardio-deep); }
-  .modality-card[data-modality="intervals"] .ring-fg { stroke: var(--c-intervals); }
-  .modality-card[data-modality="intervals"] .ring-check { color: var(--c-intervals-deep); }
-  .modality-card[data-modality="lifting"] .ring-fg { stroke: var(--c-lifting); }
-  .modality-card[data-modality="lifting"] .ring-check { color: var(--c-lifting-deep); }
-  .modality-card[data-modality="weight"] .ring-fg { stroke: var(--c-weight); }
-  .modality-card[data-modality="weight"] .ring-check { color: var(--c-weight-deep); }
-  .modality-card[data-modality="nutrition"] .ring-fg { stroke: #c06651; }
-  .modality-card[data-modality="nutrition"] .ring-check { color: #a04a3a; }
-  .modality-card.long-pressing { transform: scale(1.02); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+  .modality-card[data-modality="cardio"]    { --m-accent: var(--c-cardio); }
+  .modality-card[data-modality="intervals"] { --m-accent: var(--c-intervals); }
+  .modality-card[data-modality="lifting"]   { --m-accent: var(--c-lifting); }
+  .modality-card[data-modality="weight"]    { --m-accent: var(--c-weight); }
+  .modality-card[data-modality="nutrition"] { --m-accent: var(--c-nutrition); }
+  .modality-card:active { background: var(--surface-2); }
 
+  .modality-ring { width: 44px; height: 44px; position: relative; flex: none; }
+  .modality-ring svg { width: 44px; height: 44px; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 4; }
+  .ring-fg {
+    fill: none; stroke: var(--m-accent); stroke-width: 4; stroke-linecap: round;
+    transition: stroke-dashoffset 500ms cubic-bezier(.2,.7,.3,1);
+  }
+  .ring-check {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--m-accent); opacity: 0; transform: scale(.6);
+    transition: opacity 200ms ease, transform 200ms cubic-bezier(.2,.9,.3,1.4);
+  }
+  .modality-card.done .ring-check { opacity: 1; transform: scale(1); }
+  .modality-name {
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 14px; letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .modality-status { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .modality-card.done .modality-status { color: var(--ink-2); }
+
+  /* ---------- Week strip ---------- */
   .today-week-strip {
-    margin: 22px 0 18px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 14px 12px;
+    box-shadow: var(--edge);
   }
   .today-week-label {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-4); margin-bottom: 10px;
   }
-  .today-week-grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
-  }
+  .today-week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
   .week-cell {
-    aspect-ratio: 1; border-radius: 12px;
-    background: var(--surface-2); border: 1px solid transparent;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    position: relative; padding: 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 7px 0 6px; border-radius: 12px;
   }
-  .week-cell.today {
-    border: 1.5px solid var(--ink); background: var(--surface);
-  }
-  .week-cell.future { background: transparent; border: 1px dashed var(--border); }
-  .week-cell-dow {
-    font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
-    color: var(--ink-4); text-transform: uppercase;
-  }
-  .week-cell-num {
-    font-size: 14px; font-weight: 700; color: var(--ink-2);
-    line-height: 1; font-feature-settings: "tnum"; margin-top: 2px;
-  }
-  .week-cell.today .week-cell-num { color: var(--ink); }
-  .week-cell-dots {
-    position: absolute; bottom: 5px; left: 0; right: 0;
-    display: flex; justify-content: center; gap: 2px;
-  }
-  .week-cell-dot { width: 4px; height: 4px; border-radius: 50%; }
+  .week-cell.today { background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--border-strong); }
+  .week-cell.future { opacity: .45; }
+  .week-cell-dow { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-4); }
+  .week-cell-num { font-size: 13px; font-weight: 700; }
+  .week-cell-dots { display: flex; gap: 3px; min-height: 5px; flex-wrap: wrap; justify-content: center; max-width: 30px; }
+  .week-cell-dot { width: 5px; height: 5px; border-radius: 50%; }
   .week-cell-dot.cardio { background: var(--c-cardio); }
   .week-cell-dot.intervals { background: var(--c-intervals); }
   .week-cell-dot.lifting { background: var(--c-lifting); }
   .week-cell-dot.weight { background: var(--c-weight); }
-  .week-cell-dot.nutrition { background: #c06651; }
+  .week-cell-dot.nutrition { background: var(--c-nutrition); }
 
+  /* ---------- Weekly summary ---------- */
   .summary-card {
-    background: linear-gradient(135deg, var(--c-cardio-tint), var(--c-weight-tint));
-    border: 1px solid var(--c-cardio-soft);
-    border-radius: var(--radius-xl); padding: 18px 18px 16px;
-    margin: 18px 0 22px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px 18px;
+    box-shadow: var(--edge);
   }
   .summary-title {
-    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--c-cardio-deep); margin-bottom: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-4);
   }
-  .summary-headline {
-    font-size: 18px; font-weight: 700; color: var(--ink);
-    letter-spacing: -0.01em; line-height: 1.3;
-  }
-  .summary-rows { margin-top: 10px; display: grid; gap: 6px; }
-  .summary-row {
-    display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 13px;
-  }
-  .summary-row-label { color: var(--ink-2); font-weight: 500; }
-  .summary-row-value {
-    color: var(--ink); font-weight: 700; font-feature-settings: "tnum";
-  }
-  .summary-row-value.up { color: var(--c-cardio-deep); }
-  .summary-row-value.down { color: var(--c-lifting-deep); }
+  .summary-headline { font-size: 13px; color: var(--ink-3); margin-top: 4px; }
+  .summary-rows { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+  .summary-row { display: flex; justify-content: space-between; font-size: 13px; }
+  .summary-row-label { color: var(--ink-2); }
+  .summary-row-value { font-weight: 700; }
+  .summary-row-value.up { color: var(--c-cardio); }
+  .summary-row-value.down { color: #ff7b6e; }
 
-  /* Sparkline + delta on hero numbers */
-  .hero-augment {
-    display: flex; align-items: center; gap: 10px; margin-top: 6px;
-    font-size: 12px; color: var(--ink-3); font-weight: 500;
+  /* ---------- Goal + chart cards (weight) ---------- */
+  .goal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 12px;
+    box-shadow: var(--edge);
   }
-  .hero-augment .delta {
-    display: inline-flex; align-items: center; gap: 3px;
-    font-weight: 600; font-feature-settings: "tnum";
+  .goal-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .goal-block { text-align: center; }
+  .goal-label { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; color: var(--ink-4); }
+  .goal-value {
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 22px; margin-top: 4px;
   }
-  .hero-augment .delta.up { color: var(--c-cardio-deep); }
-  .hero-augment .delta.down { color: var(--c-lifting-deep); }
-  .hero-augment .delta.flat { color: var(--ink-3); }
-  .hero-augment .streak {
-    display: inline-flex; align-items: center; gap: 3px; font-weight: 600;
-    color: var(--ink-2);
+  .goal-value.win { color: var(--c-cardio); }
+  .goal-value.miss { color: #ff7b6e; }
+  .goal-sub { font-size: 10px; color: var(--ink-4); margin-top: 2px; }
+
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 12px 8px;
+    box-shadow: var(--edge);
   }
-  .hero-augment svg.sparkline { display: block; height: 22px; width: 80px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: center; padding: 0 6px 8px; }
+  .chart-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-4);
+  }
+  .chart-legend { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--ink-3); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 8px; }
+  .legend-actual { background: var(--c-weight); }
+  .legend-goal { background: var(--c-lifting); }
+  .chart-wrap svg { width: 100%; height: auto; }
+
+  /* ---------- Nutrition ---------- */
+  .nutrition-day-nav {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 8px 10px;
+    box-shadow: var(--edge);
+  }
+  .nav-btn {
+    width: 36px; height: 36px; border-radius: 11px;
+    background: var(--surface-2); color: var(--ink-2);
+    font-size: 19px; font-weight: 700;
+  }
+  .nav-date { flex: 1; text-align: center; font-size: 14px; font-weight: 700; }
+  .nav-add-btn {
+    padding: 9px 13px; border-radius: 11px;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 12px; font-weight: 800;
+  }
+  .nutrition-empty {
+    text-align: center; font-size: 13px; color: var(--ink-4);
+    padding: 30px 20px;
+  }
+  .nutrition-entry {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 11px 14px;
+    margin-bottom: 8px;
+    box-shadow: var(--edge);
+  }
+  .nutrition-entry.pending { opacity: .55; }
+  .nutrition-entry-time { font-size: 11px; font-weight: 700; color: var(--ink-4); width: 38px; flex: none; }
+  .nutrition-entry-body { flex: 1; min-width: 0; }
+  .nutrition-entry-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nutrition-entry-meta { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .nutrition-entry-cals {
+    font-family: var(--font-display);
+    font-size: 16px; font-weight: 800; flex: none;
+  }
+
+  .chat-dock {
+    position: fixed; left: 16px; right: 16px;
+    bottom: calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 14px) + 8px);
+    z-index: 25;
+  }
+  @media (min-width: 1024px) { .chat-dock { max-width: 428px; left: 50%; transform: translateX(-50%); } }
+  .chat-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: 999px; padding: 6px;
+    box-shadow: var(--shadow-dock);
+  }
+  .chat-plus, .chat-send {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .chat-plus { background: var(--surface-2); color: var(--ink-2); }
+  .chat-send { background: var(--accent); color: var(--on-accent); }
+  .chat-plus svg, .chat-send svg { width: 17px; height: 17px; }
+  .chat-input {
+    flex: 1; min-width: 0; border: none; background: transparent;
+    color: var(--ink); font-size: 15px; outline: none;
+  }
+  .chat-input::placeholder { color: var(--ink-4); }
+  .chat-status {
+    margin-top: 8px; text-align: center; font-size: 12px; font-weight: 600;
+    padding: 7px 12px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .chat-status.ok { color: var(--c-cardio); }
+  .chat-status.err { color: #ff7b6e; }
+  #view-nutrition { padding-bottom: 70px; }
+
+  /* ---------- Tab dock ---------- */
+  .tabbar {
+    position: fixed; left: 16px; right: 16px;
+    bottom: max(env(safe-area-inset-bottom), 14px);
+    height: var(--tabbar-h);
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    align-items: stretch;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    border: 1px solid var(--border-strong);
+    border-radius: 26px;
+    padding: 8px;
+    box-shadow: var(--shadow-dock);
+    z-index: 40;
+  }
+  @media (min-width: 1024px) { .tabbar { max-width: 428px; left: 50%; right: auto; transform: translateX(-50%); width: 428px; } }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; border-radius: 18px; color: var(--ink-4);
+    transition: background 150ms ease, color 150ms ease;
+  }
+  .tab svg { width: 20px; height: 20px; }
+  .tab-label { font-size: 8.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  .tab[data-tab="cardio"][data-active="true"]    { color: var(--c-cardio);    background: var(--c-cardio-soft); }
+  .tab[data-tab="weight"][data-active="true"]    { color: var(--c-weight);    background: var(--c-weight-soft); }
+  .tab[data-tab="lifting"][data-active="true"]   { color: var(--c-lifting);   background: var(--c-lifting-soft); }
+  .tab[data-tab="intervals"][data-active="true"] { color: var(--c-intervals); background: var(--c-intervals-soft); }
+  .tab[data-tab="nutrition"][data-active="true"] { color: var(--c-nutrition); background: var(--c-nutrition-soft); }
+  .tab[data-tab="today"][data-active="true"]     { color: var(--ink); background: var(--surface-2); }
+
+  /* ---------- Sheets ---------- */
+  .sheet-backdrop {
+    position: fixed; inset: 0; background: rgba(4,6,14,.62);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity 200ms ease; z-index: 50;
+  }
+  .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    background: var(--surface);
+    border: 1px solid var(--border-strong); border-bottom: none;
+    border-radius: 26px 26px 0 0;
+    padding: 10px 20px calc(max(env(safe-area-inset-bottom), 14px) + 16px);
+    transform: translateY(105%);
+    transition: transform 260ms cubic-bezier(.2,.8,.25,1);
+    max-height: 88vh; max-height: 88dvh; overflow-y: auto;
+  }
+  @media (min-width: 1024px) { .sheet { max-width: 460px; left: 50%; transform: translate(-50%, 105%); } .sheet.open { transform: translate(-50%, 0); } }
+  .sheet.open { transform: translateY(0); }
+  .sheet-handle {
+    width: 38px; height: 4px; border-radius: 999px;
+    background: var(--border-strong);
+    margin: 4px auto 14px;
+  }
+  .sheet-date {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .sheet-title {
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 21px; letter-spacing: -0.01em;
+    margin: 4px 0 14px;
+  }
+  .sheet-meta { font-size: 12px; color: var(--ink-3); margin: -8px 0 12px; }
+  .sheet-meta .watch-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+    color: var(--c-cardio); background: var(--c-cardio-soft);
+    border-radius: 999px; padding: 3px 8px; margin-left: 6px;
+    text-transform: uppercase;
+  }
+  .sheet-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .sheet-btn {
+    flex: 1; padding: 14px; border-radius: 15px;
+    font-size: 14px; font-weight: 800; letter-spacing: 0.01em;
+  }
+  .sheet-btn:active { transform: scale(.98); }
+  .sheet-btn.primary { background: var(--accent); color: var(--on-accent); }
+  .sheet-btn.ghost { background: var(--surface-2); color: var(--ink-2); }
+  .sheet-btn.secondary { background: var(--surface-2); color: var(--ink-2); }
+  .sheet-btn.danger { background: rgba(255,92,92,.14); color: #ff7b6e; }
+
+  .confirm-content { padding: 4px 2px 2px; }
+  .confirm-text { font-size: 14px; color: var(--ink-2); }
+
+  /* ---------- Wheels ---------- */
+  .wheel-container { position: relative; height: 168px; margin: 6px 0 2px; }
+  .wheel {
+    height: 100%; overflow-y: auto; scroll-snap-type: y mandatory;
+    padding: 56px 0; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .wheel::-webkit-scrollbar { display: none; }
+  .wheel-selection {
+    position: absolute; left: 8%; right: 8%; top: 50%;
+    height: 56px; transform: translateY(-50%);
+    border-radius: 16px;
+    background: var(--accent-tint);
+    border: 1px solid var(--accent-soft);
+    pointer-events: none;
+  }
+  .wheel-item {
+    height: 56px; display: flex; align-items: center; justify-content: center;
+    scroll-snap-align: center;
+    font-family: var(--font-display);
+    font-size: 27px; font-weight: 700; color: var(--ink-4);
+    letter-spacing: -0.02em;
+    transition: color 140ms ease;
+  }
+  .wheel-item.selected { color: var(--ink); font-weight: 900; }
+  .wheel-item .unit { font-size: 12px; font-weight: 700; color: var(--ink-4); margin-left: 6px; }
+
+  .wheel-quick-row { display: flex; gap: 8px; margin-top: 12px; }
+  .wheel-quick-btn {
+    flex: 1; padding: 11px; border-radius: 13px;
+    background: var(--surface-2); color: var(--ink-2);
+    font-size: 14px; font-weight: 800;
+  }
+  .wheel-quick-btn.active { background: var(--accent); color: var(--on-accent); }
+
+  /* ---------- Weight slots ---------- */
+  .weight-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+  .slot {
+    position: relative;
+    background: var(--surface-2); border: 1.5px solid transparent;
+    border-radius: 16px; padding: 12px 14px;
+  }
+  .slot.editing { border-color: var(--accent); background: var(--accent-tint); }
+  .slot-label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: var(--ink-4); }
+  .slot-input {
+    width: 100%; border: none; background: transparent; outline: none;
+    font-family: var(--font-display);
+    font-size: 25px; font-weight: 800; color: var(--ink);
+    margin-top: 2px; padding: 0;
+  }
+  .slot-input::placeholder { color: var(--ink-4); }
+  .slot-clear {
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--surface); color: var(--ink-3);
+    font-size: 14px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------- Chips / type toggle ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }
+  .chip {
+    display: flex; align-items: center; gap: 7px;
+    padding: 11px 16px; border-radius: 999px;
+    background: var(--surface-2); color: var(--ink-2);
+    font-size: 14px; font-weight: 700;
+    border: 1.5px solid transparent;
+  }
+  .chip.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .chip-check { width: 14px; height: 14px; display: none; }
+  .chip.active .chip-check { display: block; }
+
+  .type-toggle {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    background: var(--surface-2); border-radius: 15px; padding: 5px;
+    margin-bottom: 8px;
+  }
+  .type-btn { padding: 10px; border-radius: 11px; font-size: 13px; font-weight: 800; color: var(--ink-3); }
+  .type-btn[data-active="true"].type-interval { background: var(--c-intervals-soft); color: var(--c-intervals); }
+  .type-btn[data-active="true"].type-tempo { background: var(--c-lifting-soft); color: var(--c-lifting); }
+
+  /* ---------- Menu ---------- */
+  .menu-hint { font-size: 12px; color: var(--ink-3); margin-bottom: 14px; }
+  .menu-hint strong { color: var(--ink-2); }
+  .menu-section-title {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-4);
+    margin: 16px 0 6px;
+  }
+  .menu-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--surface-2); border-radius: 14px;
+    padding: 13px 15px; margin-bottom: 6px;
+  }
+  .menu-row:active { background: var(--border); }
+  .menu-row-label { font-size: 14px; font-weight: 600; }
+  .menu-row-value { font-size: 13px; color: var(--ink-3); font-weight: 600; }
+  .menu-row.danger .menu-row-label { color: #ff7b6e; }
+
+  .field-group { margin-bottom: 12px; }
+  .field-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 6px; }
+  .field-input, .menu-input, .deadline-input {
+    width: 100%; padding: 13px 14px;
+    background: var(--surface-2); border: 1.5px solid var(--border);
+    border-radius: 13px; color: var(--ink);
+    font-size: 15px; outline: none;
+  }
+  .field-input:focus, .menu-input:focus, .deadline-input:focus { border-color: var(--accent); }
+  .deadline-input-wrap { margin: 4px 0 6px; }
+  .nfield { display: block; margin-bottom: 4px; }
+  .nfield span { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 5px; }
+  .nfield input, .nfield select { width: 100%; padding: 12px 13px; background: var(--surface-2); border: 1.5px solid var(--border); border-radius: 12px; color: var(--ink); font-size: 15px; outline: none; }
+  .nfield input:focus, .nfield select:focus { border-color: var(--accent); }
+  .nutrition-form { display: flex; flex-direction: column; gap: 10px; }
+  .nutrition-macros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+  .sync-help { font-size: 13px; color: var(--ink-3); margin-bottom: 12px; line-height: 1.5; }
+  .sync-help a { color: var(--accent); font-weight: 700; text-decoration: none; }
+  .sync-help-detail {
+    font-size: 12px; color: var(--ink-3); line-height: 1.6;
+    background: var(--surface-2); border-radius: 13px; padding: 12px 14px 12px 28px;
+    margin-bottom: 14px;
+  }
+  .sync-help-detail li { margin-bottom: 6px; }
+  .sync-help-detail code { background: var(--surface); border-radius: 5px; padding: 1px 5px; font-size: 11px; }
+  .sync-help-detail strong { color: var(--ink-2); }
+  .sync-status { font-size: 12px; font-weight: 600; min-height: 16px; }
+  .sync-status.ok { color: var(--c-cardio); }
+  .sync-status.err { color: #ff7b6e; }
+  .sync-status.info { color: var(--ink-3); }
+
+  /* ---------- Celebrate ---------- */
+  .celebrate-overlay {
+    position: fixed; inset: 0; z-index: 80;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(4,6,14,.7);
+    opacity: 0; pointer-events: none; transition: opacity 250ms ease;
+  }
+  .celebrate-overlay.show { opacity: 1; pointer-events: auto; }
+  .celebrate-card {
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: 28px; padding: 34px 40px; text-align: center;
+    transform: scale(.85); transition: transform 250ms cubic-bezier(.2,.9,.3,1.3);
+  }
+  .celebrate-overlay.show .celebrate-card { transform: scale(1); }
+  .celebrate-emoji { font-size: 52px; }
+  .celebrate-title {
+    font-family: var(--font-display);
+    font-weight: 900; font-size: 24px; margin-top: 12px; letter-spacing: -0.01em;
+  }
+  .celebrate-sub { font-size: 14px; color: var(--ink-3); margin-top: 6px; }
+  .confetti { position: fixed; width: 9px; height: 9px; border-radius: 2px; z-index: 81; pointer-events: none; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; left: 50%; transform: translate(-50%, 24px);
+    bottom: calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 14px) + 14px);
+    z-index: 70;
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: 999px; padding: 11px 18px;
+    box-shadow: var(--shadow-dock);
+    font-size: 13px; font-weight: 700;
+    opacity: 0; pointer-events: none;
+    transition: opacity 220ms ease, transform 220ms cubic-bezier(.2,.8,.3,1);
+    max-width: 86vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast .watch-icon { color: var(--c-cardio); margin-right: 6px; }
+
+  /* ---------- Motion ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 
 </style>
 </head>
@@ -1277,7 +974,17 @@
       <span class="target">/ 100 sessions</span>
     </div>
     <div class="hero-sub"><strong id="cardioHours">0h</strong> logged · goal by <strong id="cardioDeadline">Dec 1</strong></div>
+    <div class="hero-eta" id="cardioEta" hidden></div>
     <div class="hero-augment" id="cardioAugment"></div>
+    <div class="zone-band-wrap">
+      <div class="zone-band-head"><span>HR zones</span><span id="zoneBandStatus">Auto-log <strong>armed</strong></span></div>
+      <div class="zone-band" id="zoneBand">
+        <div class="zone-window" id="zoneWindow"></div>
+        <div class="zone-marker" id="zoneMarker" hidden></div>
+      </div>
+      <div class="zone-scale"><span>100</span><span>120</span><span>140</span><span>160</span><span>180</span></div>
+      <div class="zone-band-caption" id="zoneBandCaption"></div>
+    </div>
     <div class="progress-track"><div class="progress-fill" id="cardioProgress" style="width:0%"></div></div>
     <div class="stats-row">
       <div class="stat"><div class="stat-value" id="cardioRemaining">100</div><div class="stat-label">To go</div></div>
@@ -1535,6 +1242,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-date" id="cardioSheetDate">-</div>
   <div class="sheet-title">Zone 2 duration</div>
+  <div class="sheet-meta" id="cardioSheetMeta" hidden></div>
   <div class="wheel-container">
     <div class="wheel-selection"></div>
     <div class="wheel" id="cardioWheel"></div>
@@ -1655,7 +1363,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-title" style="margin-bottom: 4px;">Settings</div>
   <div class="menu-hint">
-    <strong>Tap</strong> a day to toggle / edit · <strong>Long-press</strong> for the editor
+    <strong>Tap</strong> a day to log or edit · <strong>Long-press</strong> for the editor
   </div>
 
   <div class="menu-section-title">Zone 2</div>
@@ -1674,6 +1382,12 @@
     <span class="menu-row-value" id="menuAi">Not set ›</span>
   </div>
 
+  <div class="menu-section-title">Apple Watch</div>
+  <div class="menu-row" id="watchSetupBtn">
+    <span class="menu-row-label">Auto-log Zone 2</span>
+    <span class="menu-row-value" id="menuWatch">140–155 · on ›</span>
+  </div>
+
   <div class="menu-section-title">Sync &amp; Data</div>
   <div class="menu-row" id="syncSetupBtn">
     <span class="menu-row-label">Cloud sync</span>
@@ -1683,6 +1397,11 @@
     <span class="menu-row-label">Export data</span>
     <span class="menu-row-value">JSON</span>
   </div>
+  <div class="menu-row" id="importBtn">
+    <span class="menu-row-label">Import data</span>
+    <span class="menu-row-value">JSON ›</span>
+  </div>
+  <input type="file" id="importFileInput" accept=".json,application/json" hidden>
   <div class="menu-row danger" id="resetAllBtn">
     <span class="menu-row-label">Reset all data</span>
   </div>
@@ -1734,6 +1453,42 @@
   <button class="sheet-btn secondary" id="syncPullBtn" style="width:100%; margin-top:10px; display:none;">Pull latest from gist</button>
   <button class="sheet-btn danger" id="syncDisconnectBtn" style="width:100%; margin-top:10px; display:none;">Disconnect</button>
 </div>
+
+<!-- Apple Watch auto-log setup -->
+<div class="sheet" id="watchSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Auto-log Zone 2</div>
+  <div class="sync-help">
+    Workouts pushed from your Apple Watch are logged as Zone 2 sessions when the
+    average heart rate lands in the window below.
+    <a href="#" id="watchHelpToggle">How do I set up the Shortcut?</a>
+  </div>
+  <div class="sync-help-detail" id="watchHelpDetail" hidden>
+    <ol>
+      <li>On iPhone, open <strong>Shortcuts → Automation → +</strong>, trigger: <strong>When any Apple Watch workout ends</strong>, Run Immediately.</li>
+      <li>Actions: <strong>Find Health Samples</strong> (Workouts, latest 1) → <strong>Find Health Samples</strong> (Heart Rate, between the workout's start and end) → <strong>Calculate Statistics: Average</strong>.</li>
+      <li><strong>Text</strong> action with: <code>{"start":"[Workout Start]","duration_min":[Workout Duration in minutes],"avg_hr":[Average],"type":"[Workout Type]"}</code></li>
+      <li><strong>Get Contents of URL</strong>: PATCH <code>https://api.github.com/gists/YOUR_GIST_ID</code>, header <code>Authorization: Bearer YOUR_TOKEN</code>, JSON body: files → <code>watch-inbox.json</code> → content = the Text.</li>
+      <li>Same gist and token as Cloud sync. The app ingests it within ~30s while open, or on next launch. Full recipe: <code>apple-watch-setup.md</code> in the repo.</li>
+    </ol>
+  </div>
+  <label class="nfield" style="margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+    <span style="margin:0; font-size:14px; color:var(--ink); font-weight:600; letter-spacing:0; text-transform:none;">Enabled</span>
+    <input type="checkbox" id="watchEnabledInput" style="width:22px; height:22px; accent-color: var(--c-cardio);">
+  </label>
+  <div class="nutrition-macros" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 6px;">
+    <label class="nfield"><span>Min HR</span><input type="number" inputmode="numeric" id="watchMinHrInput"></label>
+    <label class="nfield"><span>Max HR</span><input type="number" inputmode="numeric" id="watchMaxHrInput"></label>
+    <label class="nfield"><span>Min duration</span><input type="number" inputmode="numeric" id="watchMinMinsInput"></label>
+  </div>
+  <div class="sync-status" id="watchStatusText"></div>
+  <div class="sheet-actions">
+    <button class="sheet-btn ghost" id="watchCancelBtn">Cancel</button>
+    <button class="sheet-btn primary" id="watchSaveBtn">Save</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <!-- AI logging setup -->
 <div class="sheet" id="aiSheet">
@@ -1831,10 +1586,11 @@
   ];
 
   // 2 AM day cutoff: a session at 1 AM still belongs to the previous calendar
-  // day. Past 2 AM, the day flips. Computed once at app load; force-quit and
-  // reopen past 2 AM to roll over.
+  // day. Past 2 AM, the day flips. `today` is re-checked on focus/visibility
+  // and every minute (see rolloverIfNeeded near INIT) so a PWA left in the
+  // app switcher overnight rolls to the new day without a force-quit.
   const DAY_CUTOFF_HOUR = 2;
-  const today = TrackCore.logicalToday(new Date(), DAY_CUTOFF_HOUR);
+  let today = TrackCore.logicalToday(new Date(), DAY_CUTOFF_HOUR);
 
   // ===== HELPERS =====
   const fmtKey = (d) => {
@@ -1876,7 +1632,7 @@
       const dx = (Math.random() - 0.5) * 600;
       const dy = -300 - Math.random() * 200;
       const rot = (Math.random() - 0.5) * 720;
-      c.animate(
+      c.animate?.(
         [
           { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
           { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`, opacity: 0 },
@@ -1891,24 +1647,35 @@
   }
   function checkZone2Milestone() {
     const n = TrackCore.countSessions(store.cardio);
+    // Mark every milestone at or below the current count; celebrate only the
+    // highest newly-reached one. A backfill that jumps from 8 to 30 should
+    // celebrate 25 once, not fire 10 now and 25 on the next unrelated save.
+    let newest = null;
     for (const m of ZONE2_MILESTONES) {
       const token = `z2-${m}`;
       if (n >= m && !celebrated[token]) {
         markCelebrated(token);
-        const sub = m === 100 ? 'You hit 100. Goal complete.' : `${100 - m} more to 100.`;
-        celebrate(m === 100 ? '🏆' : '🔥', `${m} Zone 2 sessions!`, sub);
-        break;
+        newest = m;
       }
+    }
+    if (newest != null) {
+      const sub = newest === 100 ? 'You hit 100. Goal complete.' : `${100 - newest} more to 100.`;
+      celebrate(newest === 100 ? '🏆' : '🔥', `${newest} Zone 2 sessions!`, sub);
     }
   }
   function checkWeightGoalHit(latest) {
     if (!latest) return;
+    // `latest` is a weightSeries item: { key, date, weight }. Reading .avg
+    // here (which doesn't exist on this shape) made `undefined > goalToday`
+    // evaluate false - so the goal celebration fired on any Saturday
+    // weigh-in, hit or miss.
+    if (typeof latest.weight !== 'number') return;
     const startSat = TrackCore.parseDate(WEIGHT_GOAL_START_KEY);
     const goalToday = TrackCore.weeklyWeightGoal(today, startSat, WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
     if (goalToday == null) return;
     if (today.getDay() !== 6) return; // only celebrate on the Saturday checkpoint
     if (latest.key !== fmtKey(today)) return;
-    if (latest.avg > goalToday) return;
+    if (latest.weight > goalToday) return;
     const token = `wt-${fmtKey(today)}`;
     if (celebrated[token]) return;
     markCelebrated(token);
@@ -1964,21 +1731,28 @@
   } catch(e) {}
 
   // Deadline
+  const DEADLINE_TS_KEY = 'track-deadline-ts-v1';
   let deadline;
+  let deadlineUpdatedAt = 0;
   try {
     const saved = localStorage.getItem(DEADLINE_KEY) || localStorage.getItem('zone2-deadline-v1');
     if (saved) {
       const [y, m, d] = saved.split('-').map(Number);
       deadline = new Date(y, m - 1, d);
     }
+    deadlineUpdatedAt = Number(localStorage.getItem(DEADLINE_TS_KEY) || 0);
   } catch(e) {}
   if (!deadline) {
     const yr = today.getFullYear();
     deadline = new Date(yr, 11, 1);
     if (today > deadline) deadline = new Date(yr + 1, 11, 1);
   }
-  const saveDeadline = () => {
-    try { localStorage.setItem(DEADLINE_KEY, fmtKey(deadline)); } catch(e) {}
+  const saveDeadline = (ts) => {
+    deadlineUpdatedAt = ts != null ? ts : Date.now();
+    try {
+      localStorage.setItem(DEADLINE_KEY, fmtKey(deadline));
+      localStorage.setItem(DEADLINE_TS_KEY, String(deadlineUpdatedAt));
+    } catch(e) {}
   };
 
   // One-time backfill of historical cardio sessions (Apr 22–May 1, 2026).
@@ -2022,6 +1796,100 @@
   // never sees the corrupted form again.
   if (needsRepairPush) saveLocal();
 
+  // ===== APPLE WATCH AUTO-LOG =====
+  // Config + ingestion ledger. `ingested` maps workoutId -> timestamp and is
+  // included in the gist payload, so a workout logged (or a session deleted)
+  // on one device never re-ingests on another.
+  const WATCH_KEY = 'track-watch-v1';
+  let watchConfig = { enabled: true, hrMin: 140, hrMax: 155, minMins: 20, ingested: {} };
+  try {
+    const raw = localStorage.getItem(WATCH_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        watchConfig = { ...watchConfig, ...parsed, ingested: parsed.ingested || {} };
+      }
+    }
+  } catch(e) {}
+  function saveWatchConfig() {
+    try { localStorage.setItem(WATCH_KEY, JSON.stringify(watchConfig)); } catch(e) {}
+  }
+
+  let toastTimer = null;
+  function showToast(html_) {
+    const t = document.getElementById('toast');
+    t.innerHTML = html_;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3600);
+  }
+
+  // Ingest normalized workout records from the watch inbox.
+  // Rules:
+  //  - avg HR within [hrMin, hrMax] AND duration >= minMins, else skipped.
+  //  - one session per day: a second qualifying workout on an auto day sums
+  //    minutes; the session count stays per-day.
+  //  - if the day already has a MANUAL entry, assume it's the same workout
+  //    logged by hand: attach avgHr + the workoutId (so it never re-adds)
+  //    but leave the minutes alone.
+  //  - deleted days stay deleted: the id lives in `ingested` forever.
+  function ingestWatchRecords(records) {
+    if (!watchConfig.enabled || !records || !records.length) return false;
+    let changed = false;
+    let lastLogged = null;
+    for (const w of records) {
+      if (watchConfig.ingested[w.id]) continue;
+      if (!TrackCore.qualifiesAsZone2(w, watchConfig)) {
+        // Non-qualifying workouts are remembered too, so a borderline workout
+        // isn't re-evaluated forever on every poll.
+        watchConfig.ingested[w.id] = Date.now();
+        changed = true;
+        continue;
+      }
+      const key = TrackCore.logicalDayKey(w.start, DAY_CUTOFF_HOUR);
+      const mins = Math.round(w.durationMin);
+      const hr = Math.round(w.avgHr);
+      const existing = store.cardio[key];
+      const applied = TrackCore.applyWatchWorkout(existing, mins, hr, w.id);
+      if (applied.changed) {
+        if (!existing) lastLogged = { key, mins, hr };
+        store.cardio[key] = applied.entry;
+        touchMeta('cardio', key);
+      }
+      watchConfig.ingested[w.id] = Date.now();
+      changed = true;
+    }
+    if (changed) {
+      saveWatchConfig();
+      saveLocal();
+      schedulePush();
+      render();
+      checkZone2Milestone();
+      if (lastLogged) {
+        const [y,m,d] = lastLogged.key.split('-').map(Number);
+        const dateStr = new Date(y, m-1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        showToast(`<span class="watch-icon">⌓</span>Auto-logged Zone 2 · ${dateStr} · ${lastLogged.mins} min · ${lastLogged.hr} bpm`);
+        haptic(20);
+      }
+    }
+    return changed;
+  }
+
+  // Union a remote ingested-ledger into ours (max timestamp wins; it's a set).
+  function mergeIngestedLedger(remoteIngested) {
+    if (!remoteIngested || typeof remoteIngested !== 'object') return false;
+    let changed = false;
+    for (const [id, ts] of Object.entries(remoteIngested)) {
+      if (typeof ts !== 'number') continue;
+      if (!watchConfig.ingested[id] || watchConfig.ingested[id] < ts) {
+        watchConfig.ingested[id] = ts;
+        changed = true;
+      }
+    }
+    if (changed) saveWatchConfig();
+    return changed;
+  }
+
   // ===== SYNC =====
   let syncConfig = null;
   try {
@@ -2038,7 +1906,16 @@
     syncText.textContent = label;
   }
 
-  let pushTimer = null, pushInFlight = false, pendingPush = false;
+  let pushTimer = null, pushInFlight = false, pendingPush = false, pushRetryTimer = null;
+  // Never push before the first successful pull has merged remote data.
+  // Without this gate, a load-time repair push (or any early edit) races the
+  // initial pull and can PATCH the gist with a near-empty store, destroying
+  // remote data. Held pushes are released as soon as the first pull lands;
+  // pull failures keep the gate closed and the focus/visibility/online/30s
+  // retry paths will eventually open it. Local edits are safe in localStorage
+  // in the meantime.
+  let initialPullDone = !syncConfig;
+  let pushHeldForPull = false;
 
   async function gistFetch() {
     if (!syncConfig) return null;
@@ -2048,13 +1925,31 @@
     if (!r.ok) throw new Error(`GitHub returned ${r.status}`);
     const gist = await r.json();
     const file = gist.files['track.json'] || gist.files['zone2.json'];
-    if (!file) return TrackCore.parseGistContent(null);
-    const content = file.truncated ? await (await fetch(file.raw_url)).text() : file.content;
-    return TrackCore.parseGistContent(content);
+    const content = file
+      ? (file.truncated ? await (await fetch(file.raw_url)).text() : file.content)
+      : null;
+    const parsed = TrackCore.parseGistContent(content);
+    // Cross-device ingested ledger rides inside track.json.
+    try {
+      const raw = content ? JSON.parse(content) : null;
+      parsed.watchIngested = (raw && raw.watch && raw.watch.ingested) || null;
+    } catch(_) { parsed.watchIngested = null; }
+    // The Shortcuts automation drops workouts into watch-inbox.json in the
+    // same gist, so ingestion costs zero extra requests.
+    const inboxFile = gist.files['watch-inbox.json'] || gist.files['watch_inbox.json'];
+    if (inboxFile) {
+      parsed.watchInbox = inboxFile.truncated
+        ? await (await fetch(inboxFile.raw_url)).text()
+        : inboxFile.content;
+    } else {
+      parsed.watchInbox = null;
+    }
+    return parsed;
   }
 
   async function gistPush() {
     if (!syncConfig) return;
+    if (!initialPullDone) { pushHeldForPull = true; return; }
     if (pushInFlight) { pendingPush = true; return; }
     pushInFlight = true;
     setSyncState('syncing', 'Saving…');
@@ -2062,6 +1957,8 @@
       const payload = {
         store, meta,
         deadline: fmtKey(deadline),
+        deadlineUpdatedAt,
+        watch: { ingested: watchConfig.ingested },
         updatedAt: new Date().toISOString()
       };
       const body = JSON.stringify({ files: { 'track.json': { content: JSON.stringify(payload, null, 2) } } });
@@ -2075,9 +1972,14 @@
       });
       if (!r.ok) throw new Error(`GitHub returned ${r.status}`);
       setSyncState('ok', 'Synced');
+      clearTimeout(pushRetryTimer);
     } catch (e) {
       console.error('Sync push failed', e);
       setSyncState('error', 'Sync error');
+      // Retry in 30s. Without this, an edit made while offline never reaches
+      // the gist until the *next* edit happens to trigger a push.
+      clearTimeout(pushRetryTimer);
+      pushRetryTimer = setTimeout(gistPush, 30000);
     } finally {
       pushInFlight = false;
       if (pendingPush) { pendingPush = false; setTimeout(gistPush, 100); }
@@ -2105,11 +2007,21 @@
     for (const tab of ['cardio','weight','lifting','intervals','nutrition']) {
       if (mergeOneTab(tab, remote.store[tab] || {}, remote.meta[tab] || {})) changed = true;
     }
-    if (remote.deadline && !localStorage.getItem(DEADLINE_KEY)) {
-      const [y,m,d] = remote.deadline.split('-').map(Number);
-      deadline = new Date(y, m - 1, d);
-      saveDeadline();
-      changed = true;
+    // Deadline: last-write-wins by edit timestamp. Legacy gists have no
+    // timestamp (0), so they only fill in a deadline the device never set.
+    if (remote.deadline) {
+      const remoteTs = Number(remote.deadlineUpdatedAt || 0);
+      const localHasDeadline = !!localStorage.getItem(DEADLINE_KEY);
+      if (remoteTs > deadlineUpdatedAt || !localHasDeadline) {
+        const [y,m,d] = remote.deadline.split('-').map(Number);
+        const remoteDate = new Date(y, m - 1, d);
+        if (fmtKey(remoteDate) !== fmtKey(deadline) || !localHasDeadline) {
+          deadline = remoteDate;
+          changed = true;
+        }
+        saveDeadline(remoteTs || Date.now());
+        updateDeadlineLabels();
+      }
     }
     return changed;
   }
@@ -2120,8 +2032,16 @@
     try {
       const remote = await gistFetch();
       const changed = mergeRemote(remote);
-      if (changed) { saveLocal(); render(); schedulePush(); }
-      else setSyncState('ok', 'Synced');
+      mergeIngestedLedger(remote.watchIngested);
+      const wasFirstPull = !initialPullDone;
+      initialPullDone = true;
+      // ingestWatchRecords persists and renders internally when it changes
+      // anything; the explicit saveLocal/render here covers merge-only changes.
+      const ingestedNew = ingestWatchRecords(TrackCore.normalizeWatchInbox(remote.watchInbox));
+      if (changed && !ingestedNew) { saveLocal(); render(); }
+      if (changed || ingestedNew) schedulePush();
+      if (wasFirstPull && pushHeldForPull) { pushHeldForPull = false; schedulePush(); }
+      setSyncState('ok', 'Synced');
     } catch (e) {
       console.error('Sync pull failed', e);
       setSyncState('error', 'Sync error');
@@ -2190,6 +2110,11 @@
     const entry = store[tab][key];
     if (entry && hasContent(tab, entry)) {
       cell.classList.add('done');
+      // Fill intensity encodes duration for timed sessions (30 min faint,
+      // 90+ min fully saturated).
+      if ((tab === 'cardio' || tab === 'intervals') && entry.mins) {
+        cell.style.setProperty('--int', Math.max(0.35, Math.min(1, entry.mins / 90)).toFixed(2));
+      }
       // Intervals tab: tempo sessions paint orange (lifting accent) instead
       // of the default purple, so the user can tell the two workout types
       // apart at a glance on the calendar.
@@ -2222,7 +2147,8 @@
       }
     }
 
-    if (!isFuture) attachDayInteractions(cell, tab, key);
+    // Interactions are event-delegated per months-container (one listener
+    // set instead of one per cell - hundreds fewer listeners per render).
     return cell;
   }
 
@@ -2338,14 +2264,26 @@
   }
 
   // ===== INTERACTIONS =====
-  function attachDayInteractions(cell, tab, key) {
+  // One delegated listener set per months container instead of eight
+  // listeners per day cell. State tracks the active cell across the gesture.
+  function delegateDayInteractions(container) {
+    let cell = null, tab = null, key = null;
     let pressTimer = null, longFired = false, startX = 0, startY = 0, pointerDown = false;
 
-    const start = (x, y) => {
+    const findCell = (target) => {
+      const c = target && target.closest ? target.closest('.day[data-key]') : null;
+      if (!c || c.classList.contains('future') || c.classList.contains('empty')) return null;
+      return c;
+    };
+    const start = (target, x, y) => {
+      cell = findCell(target);
+      if (!cell) return;
+      tab = cell.dataset.tab; key = cell.dataset.key;
       pointerDown = true; longFired = false; startX = x; startY = y;
       cell.classList.add('long-pressing');
+      clearTimeout(pressTimer);
       pressTimer = setTimeout(() => {
-        if (!pointerDown) return;
+        if (!pointerDown || !cell) return;
         longFired = true;
         haptic(15);
         cell.classList.remove('long-pressing');
@@ -2354,34 +2292,36 @@
     };
     const move = (x, y) => {
       if (!pointerDown) return;
-      if (Math.abs(x - startX) > 10 || Math.abs(y - startY) > 10) {
-        clearTimeout(pressTimer); pointerDown = false;
-        cell.classList.remove('long-pressing');
-      }
+      if (Math.abs(x - startX) > 10 || Math.abs(y - startY) > 10) cancel();
     };
     const end = () => {
-      cell.classList.remove('long-pressing');
+      if (cell) cell.classList.remove('long-pressing');
       if (!pointerDown) return;
       pointerDown = false;
       clearTimeout(pressTimer);
-      if (longFired) return;
+      if (longFired) { cell = null; return; }
       handleShortTap(tab, key);
+      cell = null;
     };
     const cancel = () => {
       pointerDown = false; clearTimeout(pressTimer);
-      cell.classList.remove('long-pressing');
+      if (cell) cell.classList.remove('long-pressing');
+      cell = null;
     };
 
-    cell.addEventListener('touchstart', (e) => { const t = e.touches[0]; start(t.clientX, t.clientY); }, { passive: true });
-    cell.addEventListener('touchmove', (e) => { const t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: true });
-    cell.addEventListener('touchend', (e) => { e.preventDefault(); end(); });
-    cell.addEventListener('touchcancel', cancel);
-    cell.addEventListener('mousedown', (e) => start(e.clientX, e.clientY));
-    cell.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
-    cell.addEventListener('mouseup', end);
-    cell.addEventListener('mouseleave', cancel);
-    cell.addEventListener('contextmenu', (e) => e.preventDefault());
+    container.addEventListener('touchstart', (e) => { const t = e.touches[0]; start(e.target, t.clientX, t.clientY); }, { passive: true });
+    container.addEventListener('touchmove', (e) => { const t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: true });
+    container.addEventListener('touchend', (e) => { if (pointerDown || longFired) e.preventDefault(); end(); });
+    container.addEventListener('touchcancel', cancel);
+    container.addEventListener('mousedown', (e) => start(e.target, e.clientX, e.clientY));
+    container.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
+    container.addEventListener('mouseup', end);
+    container.addEventListener('mouseleave', cancel);
+    container.addEventListener('contextmenu', (e) => e.preventDefault());
   }
+  ['cardioMonths','weightMonths','liftingMonths','intervalsMonths'].forEach(id => {
+    delegateDayInteractions(document.getElementById(id));
+  });
 
   function handleShortTap(tab, key) {
     const action = TrackCore.decideTapAction(tab, key, fmtKey(today), !!store[tab]?.[key]);
@@ -2483,6 +2423,15 @@
     const dateObj = new Date(y, m-1, d);
     document.getElementById('cardioSheetDate').textContent =
       dateObj.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    const metaEl = document.getElementById('cardioSheetMeta');
+    if (entry && typeof entry.avgHr === 'number') {
+      metaEl.hidden = false;
+      metaEl.innerHTML = `Avg HR <strong>${entry.avgHr} bpm</strong>` +
+        (entry.auto || entry.source === 'watch' ? '<span class="watch-badge">⌓ Apple Watch</span>' : '');
+    } else {
+      metaEl.hidden = true;
+      metaEl.innerHTML = '';
+    }
     // Show Remove button only when an entry already exists.
     document.getElementById('cardioRemoveBtn').hidden = !entry;
     document.getElementById('backdrop').classList.add('open');
@@ -2501,7 +2450,9 @@
   document.getElementById('cardioSaveBtn').addEventListener('click', () => {
     if (!currentEditKey) return;
     const wasNew = !store.cardio[currentEditKey];
-    store.cardio[currentEditKey] = { mins: pendingMins };
+    // Spread the existing entry so watch metadata (avgHr, auto, workoutIds)
+    // survives a manual duration edit.
+    store.cardio[currentEditKey] = { ...(store.cardio[currentEditKey] || {}), mins: pendingMins };
     touchMeta('cardio', currentEditKey);
     save(); haptic(10);
     const k = currentEditKey;
@@ -2666,13 +2617,22 @@
     }
   }
   let weightScrollTimer = null, lastWeightIdx = -1;
+  // Guard against phantom weigh-ins: opening the editor positions the wheel
+  // programmatically, which fires scroll events. Only a real user gesture on
+  // the wheel (touch/mouse/trackpad) arms committing values to the store.
+  let weightWheelTouched = false;
+  ['touchstart', 'mousedown', 'wheel'].forEach(ev => {
+    weightWheel.addEventListener(ev, () => { weightWheelTouched = true; }, { passive: true });
+  });
   weightWheel.addEventListener('scroll', () => {
     const idx = Math.round(weightWheel.scrollTop / ITEM_H);
     if (idx !== lastWeightIdx) {
-      lastWeightIdx = idx; haptic(2); updateWeightWheelHighlight(true);
+      lastWeightIdx = idx;
+      if (weightWheelTouched) haptic(2);
+      updateWeightWheelHighlight(weightWheelTouched);
       // Mirror the wheel value into the active slot's inline input so the
       // user sees what they're scrolling to.
-      if (activeSlot) {
+      if (activeSlot && weightWheelTouched) {
         const input = document.getElementById('slot' + activeSlot.toUpperCase() + 'Input');
         if (input && document.activeElement !== input) {
           input.value = weightValueAt(idx).toFixed(1);
@@ -2680,7 +2640,7 @@
       }
     }
     clearTimeout(weightScrollTimer);
-    weightScrollTimer = setTimeout(() => updateWeightWheelHighlight(true), 80);
+    weightScrollTimer = setTimeout(() => updateWeightWheelHighlight(weightWheelTouched), 80);
   });
 
   // Per-slot inline inputs: tap the AM/PM number, type directly. Wheel and
@@ -2817,25 +2777,19 @@
   function selectWeightSlot(slot) {
     activeSlot = slot;
     paintWeightSlots();
-    // Default order:
+    // Position the wheel at a sensible reference:
     //   1. existing draft for this slot (if any)
     //   2. the other slot's draft (am↔pm)
     //   3. last recorded weight from history
     //   4. fallback 175
+    // Nothing is written to the store here. The value commits only when the
+    // user actually scrolls the wheel or types - otherwise tapping a slot and
+    // closing the sheet would log a weigh-in the user never entered.
     const other = weightDraft[slot === 'am' ? 'pm' : 'am'];
     const v = weightDraft[slot] != null
       ? weightDraft[slot]
       : (other != null ? other : (lastRecordedWeight() || 175));
-    if (weightDraft[slot] == null) {
-      // First commit so this slot has a value when wheel touches
-      weightDraft[slot] = v;
-      paintWeightSlots();
-      writeWeightDraft();
-    }
     setWeightWheel(v, true);
-    // Sync the type input with the current value too.
-    const typeInput = document.getElementById('weightTypeInput');
-    if (typeInput) typeInput.value = (typeof v === 'number') ? v.toFixed(1) : '';
     haptic(8);
   }
 
@@ -2845,6 +2799,7 @@
   function openWeightEditor(key) {
     currentEditTab = 'weight';
     currentEditKey = key;
+    weightWheelTouched = false; // re-arm only on a real gesture in this session
     const entry = store.weight[key];
     weightDraft = { am: entry?.am ?? null, pm: entry?.pm ?? null };
     // If neither is set, default to selecting AM
@@ -2955,7 +2910,7 @@
 
   // ===== SHEETS =====
   const backdrop = document.getElementById('backdrop');
-  const allSheets = ['cardioSheet','intervalsSheet','weightSheet','liftingSheet','nutritionSheet','aiSheet','confirmSheet','menuSheet','deadlineSheet','syncSheet']
+  const allSheets = ['cardioSheet','intervalsSheet','weightSheet','liftingSheet','nutritionSheet','aiSheet','confirmSheet','menuSheet','deadlineSheet','syncSheet','watchSheet']
     .map(id => document.getElementById(id));
 
   function closeAllSheets() {
@@ -2966,6 +2921,10 @@
     currentEditTab = null;
   }
   backdrop.addEventListener('click', closeAllSheets);
+  // Escape closes any open sheet (desktop / keyboard users).
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllSheets();
+  });
 
   // Swipe down to dismiss (skip when scrolling a wheel or focusing input)
   let touchStartY = null;
@@ -3061,7 +3020,35 @@
       Object.keys(store[tab]).forEach(k => { meta[tab][k] = { deleted: now }; });
       store[tab] = {};
     }
+    // Clear celebration history too, so milestones fire again on a fresh run.
+    celebrated = {};
+    try { localStorage.removeItem(CELEBRATED_KEY); } catch(e) {}
     save(); closeAllSheets(); render();
+  });
+
+  // Import: reads a JSON export (or a raw gist file) and merges it through
+  // the same sanitize + last-write-wins path the cloud sync uses. Safe to
+  // run on top of existing data; newer local entries win.
+  const importFileInput = document.getElementById('importFileInput');
+  document.getElementById('importBtn').addEventListener('click', () => importFileInput.click());
+  importFileInput.addEventListener('change', async () => {
+    const file = importFileInput.files && importFileInput.files[0];
+    importFileInput.value = '';
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = TrackCore.parseGistContent(text);
+      const counts = TrackCore.TABS.map(t => TrackCore.countSessions(parsed.store[t])).reduce((a,b) => a+b, 0);
+      if (counts === 0) { alert('No entries found in that file.'); return; }
+      const changed = mergeRemote(parsed);
+      if (changed) { saveLocal(); schedulePush(); }
+      render();
+      checkZone2Milestone();
+      alert(changed ? 'Import complete. Entries merged.' : 'Import read successfully - everything in it was already logged.');
+      closeAllSheets();
+    } catch (e) {
+      alert('Import failed: ' + (e.message || e));
+    }
   });
 
   // Export
@@ -3093,6 +3080,17 @@
   updateMenuSync();
 
   // ===== AI SETTINGS =====
+  // anthropicConfig must be initialized BEFORE updateMenuAi() runs below.
+  // It previously lived ~1200 lines down in the Claude-wrapper section, which
+  // made the updateMenuAi() call hit the temporal dead zone: a ReferenceError
+  // at load that silently killed everything after it (initial render, gist
+  // pull, sync/AI settings buttons, chat, all of INIT).
+  let anthropicConfig = null;
+  try {
+    const raw = localStorage.getItem(ANTHROPIC_KEY);
+    if (raw) anthropicConfig = JSON.parse(raw);
+  } catch(e) {}
+
   const menuAi = document.getElementById('menuAi');
   function updateMenuAi() {
     if (anthropicConfig?.apiKey) {
@@ -3141,6 +3139,63 @@
     closeAllSheets();
   });
 
+  // ===== APPLE WATCH SETTINGS =====
+  const menuWatch = document.getElementById('menuWatch');
+  function updateMenuWatch() {
+    menuWatch.textContent = watchConfig.enabled
+      ? `${watchConfig.hrMin}–${watchConfig.hrMax} · on ›`
+      : 'Off ›';
+  }
+  updateMenuWatch();
+
+  document.getElementById('watchSetupBtn').addEventListener('click', () => {
+    document.getElementById('watchEnabledInput').checked = !!watchConfig.enabled;
+    document.getElementById('watchMinHrInput').value = watchConfig.hrMin;
+    document.getElementById('watchMaxHrInput').value = watchConfig.hrMax;
+    document.getElementById('watchMinMinsInput').value = watchConfig.minMins;
+    document.getElementById('watchStatusText').textContent = '';
+    document.getElementById('watchStatusText').className = 'sync-status';
+    document.getElementById('watchHelpDetail').hidden = true;
+    document.getElementById('menuSheet').classList.remove('open');
+    document.getElementById('watchSheet').classList.add('open');
+  });
+  document.getElementById('watchHelpToggle').addEventListener('click', (e) => {
+    e.preventDefault();
+    const d = document.getElementById('watchHelpDetail');
+    d.hidden = !d.hidden;
+  });
+  document.getElementById('watchCancelBtn').addEventListener('click', closeAllSheets);
+  document.getElementById('watchSaveBtn').addEventListener('click', () => {
+    const status = document.getElementById('watchStatusText');
+    const hrMin = parseInt(document.getElementById('watchMinHrInput').value, 10);
+    const hrMax = parseInt(document.getElementById('watchMaxHrInput').value, 10);
+    const minMins = parseInt(document.getElementById('watchMinMinsInput').value, 10);
+    if (!isFinite(hrMin) || !isFinite(hrMax) || !isFinite(minMins)) {
+      status.textContent = 'All three numbers are required.';
+      status.className = 'sync-status err';
+      return;
+    }
+    if (hrMin < 80 || hrMax > 210 || hrMin >= hrMax) {
+      status.textContent = 'HR window must be 80–210 with min below max.';
+      status.className = 'sync-status err';
+      return;
+    }
+    if (minMins < 1 || minMins > 600) {
+      status.textContent = 'Min duration must be 1–600 minutes.';
+      status.className = 'sync-status err';
+      return;
+    }
+    watchConfig.enabled = document.getElementById('watchEnabledInput').checked;
+    watchConfig.hrMin = hrMin;
+    watchConfig.hrMax = hrMax;
+    watchConfig.minMins = minMins;
+    saveWatchConfig();
+    updateMenuWatch();
+    haptic(10);
+    closeAllSheets();
+    if (currentTab === 'cardio') render();
+  });
+
   function setSyncStatus(msg, kind = 'info') {
     syncStatusText.textContent = msg;
     syncStatusText.className = 'sync-status ' + kind;
@@ -3163,7 +3218,11 @@
     try {
       const remote = await gistFetch();
       const changed = mergeRemote(remote);
+      mergeIngestedLedger(remote.watchIngested);
+      initialPullDone = true;
+      ingestWatchRecords(TrackCore.normalizeWatchInbox(remote.watchInbox));
       if (changed) saveLocal();
+      if (pushHeldForPull) { pushHeldForPull = false; schedulePush(); }
       render();
       setSyncStatus('Pull complete. Calendars refreshed.', 'ok');
       haptic(15);
@@ -3369,21 +3428,45 @@
   }
 
   function buildWeeklySummaryHTML() {
+    // "Last week" = the completed Sun→Sat week. The card shows on Sun/Mon, so
+    // a rolling today-back-7-days window would leak the new week's first day
+    // or two into the numbers.
+    const lastWeekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay() - 7);
+    const priorWeekStart = new Date(lastWeekStart.getFullYear(), lastWeekStart.getMonth(), lastWeekStart.getDate() - 7);
+    const countWeek = (tab, start) => {
+      let s = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        if (TrackCore.dayHasContent(tab, store[tab][fmtKey(d)])) s++;
+      }
+      return s;
+    };
     const tabs = [
       { id: 'cardio', label: 'Zone 2 sessions' },
       { id: 'intervals', label: 'Intervals sessions' },
       { id: 'lifting', label: 'Lifting days' },
     ];
     const rows = tabs.map(t => {
-      const d = TrackCore.trendDelta(t.id, store[t.id], today);
-      const arrow = d.delta > 0 ? '▲' : d.delta < 0 ? '▼' : '–';
-      const klass = d.delta > 0 ? 'up' : d.delta < 0 ? 'down' : '';
-      const sign = d.delta > 0 ? '+' : '';
-      return `<div class="summary-row"><span class="summary-row-label">${t.label}</span><span class="summary-row-value ${klass}">${d.current} · ${arrow} ${sign}${d.delta}</span></div>`;
+      const current = countWeek(t.id, lastWeekStart);
+      const previous = countWeek(t.id, priorWeekStart);
+      const delta = current - previous;
+      const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '–';
+      const klass = delta > 0 ? 'up' : delta < 0 ? 'down' : '';
+      const sign = delta > 0 ? '+' : '';
+      return `<div class="summary-row"><span class="summary-row-label">${t.label}</span><span class="summary-row-value ${klass}">${current} · ${arrow} ${sign}${delta}</span></div>`;
     }).join('');
-    // Weight: 7-day avg vs prior 7-day avg.
-    const wtNow = weekAvgWeight(0);
-    const wtPrev = weekAvgWeight(7);
+    // Weight: completed week's avg vs the week before it.
+    const avgWeek = (start) => {
+      let sum = 0, n = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        const avg = TrackCore.weightAvg(store.weight[fmtKey(d)]);
+        if (avg != null) { sum += avg; n++; }
+      }
+      return n ? sum / n : null;
+    };
+    const wtNow = avgWeek(lastWeekStart);
+    const wtPrev = avgWeek(priorWeekStart);
     let wtRow = '';
     if (wtNow != null && wtPrev != null) {
       const delta = wtNow - wtPrev;
@@ -3396,7 +3479,7 @@
     return `
       <div class="summary-card">
         <div class="summary-title">Last week</div>
-        <div class="summary-headline">Here's how the past 7 days went.</div>
+        <div class="summary-headline">Sun–Sat, compared to the week before.</div>
         <div class="summary-rows">${rows}${wtRow}</div>
       </div>
     `;
@@ -3456,14 +3539,27 @@
       mode: opts.streakMode || 'daily',
       shieldsPerWeek: 1,
     });
-    const delta = TrackCore.trendDelta(tab, map, today, opts.metric ? { metric: opts.metric } : undefined);
-    const spark = TrackCore.sparklineSeries(tab, map, today, {
-      days: 14,
-      value: opts.sparkValue || ((tab, e) => TrackCore.dayHasContent(tab, e) ? 1 : 0),
-    });
+    // customDelta (number|null) bypasses trendDelta for metrics where
+    // window-sums are meaningless (weight: sum of weigh-ins across a week
+    // says nothing; avg-vs-avg does).
+    let delta;
+    if ('customDelta' in opts) {
+      delta = { current: 0, previous: 0, delta: opts.customDelta };
+    } else {
+      delta = TrackCore.trendDelta(tab, map, today, opts.metric ? { metric: opts.metric } : undefined);
+    }
+    const spark = ('customSpark' in opts)
+      ? { values: opts.customSpark || [] }
+      : TrackCore.sparklineSeries(tab, map, today, {
+          days: 14,
+          value: opts.sparkValue || ((tab, e) => TrackCore.dayHasContent(tab, e) ? 1 : 0),
+        });
 
     let deltaHtml = '';
-    if (delta.previous !== 0 || delta.current !== 0) {
+    const showDelta = ('customDelta' in opts)
+      ? (delta.delta != null)
+      : (delta.previous !== 0 || delta.current !== 0);
+    if (showDelta) {
       const arrow = delta.delta > 0 ? '▲' : delta.delta < 0 ? '▼' : '–';
       const klass = delta.delta > 0 ? (opts.lowerIsBetter ? 'down' : 'up')
                   : delta.delta < 0 ? (opts.lowerIsBetter ? 'up' : 'down')
@@ -3497,6 +3593,36 @@
     return `<svg class="sparkline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/></svg>`;
   }
 
+  // Zone band: 100–190 bpm scale, the auto-log window bracketed, and the
+  // most recent watch session's avg HR plotted as a marker.
+  function renderZoneBand() {
+    const BAND_MIN = 100, BAND_MAX = 190;
+    const pct = (v) => Math.max(0, Math.min(100, ((v - BAND_MIN) / (BAND_MAX - BAND_MIN)) * 100));
+    const win = document.getElementById('zoneWindow');
+    win.style.left = pct(watchConfig.hrMin) + '%';
+    win.style.width = (pct(watchConfig.hrMax) - pct(watchConfig.hrMin)) + '%';
+    document.getElementById('zoneBandStatus').innerHTML = watchConfig.enabled
+      ? 'Auto-log <strong>armed</strong>' : 'Auto-log <strong style="color:var(--ink-4)">off</strong>';
+    // Latest session with an avg HR.
+    let latest = null;
+    for (const k of Object.keys(store.cardio).filter(TrackCore.isDateKey).sort()) {
+      const e = store.cardio[k];
+      if (e && typeof e.avgHr === 'number') latest = { key: k, hr: e.avgHr };
+    }
+    const marker = document.getElementById('zoneMarker');
+    const caption = document.getElementById('zoneBandCaption');
+    if (latest) {
+      marker.hidden = false;
+      marker.style.left = pct(latest.hr) + '%';
+      const [y,m,d] = latest.key.split('-').map(Number);
+      const dStr = new Date(y, m-1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      caption.innerHTML = `Last watch session <strong>${latest.hr} bpm</strong> · ${dStr} · window ${watchConfig.hrMin}–${watchConfig.hrMax}, ≥${watchConfig.minMins} min`;
+    } else {
+      marker.hidden = true;
+      caption.innerHTML = `Workouts averaging <strong>${watchConfig.hrMin}–${watchConfig.hrMax} bpm</strong> for ≥${watchConfig.minMins} min log themselves here.`;
+    }
+  }
+
   function renderCardio() {
     const monthsContainer = document.getElementById('cardioMonths');
     monthsContainer.innerHTML = '';
@@ -3514,10 +3640,12 @@
     if (CALENDAR_FLOOR < startMonth) startMonth = new Date(CALENDAR_FLOOR);
     let y = startMonth.getFullYear(), m = startMonth.getMonth();
     const endY = deadline.getFullYear(), endM = deadline.getMonth();
+    const frag = document.createDocumentFragment();
     while (y < endY || (y === endY && m <= endM)) {
-      monthsContainer.appendChild(buildMonth('cardio', y, m));
+      frag.appendChild(buildMonth('cardio', y, m));
       m++; if (m > 11) { m = 0; y++; }
     }
+    monthsContainer.appendChild(frag);
     const total = Object.keys(store.cardio).length;
     const totalMins = Object.values(store.cardio).reduce((s,e) => s + (e.mins || 0), 0);
     document.getElementById('cardioCount').textContent = total;
@@ -3545,6 +3673,28 @@
     }
     document.getElementById('cardioPace').textContent = pace;
 
+    // Projected finish date at the current actual pace.
+    const etaEl = document.getElementById('cardioEta');
+    {
+      const earliestK = Object.keys(store.cardio).filter(TrackCore.isDateKey).sort()[0];
+      const p = TrackCore.actualWeeklyPace(total, earliestK, today);
+      if (total >= TARGET) {
+        etaEl.hidden = false;
+        etaEl.innerHTML = '<strong>Goal complete.</strong>';
+      } else if (p && p > 0) {
+        const daysNeeded = Math.ceil(((TARGET - total) / p) * 7);
+        const finish = new Date(today.getFullYear(), today.getMonth(), today.getDate() + daysNeeded);
+        const fStr = finish.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const beats = finish <= deadline;
+        etaEl.hidden = false;
+        etaEl.innerHTML = `At this pace you finish <strong>${fStr}</strong>${beats ? '' : ' · behind deadline'}`;
+      } else {
+        etaEl.hidden = true;
+      }
+    }
+
+    renderZoneBand();
+
     // Today card
     const todayKey = fmtKey(today);
     const todayCard = document.getElementById('cardioTodayCard');
@@ -3557,11 +3707,13 @@
       todayText.textContent = mins ? `Done · ${mins} min logged` : 'Marked complete';
       btnText.textContent = 'Add time';
       btnSvg.style.display = 'none';
+      todayCard.querySelector('.today-hint').textContent = 'Tap to edit or remove';
     } else {
       todayCard.classList.remove('completed');
       todayText.textContent = 'Mark today complete';
       btnText.textContent = 'Mark done';
       btnSvg.style.display = 'block';
+      todayCard.querySelector('.today-hint').textContent = 'Tap to mark done · Long-press for time';
     }
 
     renderHeroAugment('cardio', { deltaUnit: 'this wk' });
@@ -3590,17 +3742,22 @@
     let endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
     if (monthOfLastGoal > endMonth) endMonth = monthOfLastGoal;
     let y = startMonth.getFullYear(), m = startMonth.getMonth();
+    const frag = document.createDocumentFragment();
     while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
-      monthsContainer.appendChild(buildMonth('weight', y, m));
+      frag.appendChild(buildMonth('weight', y, m));
       m++; if (m > 11) { m = 0; y++; }
     }
+    monthsContainer.appendChild(frag);
 
     // Compute stats
     const allEntries = Object.entries(store.weight)
       .map(([k,v]) => {
         const vals = [v.am, v.pm].filter(x => x != null);
         const avg = vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : null;
-        return { key: k, avg, am: v.am, pm: v.pm };
+        // date is required by renderWeightChart (time-aware x positions).
+        // Without it the chart threw on entries[0].date.getTime() the moment
+        // any weigh-in existed, aborting the rest of the weight render.
+        return { key: k, avg, am: v.am, pm: v.pm, date: TrackCore.parseDate(k) };
       })
       .filter(e => e.avg != null)
       .sort((a,b) => a.key.localeCompare(b.key));
@@ -3620,23 +3777,29 @@
       document.getElementById('weightSubtitle').textContent = 'No weigh-ins logged yet';
     }
 
-    // 7-day avg = mean of daily averages over the last 7 entries (not days)
-    const last7 = allEntries.slice(-7);
-    if (last7.length > 0) {
-      const avg = last7.reduce((s,e) => s + e.avg, 0) / last7.length;
-      document.getElementById('weight7d').textContent = avg.toFixed(1);
-    } else {
-      document.getElementById('weight7d').textContent = '-';
-    }
+    // 7-day avg = mean of daily averages over the last 7 calendar DAYS.
+    // (Previously this took the last 7 *entries*, which could silently span
+    // weeks of sporadic logging while still being labeled "7-day".)
+    const avg7 = weekAvgWeight(0);
+    document.getElementById('weight7d').textContent = avg7 != null ? avg7.toFixed(1) : '-';
 
-    // 7d trend = latest vs earliest in last 7 logged entries
-    if (last7.length >= 2) {
-      const delta = last7[last7.length - 1].avg - last7[0].avg;
-      const sign = delta > 0 ? '+' : '';
-      document.getElementById('weightTrend').textContent = `${sign}${delta.toFixed(1)}`;
+    // 7d change = this 7-day avg vs the previous 7-day avg. Falls back to
+    // latest-vs-earliest within the current 7-day window if the prior week
+    // has no data.
+    const prev7 = weekAvgWeight(7);
+    let trendTxt = '-';
+    if (avg7 != null && prev7 != null) {
+      const delta = avg7 - prev7;
+      trendTxt = `${delta > 0 ? '+' : ''}${delta.toFixed(1)}`;
     } else {
-      document.getElementById('weightTrend').textContent = '-';
+      const cutoffKey = fmtKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6));
+      const inWindow = allEntries.filter(e => e.key >= cutoffKey);
+      if (inWindow.length >= 2) {
+        const delta = inWindow[inWindow.length - 1].avg - inWindow[0].avg;
+        trendTxt = `${delta > 0 ? '+' : ''}${delta.toFixed(1)}`;
+      }
     }
+    document.getElementById('weightTrend').textContent = trendTxt;
 
     // Total logged days
     document.getElementById('weightCount').textContent = allEntries.length;
@@ -3659,12 +3822,33 @@
 
     renderWeightGoalCard(latest);
     renderWeightChart(allEntries);
+    // Weekly delta: this week's average weight minus last week's average.
+    // (trendDelta would SUM daily weights per window - logging 7 days one
+    // week and 6 the next would show a ~-156 lb "trend".)
+    const wNow = weekAvgWeight(0);
+    const wPrev = weekAvgWeight(7);
+    const customDelta = (wNow != null && wPrev != null) ? wNow - wPrev : null;
+    // Sparkline: forward-fill missing days with the last known weight so a
+    // skipped weigh-in doesn't plot as 0 lb and flatten the real variation.
+    const sparkVals = [];
+    let lastKnown = null;
+    // Seed with the most recent entry before the 14-day window, if any.
+    const windowStartKey = fmtKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 13));
+    for (const e of allEntries) {
+      if (e.key < windowStartKey) lastKnown = e.avg; else break;
+    }
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+      const avg = TrackCore.weightAvg(store.weight[fmtKey(d)]);
+      if (avg != null) lastKnown = avg;
+      if (lastKnown != null) sparkVals.push(lastKnown);
+    }
     renderHeroAugment('weight', {
       lowerIsBetter: true,
-      deltaUnit: 'lb',
+      deltaUnit: 'lb/wk',
       deltaFmt: (v) => v.toFixed(1),
-      metric: (_t, e) => TrackCore.weightAvg(e) || 0,
-      sparkValue: (_t, e) => TrackCore.weightAvg(e) || 0,
+      customDelta,
+      customSpark: sparkVals,
     });
   }
 
@@ -3861,10 +4045,12 @@
     if (CALENDAR_FLOOR < startMonth) startMonth = new Date(CALENDAR_FLOOR);
     const endMonth = new Date(today.getFullYear(), today.getMonth() + CALENDAR_FORWARD_MONTHS, 1);
     let y = startMonth.getFullYear(), m = startMonth.getMonth();
+    const frag = document.createDocumentFragment();
     while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
-      monthsContainer.appendChild(buildMonth('lifting', y, m));
+      frag.appendChild(buildMonth('lifting', y, m));
       m++; if (m > 11) { m = 0; y++; }
     }
+    monthsContainer.appendChild(frag);
 
     // Total
     const liftedDays = Object.values(store.lifting).filter(e => (e.tags || []).length > 0);
@@ -3947,10 +4133,12 @@
     if (CALENDAR_FLOOR < startMonth) startMonth = new Date(CALENDAR_FLOOR);
     const endMonth = new Date(today.getFullYear(), today.getMonth() + CALENDAR_FORWARD_MONTHS, 1);
     let y = startMonth.getFullYear(), m = startMonth.getMonth();
+    const frag = document.createDocumentFragment();
     while (y < endMonth.getFullYear() || (y === endMonth.getFullYear() && m <= endMonth.getMonth())) {
-      monthsContainer.appendChild(buildMonth('intervals', y, m));
+      frag.appendChild(buildMonth('intervals', y, m));
       m++; if (m > 11) { m = 0; y++; }
     }
+    monthsContainer.appendChild(frag);
 
     // Stats
     const allKeys = Object.keys(store.intervals).sort();
@@ -4035,11 +4223,13 @@
       todayText.textContent = mins ? `Done · ${mins} min` : 'Marked complete';
       btnText.textContent = 'Add time';
       btnSvg.style.display = 'none';
+      todayCard.querySelector('.today-hint').textContent = 'Tap to edit or remove';
     } else {
       todayCard.classList.remove('completed');
       todayText.textContent = 'Mark today complete';
       btnText.textContent = 'Mark done';
       btnSvg.style.display = 'block';
+      todayCard.querySelector('.today-hint').textContent = 'Tap to mark done · Long-press for time';
     }
 
     renderHeroAugment('intervals', { streakMode: 'weekly', deltaUnit: 'this wk' });
@@ -4236,11 +4426,8 @@
   }
 
   // ===== CLAUDE WRAPPER (browser-direct call) =====
-  let anthropicConfig = null;
-  try {
-    const raw = localStorage.getItem(ANTHROPIC_KEY);
-    if (raw) anthropicConfig = JSON.parse(raw);
-  } catch(e) {}
+  // (anthropicConfig is declared and loaded up in the AI SETTINGS section,
+  // before its first use.)
 
   // The system prompt is wrapped in a function so the kcal goal it includes
   // is recomputed at send time (not at script load), based on the latest
@@ -4491,6 +4678,21 @@ Rules:
   window.addEventListener('scroll', updateTopbarSummary, { passive: true });
 
   // ===== INIT =====
+  // Roll the logical day forward when it changes while the PWA stays alive.
+  // iOS keeps the app in memory for days; without this, "today" freezes at
+  // whatever day the app last cold-launched and every quick-log lands on the
+  // wrong date.
+  function rolloverIfNeeded() {
+    const fresh = TrackCore.logicalToday(new Date(), DAY_CUTOFF_HOUR);
+    if (fmtKey(fresh) === fmtKey(today)) return;
+    const oldKey = fmtKey(today);
+    today = fresh;
+    // If the nutrition view was sitting on the old "today", follow the day.
+    if (nutritionViewKey === oldKey) nutritionViewKey = fmtKey(today);
+    render();
+  }
+  setInterval(rolloverIfNeeded, 60000);
+
   setTab(currentTab);
 
   if (syncConfig) {
@@ -4501,12 +4703,18 @@ Rules:
     });
   }
   window.addEventListener('focus', () => {
+    rolloverIfNeeded();
     if (syncConfig && document.visibilityState === 'visible') gistPull();
   });
   // Also pull when the tab becomes visible (covers iOS PWA returning from
   // backgrounded state, which doesn't always fire 'focus').
   document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') rolloverIfNeeded();
     if (syncConfig && document.visibilityState === 'visible') gistPull();
+  });
+  // Retry syncing as soon as connectivity returns.
+  window.addEventListener('online', () => {
+    if (syncConfig) { gistPull().catch(() => {}); gistPush(); }
   });
   // Background polling: every 30 seconds when the page is foregrounded and
   // synced, fetch the gist. This is what makes a change on your laptop show

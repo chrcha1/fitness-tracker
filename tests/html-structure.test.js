@@ -105,17 +105,30 @@ test('js: titles map covers all 6 tabs', () => {
 // CSS tabbar layout invariants. Catches accidental width / overflow regressions.
 // ============================================================
 
-test('css: tabbar uses display:flex (so tabs distribute equally)', () => {
-  assert.ok(/\.tabbar\s*\{[\s\S]*?display:\s*flex/.test(html), 'tabbar must be display:flex');
+test('css: tabbar distributes tabs equally (grid or flex)', () => {
+  const blocks = html.match(/\.tabbar\s*\{[\s\S]*?\}/g) || [];
+  const primary = blocks.find(b => /position:\s*fixed/.test(b));
+  assert.ok(primary, 'no .tabbar block with position:fixed');
+  const equalGrid = /display:\s*grid/.test(primary) && /grid-template-columns:\s*repeat\(\s*\d+\s*,\s*1fr\s*\)/.test(primary);
+  const equalFlex = /display:\s*flex/.test(primary);
+  assert.ok(equalGrid || equalFlex, 'tabbar must lay out tabs with equal-width grid columns or flex');
 });
 
-test('css: .tab uses flex with shrink-to-zero so 6 tabs always fit', () => {
-  // Either flex:1 or flex:1 1 0 is acceptable, both with min-width:0.
-  const tabBlockMatch = html.match(/\.tab\s*\{[\s\S]*?\}/);
-  assert.ok(tabBlockMatch);
-  const block = tabBlockMatch[0];
-  assert.ok(/flex:\s*1/.test(block), '.tab must declare flex:1');
-  assert.ok(/min-width:\s*0/.test(block), '.tab must declare min-width:0');
+test('css: tabs cannot overflow the tabbar width', () => {
+  const blocks = html.match(/\.tabbar\s*\{[\s\S]*?\}/g) || [];
+  const primary = blocks.find(b => /position:\s*fixed/.test(b));
+  assert.ok(primary, 'no .tabbar block with position:fixed');
+  if (/display:\s*grid/.test(primary)) {
+    // repeat(N, 1fr) columns cannot overflow; just confirm it's declared.
+    assert.ok(/grid-template-columns:\s*repeat\(\s*\d+\s*,\s*1fr\s*\)/.test(primary),
+      'grid tabbar must use repeat(N, 1fr) columns');
+  } else {
+    // Flex layout needs shrink-to-zero tabs to guarantee fit.
+    const tabBlockMatch = html.match(/\.tab\s*\{[\s\S]*?\}/);
+    assert.ok(tabBlockMatch);
+    assert.ok(/flex:\s*1/.test(tabBlockMatch[0]), '.tab must declare flex:1');
+    assert.ok(/min-width:\s*0/.test(tabBlockMatch[0]), '.tab must declare min-width:0');
+  }
 });
 
 test('css: tabbar is fixed to the bottom of the viewport', () => {
@@ -124,7 +137,10 @@ test('css: tabbar is fixed to the bottom of the viewport', () => {
   const blocks = html.match(/\.tabbar\s*\{[\s\S]*?\}/g) || [];
   const primary = blocks.find(b => /position:\s*fixed/.test(b));
   assert.ok(primary, 'no .tabbar block with position:fixed');
-  assert.ok(/bottom:\s*0/.test(primary));
+  // Accept flush-to-edge (bottom: 0) or a floating safe-area dock
+  // (bottom: max(env(safe-area-inset-bottom), NNpx)).
+  assert.ok(/bottom:\s*(0|max\(env\(safe-area-inset-bottom\))/.test(primary),
+    'tabbar must anchor to the viewport bottom (0 or safe-area max())');
 });
 
 // ============================================================
@@ -334,7 +350,9 @@ test('touch: primary interactive surfaces wire both touch and mouse', () => {
   // buttons) must work on both iPhone (touch) and laptop (mouse). We find
   // each function declaration and grab a generous slab of source after it
   // to confirm both event families are wired.
-  const requiredFunctions = ['attachDayInteractions', 'attachTodayBtn'];
+  // Day cells use a single delegated listener set per calendar container
+  // (delegateDayInteractions) rather than per-cell listeners.
+  const requiredFunctions = ['delegateDayInteractions', 'attachTodayBtn'];
   for (const fn of requiredFunctions) {
     const idx = html.indexOf(`function ${fn}`);
     assert.ok(idx >= 0, `couldn't find function ${fn}`);

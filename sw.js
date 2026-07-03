@@ -5,7 +5,7 @@
 //
 // Bumping CACHE invalidates the previous cache on activate and forces a
 // fresh fetch of every asset.
-const CACHE = 'track-v4';
+const CACHE = 'track-v7';
 const ASSETS = ['./', 'index.html', 'core.js'];
 
 self.addEventListener('install', (event) => {
@@ -23,8 +23,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  // Always bypass for the GitHub API and gist downloads. Sync needs fresh data.
-  if (url.hostname === 'api.github.com' || url.hostname === 'gist.githubusercontent.com') {
+  // Only handle http(s). Extension/data requests break caches.put.
+  if (!url.protocol.startsWith('http')) return;
+  // Always bypass for the GitHub API, gist downloads, and the Anthropic API.
+  // Sync and AI logging need fresh, uncached responses.
+  if (url.hostname === 'api.github.com' || url.hostname === 'gist.githubusercontent.com' || url.hostname === 'api.anthropic.com') {
     return;
   }
   if (event.request.method !== 'GET') return;
