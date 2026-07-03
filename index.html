@@ -2596,9 +2596,12 @@
     return Math.round((val - WEIGHT_MIN) / WEIGHT_STEP);
   }
   function setWeightWheel(val, smooth) {
-    if (val == null) val = 175;
+    if (val == null) val = lastRecordedWeight() || 175;
     val = Math.max(WEIGHT_MIN, Math.min(WEIGHT_MAX, val));
     const idx = indexFromWeight(val);
+    // Programmatic positioning fires scroll events; make sure they can never
+    // commit to the store until the next real user gesture on the wheel.
+    wheelProgrammatic = true;
     if (smooth) weightWheel.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' });
     else weightWheel.scrollTop = idx * ITEM_H;
     updateWeightWheelHighlight(false);
@@ -2617,22 +2620,28 @@
     }
   }
   let weightScrollTimer = null, lastWeightIdx = -1;
-  // Guard against phantom weigh-ins: opening the editor positions the wheel
-  // programmatically, which fires scroll events. Only a real user gesture on
-  // the wheel (touch/mouse/trackpad) arms committing values to the store.
+  // Guard against phantom weigh-ins: opening the editor or focusing a slot
+  // positions the wheel programmatically, which fires scroll events. Only a
+  // real user gesture on the wheel (touch/mouse/trackpad) arms committing
+  // values to the store, and any programmatic scroll DIS-arms until the next
+  // gesture. Without the dis-arm, one stray tap on the wheel followed by a
+  // programmatic smooth-scroll silently logged the wheel's resting value
+  // (this is how the phantom 175 lb weigh-ins happened).
   let weightWheelTouched = false;
+  let wheelProgrammatic = false;
   ['touchstart', 'mousedown', 'wheel'].forEach(ev => {
-    weightWheel.addEventListener(ev, () => { weightWheelTouched = true; }, { passive: true });
+    weightWheel.addEventListener(ev, () => { weightWheelTouched = true; wheelProgrammatic = false; }, { passive: true });
   });
+  function wheelUserDriven() { return weightWheelTouched && !wheelProgrammatic; }
   weightWheel.addEventListener('scroll', () => {
     const idx = Math.round(weightWheel.scrollTop / ITEM_H);
     if (idx !== lastWeightIdx) {
       lastWeightIdx = idx;
-      if (weightWheelTouched) haptic(2);
-      updateWeightWheelHighlight(weightWheelTouched);
+      if (wheelUserDriven()) haptic(2);
+      updateWeightWheelHighlight(wheelUserDriven());
       // Mirror the wheel value into the active slot's inline input so the
       // user sees what they're scrolling to.
-      if (activeSlot && weightWheelTouched) {
+      if (activeSlot && wheelUserDriven()) {
         const input = document.getElementById('slot' + activeSlot.toUpperCase() + 'Input');
         if (input && document.activeElement !== input) {
           input.value = weightValueAt(idx).toFixed(1);
@@ -2640,7 +2649,7 @@
       }
     }
     clearTimeout(weightScrollTimer);
-    weightScrollTimer = setTimeout(() => updateWeightWheelHighlight(weightWheelTouched), 80);
+    weightScrollTimer = setTimeout(() => updateWeightWheelHighlight(wheelUserDriven()), 80);
   });
 
   // Per-slot inline inputs: tap the AM/PM number, type directly. Wheel and
@@ -2812,9 +2821,10 @@
     document.getElementById('weightSheet').classList.add('open');
     paintWeightSlots();
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      const v = weightDraft[activeSlot] ?? weightDraft[activeSlot === 'am' ? 'pm' : 'am'] ?? 175;
+      const v = weightDraft[activeSlot] ?? weightDraft[activeSlot === 'am' ? 'pm' : 'am'] ?? lastRecordedWeight() ?? 175;
       // Set wheel without committing (since the slot may not be filled yet)
       const idx = indexFromWeight(v);
+      wheelProgrammatic = true;
       weightWheel.scrollTop = idx * ITEM_H;
       lastWeightIdx = idx;
       updateWeightWheelHighlight(false);
