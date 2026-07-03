@@ -2041,6 +2041,16 @@
       if (changed && !ingestedNew) { saveLocal(); render(); }
       if (changed || ingestedNew) schedulePush();
       if (wasFirstPull && pushHeldForPull) { pushHeldForPull = false; schedulePush(); }
+      // If this device holds data the gist doesn't (e.g. entries logged while
+      // sync was broken or offline), push the merged state up. Without this,
+      // local-only history never uploads until the user happens to edit
+      // something.
+      if (wasFirstPull) {
+        const localAhead =
+          JSON.stringify(store) !== JSON.stringify(TrackCore.sanitizeStore(remote.store)) ||
+          JSON.stringify(meta) !== JSON.stringify(TrackCore.sanitizeMeta(remote.meta));
+        if (localAhead) schedulePush();
+      }
       setSyncState('ok', 'Synced');
     } catch (e) {
       console.error('Sync pull failed', e);
