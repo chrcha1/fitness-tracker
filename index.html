@@ -3944,6 +3944,13 @@
     const ONE_WEEK = 7 * 86400000;
     const earliestData = entries.length ? entries[0].date.getTime() : null;
     const latestData = entries.length ? entries[entries.length - 1].date.getTime() : null;
+    // Trend projection toward the target. If the projected goal date lands
+    // within ~4 months, widen the x-window so the intercept is visible;
+    // beyond that the zoom-out would crush the actual data into a sliver.
+    const proj = TrackCore.weightProjection(entries, WEIGHT_GOAL_TARGET_LB);
+    const PROJ_HORIZON = 120 * 86400000;
+    const projEtaT = (proj && proj.etaDate && (proj.etaDate.getTime() - today.getTime()) <= PROJ_HORIZON)
+      ? proj.etaDate.getTime() : null;
     const xMinDate = new Date(
       earliestData != null
         ? earliestData - ONE_WEEK
@@ -3951,7 +3958,7 @@
     );
     const xMaxDate = new Date(
       latestData != null
-        ? Math.max(latestData + ONE_WEEK, today.getTime() + ONE_WEEK)
+        ? Math.max(latestData + ONE_WEEK, today.getTime() + ONE_WEEK, projEtaT ? projEtaT + 4 * 86400000 : 0)
         : today.getTime() + ONE_WEEK,
     );
     const xRange = Math.max(1, xMaxDate - xMinDate);
@@ -3967,6 +3974,16 @@
     // dashed line is also visible in y.
     for (const s of schedule) {
       if (s.date >= xMinDate && s.date <= xMaxDate) visibleWeights.push(s.weight);
+    }
+    // Projection endpoint: either the target (eta in window) or the fitted
+    // value at the right edge of the chart.
+    let projEndT = null, projEndVal = null;
+    if (proj) {
+      projEndT = projEtaT != null ? projEtaT : xMaxDate.getTime();
+      const projDays = (projEndT - proj.anchorDate.getTime()) / 86400000;
+      projEndVal = projEtaT != null ? WEIGHT_GOAL_TARGET_LB : proj.anchorValue + proj.slopePerDay * projDays;
+      if (projDays > 0 && isFinite(projEndVal)) visibleWeights.push(projEndVal);
+      else { projEndT = null; projEndVal = null; }
     }
     if (!visibleWeights.length) visibleWeights.push(WEIGHT_GOAL_START_LB, WEIGHT_GOAL_TARGET_LB);
     const yMin = Math.floor(Math.min(...visibleWeights) - 1);
@@ -4021,6 +4038,28 @@
           cx: xOf(e.date), cy: yOf(e.avg), r: 3.5,
           fill: '#fff', stroke: '#2563eb', 'stroke-width': 2,
         }));
+      }
+    }
+
+    // Trend projection (dotted blue): from the latest weigh-in along the
+    // fitted slope, ending at the target intercept when it's in view.
+    if (proj && projEndT != null && projEndT > proj.anchorDate.getTime()) {
+      svg.appendChild(el('line', {
+        x1: xOf(proj.anchorDate), y1: yOf(proj.anchorValue),
+        x2: xOf(projEndT), y2: yOf(projEndVal),
+        stroke: '#2563eb', 'stroke-width': 2, 'stroke-dasharray': '1.5 5',
+        'stroke-linecap': 'round', opacity: 0.65,
+      }));
+      if (projEtaT != null) {
+        const ex = xOf(projEtaT), ey = yOf(WEIGHT_GOAL_TARGET_LB);
+        svg.appendChild(el('circle', { cx: ex, cy: ey, r: 4, fill: '#2563eb', opacity: 0.9 }));
+        const etaDate = new Date(projEtaT);
+        const label = el('text', {
+          x: Math.min(ex, W - padR - 4), y: Math.max(ey - 8, padT + 10),
+          'text-anchor': 'end', 'font-size': 10, 'font-weight': 700, fill: '#2563eb',
+        });
+        label.textContent = `${WEIGHT_GOAL_TARGET_LB} lb ~ ${etaDate.toLocaleString('en-US', { month: 'short' })} ${etaDate.getDate()}`;
+        svg.appendChild(label);
       }
     }
 

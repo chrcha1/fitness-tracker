@@ -5,7 +5,7 @@
 //
 // Bumping CACHE invalidates the previous cache on activate and forces a
 // fresh fetch of every asset.
-const CACHE = 'track-v9';
+const CACHE = 'track-v10';
 const ASSETS = ['./', 'index.html', 'core.js'];
 
 self.addEventListener('install', (event) => {

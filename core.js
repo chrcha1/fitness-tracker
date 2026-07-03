@@ -543,6 +543,42 @@
     return w.avgHr >= hrMin && w.avgHr <= hrMax && w.durationMin >= minMins;
   }
 
+  // Project the current weight trend forward to a target.
+  // entries: [{ date: Date, avg: number }] sorted ascending by date.
+  // Fits a least-squares line over the trailing windowDays (default 28) so
+  // ancient history doesn't drag the slope, then anchors the projection at
+  // the latest actual weigh-in for visual continuity with the chart line.
+  // Returns null with fewer than 2 points in the window, otherwise:
+  //   { slopePerDay, anchorDate, anchorValue, etaDate }
+  // etaDate is when the projected line reaches targetLb: the anchor date if
+  // already at/below target, null if the trend isn't heading toward it.
+  function weightProjection(entries, targetLb, windowDays) {
+    if (!entries || entries.length < 2) return null;
+    const win = typeof windowDays === 'number' ? windowDays : 28;
+    const latest = entries[entries.length - 1];
+    const cutoff = latest.date.getTime() - win * 86400000;
+    const pts = entries.filter((e) => e.date.getTime() >= cutoff);
+    if (pts.length < 2) return null;
+    const t0 = pts[0].date.getTime();
+    let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    const n = pts.length;
+    for (const p of pts) {
+      const x = (p.date.getTime() - t0) / 86400000;
+      sx += x; sy += p.avg; sxx += x * x; sxy += x * p.avg;
+    }
+    const denom = n * sxx - sx * sx;
+    if (!denom) return null;
+    const slopePerDay = (n * sxy - sx * sy) / denom;
+    let etaDate = null;
+    if (latest.avg <= targetLb) {
+      etaDate = new Date(latest.date.getTime());
+    } else if (slopePerDay < -1e-9) {
+      const days = (targetLb - latest.avg) / slopePerDay;
+      etaDate = new Date(latest.date.getTime() + days * 86400000);
+    }
+    return { slopePerDay, anchorDate: latest.date, anchorValue: latest.avg, etaDate };
+  }
+
   // Apply one qualifying watch workout to a day's existing cardio entry
   // (or null/undefined for an empty day). Pure: never mutates the input.
   // Returns { entry, changed }:
@@ -600,6 +636,7 @@
     normalizeWatchInbox,
     qualifiesAsZone2,
     applyWatchWorkout,
+    weightProjection,
     nutritionDayTotals,
     newNutritionEntryId,
     mergeTabKeys,
